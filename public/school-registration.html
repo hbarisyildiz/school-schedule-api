@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okul Kayıt Formu - Ders Programı Sistemi</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .form {
+            padding: 40px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error {
+            background: linear-gradient(45deg, #f8d7da, #f5c2c7);
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #dc3545;
+        }
+        .success {
+            background: linear-gradient(45deg, #d4edda, #c3e6cb);
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .verification-note {
+            background: #fff3cd;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .verification-note h3 {
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>🏫 Okul Kayıt Formu</h1>
+                <p>Ders Programı Yönetim Sistemi'ne katılın</p>
+            </div>
+
+            <div class="form" v-if="!registrationSuccess">
+                <!-- Error Message -->
+                <div v-if="error" class="error">{{ error }}</div>
+
+                <!-- Registration Form -->
+                <form @submit.prevent="submitRegistration">
+                    <div class="form-group">
+                        <label>Okul Adı *</label>
+                        <input type="text" v-model="form.school_name" required placeholder="Okulunuzun adını giriniz">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Adresi *</label>
+                        <input type="email" v-model="form.email" required placeholder="okul@example.com">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>İl *</label>
+                            <select v-model="form.city_id" @change="onCityChange" required>
+                                <option value="">İl Seçiniz</option>
+                                <option v-for="city in cities" :key="city.id" :value="city.id">
+                                    {{ city.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>İlçe *</label>
+                            <select v-model="form.district_id" required :disabled="!form.city_id">
+                                <option value="">İlçe Seçiniz</option>
+                                <option v-for="district in districts" :key="district.id" :value="district.id">
+                                    {{ district.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Şifre * (En az 6 karakter)</label>
+                            <input type="password" v-model="form.password" required minlength="6" placeholder="Güçlü bir şifre seçin">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Şifre Tekrar *</label>
+                            <input type="password" v-model="form.password_confirmation" required minlength="6" placeholder="Şifreyi tekrar girin">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" :disabled="loading">
+                        {{ loading ? 'Kaydediliyor...' : 'Kayıt Ol' }}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Success Message -->
+            <div v-if="registrationSuccess" class="form">
+                <div class="success">
+                    <h3>🎉 Kayıt Başarılı!</h3>
+                    <p><strong>{{ successMessage }}</strong></p>
+                    <p>Okul Kodunuz: <strong>{{ schoolCode }}</strong></p>
+                </div>
+                
+                <div class="verification-note">
+                    <h3>📧 Hoş Geldiniz!</h3>
+                    <p>{{ form.email }} adresine hoş geldiniz mesajı gönderildi.</p>
+                    <p>Artık sisteme giriş yapabilirsiniz!</p>
+                </div>
+
+                <button @click="goToLogin" class="btn" style="margin-top: 20px;">
+                    🚀 Giriş Sayfasına Git
+                </button>
+                
+                <button @click="resetForm" class="btn" style="margin-top: 10px; background: #6c757d;">
+                    Yeni Kayıt Yap
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    loading: false,
+                    error: '',
+                    registrationSuccess: false,
+                    cities: [],
+                    districts: [],
+                    successMessage: '',
+                    schoolCode: '',
+                    form: {
+                        school_name: '',
+                        email: '',
+                        city_id: '',
+                        district_id: '',
+                        password: '',
+                        password_confirmation: ''
+                    }
+                }
+            },
+            async mounted() {
+                await this.loadResources();
+            },
+            methods: {
+                async loadResources() {
+                    try {
+                        // Load cities
+                        const citiesResponse = await axios.get('http://localhost:8004/api/cities');
+                        this.cities = citiesResponse.data;
+                    } catch (error) {
+                        this.error = 'Veriler yüklenirken hata oluştu';
+                        console.error('Load resources error:', error);
+                    }
+                },
+
+                async onCityChange() {
+                    this.form.district_id = '';
+                    this.districts = [];
+                    
+                    if (!this.form.city_id) return;
+
+                    try {
+                        const response = await axios.get(`http://localhost:8004/api/cities/${this.form.city_id}/districts`);
+                        this.districts = response.data;
+                    } catch (error) {
+                        this.error = 'İlçeler yüklenirken hata oluştu';
+                    }
+                },
+
+                async submitRegistration() {
+                    if (!this.validateForm()) return;
+
+                    this.loading = true;
+                    this.error = '';
+
+                    try {
+                        const response = await axios.post('http://localhost:8004/api/register-school', this.form);
+                        this.successMessage = response.data.message;
+                        this.schoolCode = response.data.school_code;
+                        this.registrationSuccess = true;
+                    } catch (error) {
+                        if (error.response?.data?.errors) {
+                            const errors = Object.values(error.response.data.errors).flat();
+                            this.error = errors.join(', ');
+                        } else {
+                            this.error = error.response?.data?.message || 'Kayıt işlemi başarısız oldu';
+                        }
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                validateForm() {
+                    if (!this.form.school_name.trim()) {
+                        this.error = 'Okul adı gereklidir';
+                        return false;
+                    }
+                    if (!this.form.email.trim()) {
+                        this.error = 'Email adresi gereklidir';
+                        return false;
+                    }
+                    if (!this.form.city_id) {
+                        this.error = 'İl seçimi gereklidir';
+                        return false;
+                    }
+                    if (!this.form.district_id) {
+                        this.error = 'İlçe seçimi gereklidir';
+                        return false;
+                    }
+                    if (!this.form.password.trim()) {
+                        this.error = 'Şifre gereklidir';
+                        return false;
+                    }
+                    if (this.form.password.length < 6) {
+                        this.error = 'Şifre en az 6 karakter olmalıdır';
+                        return false;
+                    }
+                    if (this.form.password !== this.form.password_confirmation) {
+                        this.error = 'Şifreler eşleşmiyor';
+                        return false;
+                    }
+                    return true;
+                },
+
+                resetForm() {
+                    this.registrationSuccess = false;
+                    this.successMessage = '';
+                    this.schoolCode = '';
+                    this.form = {
+                        school_name: '',
+                        email: '',
+                        city_id: '',
+                        district_id: '',
+                        password: '',
+                        password_confirmation: ''
+                    };
+                    this.districts = [];
+                },
+
+                goToLogin() {
+                    // Login sayfasına yönlendir
+                    window.location.href = '/login.html';
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

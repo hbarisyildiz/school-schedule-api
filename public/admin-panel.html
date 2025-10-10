@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okul Ders Programı - Admin Panel</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .app { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .table th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+        .status-active {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .success {
+            background: linear-gradient(45deg, #d4edda, #c3e6cb);
+            color: #155724;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(40, 167, 69, 0.2);
+            animation: slideInTop 0.3s ease-out;
+        }
+        @keyframes slideInTop {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 15px 25px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+        }
+        .tab.active {
+            background: white;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .modal h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            color: #3498db;
+        }
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .schedule-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            min-height: 80px;
+        }
+        .schedule-item.conflict {
+            border-left-color: #e74c3c;
+            background: #ffeaa7;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+        }
+        .bg-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .bg-info {
+            background-color: #17a2b8;
+        }
+        .bg-success {
+            background-color: #28a745;
+        }
+        .bg-danger {
+            background-color: #dc3545;
+        }
+        .bg-secondary {
+            background-color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="app">
+        <!-- Header -->
+        <div class="header">
+            <h1 v-if="user">🏫 Hoş Geldiniz, {{ user.name }}</h1>
+            <h1 v-else>🔐 Okul Ders Programı Sistemi</h1>
+            <p v-if="user">{{ user.role?.display_name }} - {{ user.school?.name }}</p>
+            <button v-if="!user" @click="showLogin = true" class="btn">Giriş Yap</button>
+            <button v-if="user" @click="logout" class="btn btn-danger">Çıkış Yap</button>
+        </div>
+
+        <!-- Login Modal -->
+        <div v-if="showLogin && !user" class="card">
+            <h2>🔐 Giriş Yap</h2>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" v-model="loginForm.email" placeholder="Email adresinizi giriniz">
+                <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                    Test hesapları: admin@schoolschedule.com, mudur@ataturklisesi.edu.tr, ayse.yilmaz@ataturklisesi.edu.tr
+                </small>
+            </div>
+            <div class="form-group">
+                <label>Şifre:</label>
+                <input type="password" v-model="loginForm.password" placeholder="Şifrenizi giriniz">
+                <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                    Şifreler: admin123 (Super Admin), mudur123 (Müdür), teacher123 (Öğretmen)
+                </small>
+            </div>
+            <button @click="login" class="btn">Giriş Yap</button>
+            
+            <!-- Hızlı Giriş Butonları -->
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                <p style="margin-bottom: 10px; color: #666; font-size: 14px;">Hızlı Test Girişi:</p>
+                <button @click="quickLogin('admin@schoolschedule.com')" class="btn" style="font-size: 12px; padding: 8px 12px; margin: 3px; background: #e74c3c;">
+                    Super Admin
+                </button>
+                <button @click="quickLogin('mudur@ataturklisesi.edu.tr')" class="btn" style="font-size: 12px; padding: 8px 12px; margin: 3px; background: #3498db;">
+                    Okul Müdürü
+                </button>
+                <button @click="quickLogin('ayse.yilmaz@ataturklisesi.edu.tr')" class="btn" style="font-size: 12px; padding: 8px 12px; margin: 3px; background: #27ae60;">
+                    Öğretmen
+                </button>
+            </div>
+            
+            <div v-if="loginError" class="error">{{ loginError }}</div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div v-if="user">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab" :class="{active: activeTab === 'dashboard'}" @click="activeTab = 'dashboard'">📊 Dashboard</button>
+                <button class="tab" :class="{active: activeTab === 'schools'}" @click="activeTab = 'schools'; loadSchools()" v-if="user?.role?.name === 'super_admin'">🏫 Okullar</button>
+                <button class="tab" :class="{active: activeTab === 'registration-requests'}" @click="activeTab = 'registration-requests'; loadRegistrationRequests()" v-if="user?.role?.name === 'super_admin'">📝 Kayıt Talepleri</button>
+                <button class="tab" :class="{active: activeTab === 'users'}" @click="activeTab = 'users'; loadUsers()">👥 Kullanıcılar</button>
+                <button class="tab" :class="{active: activeTab === 'subjects'}" @click="activeTab = 'subjects'; loadSubjects()">📚 Dersler</button>
+                <button class="tab" :class="{active: activeTab === 'schedules'}" @click="activeTab = 'schedules'; loadSchedules()">📅 Ders Programı</button>
+                <button class="tab" :class="{active: activeTab === 'weekly'}" @click="activeTab = 'weekly'; loadWeeklySchedule()">📊 Haftalık Program</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div v-if="activeTab === 'dashboard'" class="card">
+                <h2>📊 Dashboard</h2>
+                <div v-if="schoolInfo">
+                    <h3>{{ schoolInfo.school.name }}</h3>
+                    <p><strong>Abonelik:</strong> {{ schoolInfo.school.subscription_plan.name }}</p>
+                    <p><strong>Öğretmen Sayısı:</strong> {{ schoolInfo.statistics.teachers }}</p>
+                    <p><strong>Öğrenci Sayısı:</strong> {{ schoolInfo.statistics.students }}</p>
+                    <p><strong>Sınıf Sayısı:</strong> {{ schoolInfo.statistics.classes }}</p>
+                </div>
+            </div>
+
+            <!-- Schools Tab (Super Admin Only) -->
+            <div v-if="activeTab === 'schools' && user?.role?.name === 'super_admin'" class="card">
+                <h2>🏫 Okul Yönetimi</h2>
+                
+                <!-- Search & Filters -->
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                    <input type="text" v-model="schoolSearch" @input="searchSchools" placeholder="Okul ara..." style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button @click="openAddSchoolModal" class="btn">+ Yeni Okul</button>
+                </div>
+                
+                <!-- Schools Table -->
+                <div v-if="schoolsData.data && schoolsData.data.length > 0" style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 200px;">Okul Adı</th>
+                                <th style="min-width: 180px;">Email</th>
+                                <th style="min-width: 120px;">Telefon</th>
+                                <th style="min-width: 150px;">📍 İl / İlçe</th>
+                                <th style="min-width: 120px;">💳 Abonelik</th>
+                                <th style="min-width: 80px;">Durum</th>
+                                <th style="min-width: 160px;">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="school in schoolsData.data" :key="school.id">
+                                <td><strong>{{ school.name }}</strong></td>
+                                <td style="font-size: 13px;">{{ school.email }}</td>
+                                <td style="font-size: 13px;">{{ school.phone || '-' }}</td>
+                                <td>
+                                    <div style="font-size: 13px; line-height: 1.3;">
+                                        <div style="font-weight: bold; color: #2c3e50;">{{ school.city?.name || '-' }}</div>
+                                        <div style="color: #7f8c8d;">{{ school.district?.name || '-' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-size: 11px; display: inline-block;">
+                                        {{ school.subscription_plan?.name || 'Plan yok' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span :class="school.is_active ? 'status-active' : 'status-inactive'" style="font-size: 12px;">
+                                        {{ school.is_active ? '✅ Aktif' : '❌ Pasif' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button @click="editSchool(school)" class="btn" style="background: #007bff; font-size: 11px; padding: 6px 10px; margin-right: 5px;">✏️ Düzenle</button>
+                                    <button @click="toggleSchoolStatus(school)" class="btn" style="font-size: 11px; padding: 6px 10px;" :style="school.is_active ? 'background: #dc3545;' : 'background: #28a745;'">
+                                        {{ school.is_active ? '⏸️ Pasifleştir' : '▶️ Aktifleştir' }}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <span style="color: #6c757d; font-size: 14px;">
+                                📊 Toplam <strong>{{ schoolsData.total }}</strong> okul
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button @click="loadSchoolsPage(schoolsData.current_page - 1)" :disabled="!schoolsData.prev_page_url" class="btn" 
+                                style="padding: 8px 12px; background: #6c757d;" :style="!schoolsData.prev_page_url ? 'opacity: 0.5; cursor: not-allowed;' : ''">
+                                ⬅️ Önceki
+                            </button>
+                            <span style="padding: 0 15px; font-weight: bold; color: #495057;">
+                                {{ schoolsData.current_page }} / {{ schoolsData.last_page }}
+                            </span>
+                            <button @click="loadSchoolsPage(schoolsData.current_page + 1)" :disabled="!schoolsData.next_page_url" class="btn" 
+                                style="padding: 8px 12px; background: #6c757d;" :style="!schoolsData.next_page_url ? 'opacity: 0.5; cursor: not-allowed;' : ''">
+                                Sonraki ➡️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div v-else-if="schoolsLoading" class="loading">Okullar yükleniyor...</div>
+                <div v-else class="loading">Okul bulunamadı</div>
+                
+                <!-- Add/Edit School Modal -->
+                <div v-if="showAddSchoolModal || showEditSchoolModal" class="modal-overlay" @click.self="closeSchoolModal">
+                    <div class="modal">
+                        <h3>{{ showEditSchoolModal ? '✏️ Okul Düzenle' : '🏫 Yeni Okul Ekle' }}</h3>
+                        
+                        <!-- Modal Messages -->
+                        <div v-if="error" class="error" style="margin: 15px 0;">{{ error }}</div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+                            <div class="form-group">
+                                <label>Okul Adı:</label>
+                                <input type="text" v-model="schoolForm.name" placeholder="Okul adını giriniz">
+                            </div>
+                            <div class="form-group">
+                                <label>Email:</label>
+                                <input type="email" v-model="schoolForm.email" placeholder="okul@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Telefon:</label>
+                                <input type="text" v-model="schoolForm.phone" placeholder="0212 555 00 00">
+                            </div>
+                            <div class="form-group">
+                                <label>Abonelik Planı:</label>
+                                <select v-model="schoolForm.subscription_plan_id">
+                                    <option value="">Seçiniz</option>
+                                    <option v-for="plan in subscriptionPlans" :key="plan.id" :value="plan.id">
+                                        {{ plan.name }} - {{ plan.price }}₺/ay
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>İl:</label>
+                                <select v-model="schoolForm.city_id" @change="onCityChange">
+                                    <option value="">İl Seçiniz</option>
+                                    <option v-for="city in cities" :key="city.id" :value="city.id">
+                                        {{ city.name }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>İlçe:</label>
+                                <select v-model="schoolForm.district_id" :disabled="!schoolForm.city_id">
+                                    <option value="">İlçe Seçiniz</option>
+                                    <option v-for="district in districts" :key="district.id" :value="district.id">
+                                        {{ district.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button @click="closeSchoolModal" class="btn" style="background: #6c757d;">İptal</button>
+                            <button @click="saveSchool" class="btn">{{ showEditSchoolModal ? 'Güncelle' : 'Ekle' }}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Details Modal -->
+                <div v-if="showRequestDetails" class="modal-overlay" @click.self="closeRequestDetails">
+                    <div class="modal" style="max-width: 600px;">
+                        <h3>📋 Kayıt Talebi Detayları</h3>
+                        
+                        <div v-if="selectedRequest" style="padding: 20px 0;">
+                            <div class="form-group">
+                                <strong>Okul Adı:</strong> {{ selectedRequest.school_name }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Email:</strong> {{ selectedRequest.email }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Telefon:</strong> {{ selectedRequest.phone }}
+                            </div>
+                            <div class="form-group">
+                                <strong>İl:</strong> {{ selectedRequest.city?.name }}
+                            </div>
+                            <div class="form-group">
+                                <strong>İlçe:</strong> {{ selectedRequest.district?.name }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Adres:</strong> {{ selectedRequest.address }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Abonelik Planı:</strong> {{ selectedRequest.subscription_plan?.name }}
+                            </div>
+                            <div class="form-group">
+                                <strong>Durum:</strong> 
+                                <span :class="'badge ' + getStatusBadgeClass(selectedRequest.status)">
+                                    {{ getStatusText(selectedRequest.status) }}
+                                </span>
+                            </div>
+                            <div class="form-group">
+                                <strong>Başvuru Tarihi:</strong> {{ formatDate(selectedRequest.created_at) }}
+                            </div>
+                            <div v-if="selectedRequest.email_verified_at" class="form-group">
+                                <strong>Email Doğrulama:</strong> {{ formatDate(selectedRequest.email_verified_at) }}
+                            </div>
+                            <div v-if="selectedRequest.approved_at" class="form-group">
+                                <strong>Onaylama Tarihi:</strong> {{ formatDate(selectedRequest.approved_at) }}
+                            </div>
+                            <div v-if="selectedRequest.approved_by_user" class="form-group">
+                                <strong>Onaylayan:</strong> {{ selectedRequest.approved_by_user.name }}
+                            </div>
+                            <div v-if="selectedRequest.rejected_at" class="form-group">
+                                <strong>Red Tarihi:</strong> {{ formatDate(selectedRequest.rejected_at) }}
+                            </div>
+                            <div v-if="selectedRequest.rejection_reason" class="form-group">
+                                <strong>Red Sebebi:</strong> {{ selectedRequest.rejection_reason }}
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button @click="closeRequestDetails" class="btn" style="background: #6c757d;">Kapat</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reject Request Modal -->
+                <div v-if="showRejectRequestModal" class="modal-overlay" @click.self="closeRejectModal">
+                    <div class="modal" style="max-width: 500px;">
+                        <h3>❌ Kayıt Talebini Reddet</h3>
+                        
+                        <div v-if="selectedRequest" style="padding: 20px 0;">
+                            <p><strong>Okul:</strong> {{ selectedRequest.school_name }}</p>
+                            <p style="color: #666; margin-bottom: 20px;">
+                                Bu kayıt talebini reddetmek istediğinizden emin misiniz? Red sebebini belirtiniz:
+                            </p>
+                            
+                            <div class="form-group">
+                                <label>Red Sebebi *</label>
+                                <textarea v-model="rejectReason" 
+                                         placeholder="Red sebebini açıklayınız..." 
+                                         rows="4" 
+                                         style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </textarea>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button @click="closeRejectModal" class="btn" style="background: #6c757d;">İptal</button>
+                            <button @click="rejectRequest" class="btn" style="background: #dc3545;">Reddet</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedules Tab -->
+            <div v-if="activeTab === 'schedules'" class="card">
+                <h2>📅 Ders Programları</h2>
+                
+                <!-- New Schedule Form -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3>Yeni Ders Programı</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="form-group">
+                            <label>Ders:</label>
+                            <select v-model="newSchedule.subject_id">
+                                <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+                                    {{ subject.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Öğretmen:</label>
+                            <select v-model="newSchedule.teacher_id">
+                                <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+                                    {{ teacher.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sınıf:</label>
+                            <select v-model="newSchedule.class_id">
+                                <option v-for="cls in classes" :key="cls.id" :value="cls.id">
+                                    {{ cls.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Gün:</label>
+                            <select v-model="newSchedule.day_of_week">
+                                <option value="1">Pazartesi</option>
+                                <option value="2">Salı</option>
+                                <option value="3">Çarşamba</option>
+                                <option value="4">Perşembe</option>
+                                <option value="5">Cuma</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Başlangıç:</label>
+                            <input type="time" v-model="newSchedule.start_time">
+                        </div>
+                        <div class="form-group">
+                            <label>Bitiş:</label>
+                            <input type="time" v-model="newSchedule.end_time">
+                        </div>
+                    </div>
+                    <button @click="createSchedule" class="btn">Ders Programı Oluştur</button>
+                    <button @click="generateAutoSchedule" class="btn" style="background: linear-gradient(135deg, #f39c12, #e67e22);">Otomatik Oluştur</button>
+                </div>
+
+                <!-- Schedules List -->
+                <div v-if="schedules.length > 0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ders</th>
+                                <th>Öğretmen</th>
+                                <th>Sınıf</th>
+                                <th>Gün</th>
+                                <th>Saat</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="schedule in schedules" :key="schedule.id">
+                                <td>{{ schedule.subject?.name }}</td>
+                                <td>{{ schedule.teacher?.name }}</td>
+                                <td>{{ schedule.class?.name }}</td>
+                                <td>{{ getDayName(schedule.day_of_week) }}</td>
+                                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                <td>
+                                    <button @click="deleteSchedule(schedule.id)" class="btn btn-danger">Sil</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-else class="loading">Henüz ders programı yok</div>
+            </div>
+
+            <!-- Users Tab -->
+            <div v-if="activeTab === 'users'" class="card">
+                <h2>👥 Kullanıcı Yönetimi</h2>
+                
+                <!-- Add New User Form -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3>Yeni Kullanıcı Ekle</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="form-group">
+                            <label>Adı Soyadı:</label>
+                            <input type="text" v-model="newUser.name" placeholder="Ad Soyad">
+                        </div>
+                        <div class="form-group">
+                            <label>Email:</label>
+                            <input type="email" v-model="newUser.email" placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Rol:</label>
+                            <select v-model="newUser.role_id">
+                                <option value="">Rol Seçiniz</option>
+                                <option v-for="role in roles" :key="role.id" :value="role.id">
+                                    {{ role.display_name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Şifre:</label>
+                            <input type="password" v-model="newUser.password" placeholder="Şifre">
+                        </div>
+                        <div class="form-group">
+                            <label>Şifre Tekrar:</label>
+                            <input type="password" v-model="newUser.password_confirmation" placeholder="Şifre Tekrar">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefon:</label>
+                            <input type="text" v-model="newUser.phone" placeholder="0555 123 45 67">
+                        </div>
+                    </div>
+                    <button @click="createUser" class="btn">Kullanıcı Ekle</button>
+                </div>
+
+                <!-- Users List -->
+                <div v-if="users.length > 0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Adı</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Telefon</th>
+                                <th>Durum</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="user in users" :key="user.id">
+                                <td><strong>{{ user.name }}</strong></td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span style="background: #e8f5e8; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                        {{ user.role?.display_name }}
+                                    </span>
+                                </td>
+                                <td>{{ user.phone || '-' }}</td>
+                                <td>
+                                    <span :class="user.is_active ? 'status-active' : 'status-inactive'">
+                                        {{ user.is_active ? 'Aktif' : 'Pasif' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ formatDate(user.created_at) }}</small>
+                                </td>
+                                <td>
+                                    <button @click="toggleUserStatus(user)" class="btn" style="font-size: 12px; padding: 6px 12px;">
+                                        {{ user.is_active ? 'Pasifleştir' : 'Aktifleştir' }}
+                                    </button>
+                                    <button @click="editUser(user)" class="btn" style="font-size: 12px; padding: 6px 12px; background: #f39c12;">
+                                        Düzenle
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-else class="loading">Kullanıcı bulunamadı</div>
+            </div>
+
+            <!-- Subjects Tab -->
+            <div v-if="activeTab === 'subjects'" class="card">
+                <h2>📚 Ders Yönetimi</h2>
+                
+                <!-- Add New Subject Form -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3>Yeni Ders Ekle</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="form-group">
+                            <label>Ders Adı:</label>
+                            <input type="text" v-model="newSubject.name" placeholder="Matematik, Türkçe vb.">
+                        </div>
+                        <div class="form-group">
+                            <label>Ders Kodu:</label>
+                            <input type="text" v-model="newSubject.code" placeholder="MAT101">
+                        </div>
+                        <div class="form-group">
+                            <label>Haftalık Saat:</label>
+                            <input type="number" v-model="newSubject.weekly_hours" min="1" max="40" placeholder="4">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Açıklama:</label>
+                            <input type="text" v-model="newSubject.description" placeholder="Ders açıklaması">
+                        </div>
+                    </div>
+                    <button @click="createSubject" class="btn">Ders Ekle</button>
+                </div>
+
+                <!-- Subjects List -->
+                <div v-if="subjects.length > 0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ders Adı</th>
+                                <th>Kod</th>
+                                <th>Haftalık Saat</th>
+                                <th>Açıklama</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="subject in subjects" :key="subject.id">
+                                <td><strong>{{ subject.name }}</strong></td>
+                                <td>
+                                    <span style="background: #fff3cd; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                        {{ subject.code }}
+                                    </span>
+                                </td>
+                                <td>{{ subject.weekly_hours }} saat</td>
+                                <td>{{ subject.description || '-' }}</td>
+                                <td>
+                                    <span :class="subject.is_active ? 'status-active' : 'status-inactive'">
+                                        {{ subject.is_active ? 'Aktif' : 'Pasif' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button @click="toggleSubjectStatus(subject)" class="btn" style="font-size: 12px; padding: 6px 12px;">
+                                        {{ subject.is_active ? 'Pasifleştir' : 'Aktifleştir' }}
+                                    </button>
+                                    <button @click="editSubject(subject)" class="btn" style="font-size: 12px; padding: 6px 12px; background: #f39c12;">
+                                        Düzenle
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-else class="loading">Ders bulunamadı</div>
+            </div>
+
+            <!-- Weekly Schedule Tab -->
+            <div v-if="activeTab === 'weekly'" class="card">
+                <h2>📊 Haftalık Ders Programı</h2>
+                <div v-if="weeklySchedule" class="schedule-grid">
+                    <div v-for="(daySchedules, day) in weeklySchedule" :key="day">
+                        <h3>{{ day }}</h3>
+                        <div v-for="schedule in daySchedules" :key="schedule.id" class="schedule-item">
+                            <strong>{{ schedule.subject?.name }}</strong><br>
+                            <small>{{ schedule.teacher?.name }}</small><br>
+                            <small>{{ schedule.start_time }} - {{ schedule.end_time }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Requests Tab -->
+            <div v-if="activeTab === 'registration-requests'" class="card">
+                <h2>📝 Okul Kayıt Talepleri</h2>
+                
+                <!-- Filters -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                    <select v-model="requestFilter" @change="loadRegistrationRequests()" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        <option value="">Tüm Talepler</option>
+                        <option value="pending">⏳ Bekleyen</option>
+                        <option value="approved">✅ Onaylanan</option>
+                        <option value="rejected">❌ Reddedilen</option>
+                    </select>
+                    <input v-model="requestSearch" @input="loadRegistrationRequests()" placeholder="Okul adı, email ara..." 
+                           style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; flex: 1;">
+                </div>
+
+                <!-- Registration Requests Table -->
+                <div v-if="registrationRequests.data && registrationRequests.data.length > 0" style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>🏫 Okul Bilgileri</th>
+                                <th>📍 Lokasyon</th>
+                                <th>👤 Müdür Bilgileri</th>
+                                <th>💳 Plan</th>
+                                <th>📅 Tarih</th>
+                                <th>📧 Email</th>
+                                <th>📊 Durum</th>
+                                <th>⚙️ İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="request in registrationRequests.data" :key="request.id">
+                                <td>
+                                    <div style="font-weight: bold;">{{ request.school_name }}</div>
+                                    <div style="font-size: 12px; color: #666;">{{ request.school_code }}</div>
+                                    <div style="font-size: 12px; color: #666;">{{ request.email }}</div>
+                                </td>
+                                <td style="font-size: 13px;">
+                                    <div style="font-weight: bold;">{{ request.city?.name }}</div>
+                                    <div style="color: #666;">{{ request.district?.name }}</div>
+                                </td>
+                                <td style="font-size: 13px;">
+                                    <div style="font-weight: bold;">{{ request.principal_name }}</div>
+                                    <div style="color: #666;">{{ request.principal_email }}</div>
+                                    <div style="color: #666;">{{ request.principal_phone }}</div>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    <span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px;">
+                                        {{ request.subscription_plan?.name || 'Plan yok' }}
+                                    </span>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    {{ new Date(request.created_at).toLocaleDateString('tr-TR') }}
+                                </td>
+                                <td style="font-size: 12px;">
+                                    <span v-if="request.email_verified_at" style="color: #27ae60;">✅ Doğrulandı</span>
+                                    <span v-else style="color: #e74c3c;">❌ Doğrulanmadı</span>
+                                </td>
+                                <td>
+                                    <span v-if="request.status === 'pending'" style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                        ⏳ Bekliyor
+                                    </span>
+                                    <span v-else-if="request.status === 'approved'" style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                        ✅ Onaylandı
+                                    </span>
+                                    <span v-else-if="request.status === 'rejected'" style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                        ❌ Reddedildi
+                                    </span>
+                                </td>
+                                <td>
+                                    <button v-if="request.status === 'pending' && request.email_verified_at" 
+                                            @click="approveRequest(request)" 
+                                            class="btn" style="background: #28a745; font-size: 11px; padding: 6px 10px; margin: 2px;">
+                                        ✅ Onayla
+                                    </button>
+                                    <button v-if="request.status === 'pending'" 
+                                            @click="showRejectModal(request)" 
+                                            class="btn" style="background: #dc3545; font-size: 11px; padding: 6px 10px; margin: 2px;">
+                                        ❌ Reddet
+                                    </button>
+                                    <button @click="viewRequestDetails(request)" 
+                                            class="btn" style="background: #17a2b8; font-size: 11px; padding: 6px 10px; margin: 2px;">
+                                        👁️ Detay
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <span style="color: #6c757d; font-size: 14px;">
+                                📊 Toplam <strong>{{ registrationRequests.total }}</strong> talep
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button @click="loadRegistrationRequests(registrationRequests.current_page - 1)" 
+                                    :disabled="!registrationRequests.prev_page_url" 
+                                    class="btn" 
+                                    style="padding: 8px 12px; background: #6c757d;" 
+                                    :style="!registrationRequests.prev_page_url ? 'opacity: 0.5; cursor: not-allowed;' : ''">
+                                ⬅️ Önceki
+                            </button>
+                            <span style="padding: 0 15px; font-weight: bold; color: #495057;">
+                                {{ registrationRequests.current_page }} / {{ registrationRequests.last_page }}
+                            </span>
+                            <button @click="loadRegistrationRequests(registrationRequests.current_page + 1)" 
+                                    :disabled="!registrationRequests.next_page_url" 
+                                    class="btn" 
+                                    style="padding: 8px 12px; background: #6c757d;" 
+                                    :style="!registrationRequests.next_page_url ? 'opacity: 0.5; cursor: not-allowed;' : ''">
+                                Sonraki ➡️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div v-else-if="requestsLoading" class="loading">Talepler yükleniyor...</div>
+                <div v-else class="loading">Talep bulunamadı</div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div v-if="message" class="success">{{ message }}</div>
+        <div v-if="error" class="error">{{ error }}</div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    user: null,
+                    showLogin: false,
+                    activeTab: 'dashboard',
+                    loginForm: {
+                        email: '',
+                        password: ''
+                    },
+                    loginError: '',
+                    message: '',
+                    error: '',
+                    schoolInfo: null,
+                    schedules: [],
+                    users: [],
+                    subjects: [],
+                    teachers: [],
+                    classes: [],
+                    schools: [],
+                    schoolsData: {},
+                    schoolsLoading: false,
+                    schoolSearch: '',
+                    showAddSchoolModal: false,
+                    showEditSchoolModal: false,
+                    schoolForm: {
+                        id: null,
+                        name: '',
+                        email: '',
+                        phone: '',
+                        city_id: '',
+                        district_id: '',
+                        subscription_plan_id: ''
+                    },
+                    searchTimeout: null,
+                    cities: [],
+                    districts: [],
+                    roles: [],
+                    subscriptionPlans: [],
+                    weeklySchedule: null,
+                    newSchedule: {
+                        subject_id: '',
+                        teacher_id: '',
+                        class_id: '',
+                        day_of_week: '1',
+                        start_time: '08:00',
+                        end_time: '08:45',
+                        academic_year: '2024-2025',
+                        semester: '1'
+                    },
+
+                    newUser: {
+                        name: '',
+                        email: '',
+                        password: '',
+                        password_confirmation: '',
+                        role_id: '',
+                        phone: ''
+                    },
+                    newSubject: {
+                        name: '',
+                        code: '',
+                        weekly_hours: 4,
+                        description: ''
+                    },
+
+                    // Registration Requests
+                    registrationRequests: {
+                        data: [],
+                        current_page: 1,
+                        last_page: 1,
+                        total: 0,
+                        per_page: 10
+                    },
+                    requestsLoading: false,
+                    requestFilter: 'all',
+                    requestSearch: '',
+                    selectedRequest: null,
+                    showRequestDetails: false,
+                    showRejectRequestModal: false,
+                    rejectReason: ''
+                }
+            },
+            async mounted() {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    this.setAuthToken(token);
+                    await this.loadUser();
+                }
+            },
+            methods: {
+                setAuthToken(token) {
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                },
+                async loadUser() {
+                    try {
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/user');
+                        this.user = response.data;
+                        this.loadSchoolInfo();
+                        this.loadResources();
+                    } catch (error) {
+                        localStorage.removeItem('token');
+                        delete axios.defaults.headers.common['Authorization'];
+                    }
+                },
+                async login() {
+                    try {
+                        if (!this.loginForm.email || !this.loginForm.password) {
+                            this.loginError = 'Email ve şifre alanları zorunludur';
+                            return;
+                        }
+
+                        const response = await axios.post('http://localhost/dersProg/school-schedule-api/public/api/auth/login', this.loginForm);
+                        
+                        localStorage.setItem('token', response.data.access_token);
+                        this.setAuthToken(response.data.access_token);
+                        
+                        this.user = response.data.user;
+                        this.showLogin = false;
+                        this.loginError = '';
+                        this.error = ''; // Genel error'ları da temizle
+                        this.message = 'Başarıyla giriş yaptınız!';
+                        
+                        this.loadSchoolInfo();
+                        this.loadResources();
+                    } catch (error) {
+                        this.loginError = error.response?.data?.message || 'Giriş başarısız. Email ve şifrenizi kontrol ediniz.';
+                    }
+                },
+                quickLogin(email) {
+                    this.loginForm.email = email;
+                    
+                    // Correct passwords for each user
+                    if (email === 'admin@schoolschedule.com') {
+                        this.loginForm.password = 'admin123';
+                    } else if (email === 'mudur@ataturklisesi.edu.tr') {
+                        this.loginForm.password = 'mudur123';
+                    } else if (email === 'ayse.yilmaz@ataturklisesi.edu.tr') {
+                        this.loginForm.password = 'teacher123';
+                    }
+                    
+                    this.login();
+                },
+                logout() {
+                    localStorage.removeItem('token');
+                    delete axios.defaults.headers.common['Authorization'];
+                    this.user = null;
+                    this.schoolInfo = null;
+                    this.schedules = [];
+                    this.users = [];
+                    this.message = 'Çıkış yaptınız';
+                },
+                async loadSchoolInfo() {
+                    // Super admin için school info yükleme
+                    if (this.user?.role?.name === 'super_admin') {
+                        return;
+                    }
+                    
+                    try {
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/my-school');
+                        this.schoolInfo = response.data;
+                    } catch (error) {
+                        this.error = 'Okul bilgileri yüklenemedi';
+                    }
+                },
+                async loadResources() {
+                    try {
+                        // Önce auth gerektirmeyen verileri yükle
+                        await this.loadCitiesAndPlans();
+                        
+                        // Sonra auth gerektiren verileri yükle
+                        const promises = [
+                            axios.get('http://localhost/dersProg/school-schedule-api/public/api/subjects'),
+                            axios.get('http://localhost/dersProg/school-schedule-api/public/api/teachers'),  
+                            axios.get('http://localhost/dersProg/school-schedule-api/public/api/classes'),
+                            axios.get('http://localhost/dersProg/school-schedule-api/public/api/roles')
+                        ];
+                        
+                        const responses = await Promise.all(promises);
+                        
+                        this.subjects = responses[0].data;
+                        this.teachers = responses[1].data;
+                        this.classes = responses[2].data;
+                        this.roles = responses[3].data;
+                        
+                        // Super admin ise schools'u ayrı olarak yükle (pagination ile)
+                        if (this.user?.role?.name === 'super_admin') {
+                            this.loadSchools(1);
+                        }
+                    } catch (error) {
+                        console.error('Kaynaklar yüklenemedi:', error);
+                        this.error = 'Veriler yüklenirken hata oluştu: ' + (error.response?.data?.message || error.message);
+                    }
+                },
+                async loadCitiesAndPlans() {
+                    try {
+                        // Auth gerektirmeyen API'ler
+                        const [citiesResponse, plansResponse] = await Promise.all([
+                            axios.get('http://localhost/dersProg/school-schedule-api/public/api/cities'),
+                            axios.get('http://localhost/dersProg/school-schedule-api/public/api/subscription-plans')
+                        ]);
+                        
+                        this.cities = citiesResponse.data;
+                        this.subscriptionPlans = plansResponse.data;
+                        
+                        console.log('Cities loaded:', this.cities.length);
+                        console.log('Plans loaded:', this.subscriptionPlans.length);
+                    } catch (error) {
+                        console.error('Cities/Plans yüklenemedi:', error);
+                        this.error = 'İl/ilçe verileri yüklenemedi: ' + (error.response?.data?.message || error.message);
+                    }
+                },
+                async loadSchedules() {
+                    try {
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/schedules');
+                        this.schedules = response.data.data || response.data;
+                    } catch (error) {
+                        this.error = 'Ders programları yüklenemedi';
+                    }
+                },
+                async loadUsers() {
+                    try {
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/users');
+                        this.users = response.data.data || response.data;
+                    } catch (error) {
+                        this.error = 'Kullanıcılar yüklenemedi';
+                    }
+                },
+                async loadWeeklySchedule() {
+                    try {
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/schedules/weekly/view');
+                        this.weeklySchedule = response.data.weekly_schedule;
+                    } catch (error) {
+                        this.error = 'Haftalık program yüklenemedi';
+                    }
+                },
+                async createSchedule() {
+                    try {
+                        this.newSchedule.classroom_id = this.newSchedule.class_id; // Geçici
+                        const response = await axios.post('http://localhost/dersProg/school-schedule-api/public/api/schedules', this.newSchedule);
+                        this.message = 'Ders programı oluşturuldu!';
+                        this.loadSchedules();
+                        
+                        // Reset form
+                        this.newSchedule = {
+                            subject_id: '',
+                            teacher_id: '',
+                            class_id: '',
+                            day_of_week: '1',
+                            start_time: '08:00',
+                            end_time: '08:45',
+                            academic_year: '2024-2025',
+                            semester: '1'
+                        };
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Ders programı oluşturulamadı';
+                    }
+                },
+                async generateAutoSchedule() {
+                    try {
+                        const response = await axios.post('http://localhost/dersProg/school-schedule-api/public/api/schedules/generate', {
+                            class_id: 1,
+                            academic_year: '2024-2025',
+                            semester: '1'
+                        });
+                        this.message = `Otomatik program oluşturuldu! ${response.data.generated_count} ders eklendi.`;
+                        this.loadSchedules();
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Otomatik program oluşturulamadı';
+                    }
+                },
+                async deleteSchedule(id) {
+                    if (confirm('Bu ders programını silmek istediğinizden emin misiniz?')) {
+                        try {
+                            await axios.delete(`http://localhost/dersProg/school-schedule-api/public/api/schedules/${id}`);
+                            this.message = 'Ders programı silindi';
+                            this.loadSchedules();
+                        } catch (error) {
+                            this.error = 'Ders programı silinemedi';
+                        }
+                    }
+                },
+                async toggleUserStatus(user) {
+                    try {
+                        await axios.post(`http://localhost/dersProg/school-schedule-api/public/api/users/${user.id}/toggle-status`);
+                        this.message = `${user.name} durumu değiştirildi`;
+                        this.loadUsers();
+                    } catch (error) {
+                        this.error = 'Kullanıcı durumu değiştirilemedi';
+                    }
+                },
+                getDayName(day) {
+                    const days = {
+                        1: 'Pazartesi',
+                        2: 'Salı', 
+                        3: 'Çarşamba',
+                        4: 'Perşembe',
+                        5: 'Cuma',
+                        6: 'Cumartesi',
+                        7: 'Pazar'
+                    };
+                    return days[day] || 'Bilinmiyor';
+                },
+                formatDate(date) {
+                    return new Date(date).toLocaleDateString('tr-TR');
+                },
+                // Schools Management
+                async loadSchools(page = 1) {
+                    this.schoolsLoading = true;
+                    try {
+                        const params = { page };
+                        if (this.schoolSearch) {
+                            params.search = this.schoolSearch;
+                        }
+                        
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/schools', { params });
+                        this.schoolsData = response.data;
+                        this.schools = response.data.data; // Backward compatibility
+                    } catch (error) {
+                        this.error = 'Okullar yüklenemedi: ' + (error.response?.data?.message || error.message);
+                    } finally {
+                        this.schoolsLoading = false;
+                    }
+                },
+                async loadSchoolsPage(page) {
+                    if (page >= 1 && page <= this.schoolsData.last_page) {
+                        await this.loadSchools(page);
+                    }
+                },
+                searchSchools() {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.loadSchools(1);
+                    }, 500);
+                },
+                editSchool(school) {
+                    this.schoolForm = {
+                        id: school.id,
+                        name: school.name,
+                        email: school.email,
+                        phone: school.phone || '',
+                        city_id: school.city_id || '',
+                        district_id: school.district_id || '',
+                        subscription_plan_id: school.subscription_plan_id || ''
+                    };
+                    
+                    // İlçeleri yükle
+                    if (school.city_id) {
+                        this.loadDistricts(school.city_id);
+                    }
+                    
+                    this.showEditSchoolModal = true;
+                },
+                openAddSchoolModal() {
+                    this.resetSchoolForm();
+                    this.error = '';
+                    this.message = '';
+                    this.showAddSchoolModal = true;
+                },
+                closeSchoolModal() {
+                    this.showAddSchoolModal = false;
+                    this.showEditSchoolModal = false;
+                    this.resetSchoolForm();
+                    this.error = ''; // Clear any errors when closing modal
+                },
+                resetSchoolForm() {
+                    this.schoolForm = {
+                        id: null,
+                        name: '',
+                        email: '',
+                        phone: '',
+                        city_id: '',
+                        district_id: '',
+                        subscription_plan_id: ''
+                    };
+                    this.districts = [];
+                },
+                async saveSchool() {
+                    // Form validation
+                    if (!this.schoolForm.name || !this.schoolForm.email || !this.schoolForm.phone || !this.schoolForm.city_id || !this.schoolForm.district_id || !this.schoolForm.subscription_plan_id) {
+                        this.error = 'Lütfen tüm alanları doldurunuz';
+                        return;
+                    }
+                    
+                    // Email validation
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(this.schoolForm.email)) {
+                        this.error = 'Geçerli bir email adresi giriniz';
+                        return;
+                    }
+                    
+                    try {
+                        this.error = ''; // Clear previous errors
+                        
+                        if (this.showEditSchoolModal) {
+                            // Update existing school
+                            await axios.put(`http://localhost/dersProg/school-schedule-api/public/api/schools/${this.schoolForm.id}`, this.schoolForm);
+                            this.message = 'Okul başarıyla güncellendi!';
+                        } else {
+                            // Create new school
+                            await axios.post('http://localhost/dersProg/school-schedule-api/public/api/schools', this.schoolForm);
+                            this.message = 'Okul başarıyla eklendi!';
+                        }
+                        
+                        // Show message first, then close modal and reload
+                        setTimeout(() => {
+                            this.closeSchoolModal();
+                            this.loadSchools(this.schoolsData.current_page || 1);
+                        }, 100);
+                        
+                        // Auto-clear success message after 3 seconds
+                        setTimeout(() => {
+                            this.message = '';
+                        }, 3000);
+                    } catch (error) {
+                        if (error.response?.data?.errors) {
+                            // Laravel validation errors
+                            const errors = Object.values(error.response.data.errors).flat();
+                            this.error = errors.join(', ');
+                        } else {
+                            this.error = error.response?.data?.message || 'İşlem başarısız';
+                        }
+                    }
+                },
+                async toggleSchoolStatus(school) {
+                    try {
+                        await axios.post(`http://localhost/dersProg/school-schedule-api/public/api/schools/${school.id}/toggle-status`);
+                        this.message = `${school.name} durumu değiştirildi`;
+                        school.is_active = !school.is_active; // Update UI immediately
+                    } catch (error) {
+                        this.error = 'Okul durumu değiştirilemedi';
+                    }
+                },
+                // City/District Management
+                async loadDistricts(cityId) {
+                    if (!cityId) {
+                        this.districts = [];
+                        return;
+                    }
+                    
+                    try {
+                        const response = await axios.get(`http://localhost/dersProg/school-schedule-api/public/api/cities/${cityId}/districts`);
+                        this.districts = response.data;
+                    } catch (error) {
+                        this.error = 'İlçeler yüklenemedi';
+                        this.districts = [];
+                    }
+                },
+                onCityChange() {
+                    this.schoolForm.district_id = ''; // Reset district
+                    this.loadDistricts(this.schoolForm.city_id);
+                },
+                // Users Management
+                async createUser() {
+                    try {
+                        const response = await axios.post('http://localhost/dersProg/school-schedule-api/public/api/users', this.newUser);
+                        this.message = 'Kullanıcı başarıyla eklendi!';
+                        this.loadUsers();
+                        
+                        // Reset form
+                        this.newUser = {
+                            name: '',
+                            email: '',
+                            password: '',
+                            password_confirmation: '',
+                            role_id: '',
+                            phone: ''
+                        };
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Kullanıcı eklenemedi';
+                    }
+                },
+                editUser(user) {
+                    // TODO: Implement edit user modal
+                    this.message = `${user.name} düzenleme özelliği yakında eklenecek`;
+                },
+                // Subjects Management  
+                async loadSubjects() {
+                    try {
+                        const response = await axios.get('http://localhost/dersProg/school-schedule-api/public/api/subjects');
+                        this.subjects = response.data;
+                    } catch (error) {
+                        this.error = 'Dersler yüklenemedi';
+                    }
+                },
+                async createSubject() {
+                    try {
+                        const response = await axios.post('http://localhost/dersProg/school-schedule-api/public/api/subjects', this.newSubject);
+                        this.message = 'Ders başarıyla eklendi!';
+                        this.loadSubjects();
+                        
+                        // Reset form
+                        this.newSubject = {
+                            name: '',
+                            code: '',
+                            weekly_hours: 4,
+                            description: ''
+                        };
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Ders eklenemedi';
+                    }
+                },
+                async toggleSubjectStatus(subject) {
+                    try {
+                        await axios.post(`http://localhost/dersProg/school-schedule-api/public/api/subjects/${subject.id}/toggle-status`);
+                        this.message = `${subject.name} durumu değiştirildi`;
+                        this.loadSubjects();
+                    } catch (error) {
+                        this.error = 'Ders durumu değiştirilemedi';
+                    }
+                },
+                editSubject(subject) {
+                    this.message = `${subject.name} düzenleme özelliği yakında eklenecek`;
+                },
+                
+                // Registration Requests Management
+                async loadRegistrationRequests(page = 1) {
+                    try {
+                        this.requestsLoading = true;
+                        const params = new URLSearchParams({
+                            page: page,
+                            per_page: 10
+                        });
+                        
+                        if (this.requestFilter && this.requestFilter !== 'all') {
+                            params.append('status', this.requestFilter);
+                        }
+                        
+                        if (this.requestSearch.trim()) {
+                            params.append('search', this.requestSearch.trim());
+                        }
+                        
+                        const response = await axios.get(`http://localhost/dersProg/school-schedule-api/public/api/registration-requests?${params}`);
+                        this.registrationRequests = response.data;
+                    } catch (error) {
+                        this.error = 'Kayıt talepleri yüklenemedi';
+                        console.error('Registration requests error:', error);
+                    } finally {
+                        this.requestsLoading = false;
+                    }
+                },
+                
+                async approveRequest(request) {
+                    if (!confirm(`${request.school_name} adlı okulun kaydını onaylıyor musunuz?`)) {
+                        return;
+                    }
+                    
+                    try {
+                        await axios.post(`http://localhost/dersProg/school-schedule-api/public/api/registration-requests/${request.id}/approve`);
+                        this.message = `${request.school_name} başarıyla onaylandı!`;
+                        this.loadRegistrationRequests(this.registrationRequests.current_page);
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Onaylama işlemi başarısız';
+                    }
+                },
+                
+                showRejectModal(request) {
+                    this.selectedRequest = request;
+                    this.showRejectRequestModal = true;
+                },
+                
+                async rejectRequest() {
+                    if (!this.rejectReason.trim()) {
+                        this.error = 'Red sebebi belirtmeniz gereklidir';
+                        return;
+                    }
+                    
+                    try {
+                        await axios.post(`http://localhost/dersProg/school-schedule-api/public/api/registration-requests/${this.selectedRequest.id}/reject`, {
+                            reason: this.rejectReason
+                        });
+                        
+                        this.message = `${this.selectedRequest.school_name} kaydı reddedildi`;
+                        this.showRejectRequestModal = false;
+                        this.rejectReason = '';
+                        this.selectedRequest = null;
+                        this.loadRegistrationRequests(this.registrationRequests.current_page);
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Red işlemi başarısız';
+                    }
+                },
+                
+                viewRequestDetails(request) {
+                    this.selectedRequest = request;
+                    this.showRequestDetails = true;
+                },
+                
+                closeRequestDetails() {
+                    this.showRequestDetails = false;
+                    this.selectedRequest = null;
+                },
+                
+                closeRejectModal() {
+                    this.showRejectRequestModal = false;
+                    this.rejectReason = '';
+                    this.selectedRequest = null;
+                },
+                
+                getStatusBadgeClass(status) {
+                    const classes = {
+                        'pending': 'bg-warning',
+                        'verified': 'bg-info', 
+                        'approved': 'bg-success',
+                        'rejected': 'bg-danger'
+                    };
+                    return classes[status] || 'bg-secondary';
+                },
+                
+                getStatusText(status) {
+                    const texts = {
+                        'pending': 'Bekliyor',
+                        'verified': 'Doğrulandı',
+                        'approved': 'Onaylandı', 
+                        'rejected': 'Reddedildi'
+                    };
+                    return texts[status] || status;
+                },
+                
+                formatDate(dateString) {
+                    if (!dateString) return '-';
+                    return new Date(dateString).toLocaleDateString('tr-TR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            },
+            watch: {
+                message(newVal) {
+                    if (newVal) {
+                        setTimeout(() => this.message = '', 3000);
+                    }
+                },
+                error(newVal) {
+                    if (newVal) {
+                        setTimeout(() => this.error = '', 5000);
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

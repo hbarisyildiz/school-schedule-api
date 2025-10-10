@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ders Programı Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        .header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 50px 40px;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            border-color: #3498db;
+        }
+        .card .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .card p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn.secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+        .btn.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        .features {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+        .features h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .features ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .features li {
+            padding: 8px 0;
+            color: #495057;
+        }
+        .features li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .header p {
+                font-size: 1rem;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏫 Ders Programı Sistemi</h1>
+            <p>Okullar için modern, akıllı ders programı yönetimi</p>
+        </div>
+
+        <div class="content">
+            <div class="cards">
+                <div class="card">
+                    <span class="icon">📝</span>
+                    <h3>Okul Kayıt</h3>
+                    <p>Yeni okul olarak sisteme kayıt olun. Email doğrulama ve onay sürecinden geçerek hemen kullanmaya başlayın.</p>
+                    <a href="/school-registration" class="btn success">Kayıt Ol</a>
+                </div>
+
+                <div class="card">
+                    <span class="icon">👨‍💼</span>
+                    <h3>Yönetici Paneli</h3>
+                    <p>Süper admin ve okul yöneticileri için özel panel. Okul yönetimi, ders programları ve tüm sistem ayarları.</p>
+                    <a href="/admin-panel" class="btn">Giriş Yap</a>
+                </div>
+
+                <div class="card">
+                    <span class="icon">📧</span>
+                    <h3>Email Doğrulama</h3>
+                    <p>Kayıt sonrası gönderilen email ile hesabınızı doğrulayın. Token tabanlı güvenli doğrulama sistemi.</p>
+                    <a href="/verify-email" class="btn secondary">Doğrula</a>
+                </div>
+            </div>
+
+            <div class="features">
+                <h3>🚀 Sistem Özellikleri</h3>
+                <ul>
+                    <li>Multi-tenant okul yönetimi</li>
+                    <li>Otomatik ders programı oluşturma</li>
+                    <li>Çakışma kontrolü</li>
+                    <li>Öğretmen ve öğrenci yönetimi</li>
+                    <li>Sınıf ve ders tanımlama</li>
+                    <li>Email bildirim sistemi</li>
+                    <li>Role-based erişim kontrolü</li>
+                    <li>Türkiye il/ilçe veri tabanı</li>
+                    <li>Abonelik planı yönetimi</li>
+                    <li>Responsive web arayüzü</li>
+                    <li>RESTful API altyapısı</li>
+                    <li>Laravel + Vue.js teknolojisi</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid #dee2e6;">
+                <h4 style="color: #6c757d; margin-bottom: 10px;">�️ Geliştirici Test Alanları</h4>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/api-status.php" class="btn secondary" style="font-size: 14px; padding: 8px 15px;">API Status</a>
+                    <a href="/api-test.php" class="btn secondary" style="font-size: 14px; padding: 8px 15px;">API Test</a>
+                    <a href="/test-dashboard.php" class="btn secondary" style="font-size: 14px; padding: 8px 15px;">Dashboard Test</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

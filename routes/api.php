@@ -1,0 +1,108 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+// Kimlik doğrulama rotaları
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+});
+
+// Genel erişim (auth gerektirmeyen)
+Route::get('cities', [\App\Http\Controllers\Api\SchoolController::class, 'getCities']);
+Route::get('cities/{cityId}/districts', [\App\Http\Controllers\Api\SchoolController::class, 'getDistricts']);
+Route::get('subscription-plans', [\App\Http\Controllers\Api\SchoolController::class, 'getSubscriptionPlans']);
+
+// Okul kayıt sistemi (auth gerektirmeyen)
+Route::post('register-school', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'register']);
+Route::post('verify-school-email', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'verifyEmail']);
+Route::get('verify-school-email/{token}', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'verifyEmail']);
+
+// Korumalı rotalar
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // Auth user bilgileri
+    Route::get('user', [AuthController::class, 'user']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    
+    // Süper Admin rotaları
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::apiResource('schools', \App\Http\Controllers\Api\SchoolController::class);
+        Route::post('schools/{id}/subscription', [\App\Http\Controllers\Api\SchoolController::class, 'updateSubscription']);
+        Route::post('schools/{id}/toggle-status', [\App\Http\Controllers\Api\SchoolController::class, 'toggleStatus']);
+        
+        // Okul kayıt talepleri yönetimi
+        Route::get('registration-requests', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'index']);
+        Route::get('registration-requests/{id}', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'show']);
+        Route::delete('registration-requests/{id}', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'destroy']);
+        Route::post('registration-requests/{id}/approve', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'approve']);
+        Route::post('registration-requests/{id}/reject', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'reject']);
+    });
+    
+
+    
+    // Okul bazlı rotalar (kendi okulu)
+    Route::middleware(['school.access'])->group(function () {
+        
+        // Okul bilgileri
+        Route::get('my-school', function () {
+            $user = auth()->user();
+            return response()->json([
+                'school' => $user->school->load('subscriptionPlan'),
+                'statistics' => [
+                    'teachers' => $user->school->current_teachers,
+                    'students' => $user->school->current_students,
+                    'classes' => $user->school->current_classes,
+                ]
+            ]);
+        });
+        
+        // Kullanıcı yönetimi
+        Route::apiResource('users', \App\Http\Controllers\Api\UserController::class);
+        Route::post('users/{id}/toggle-status', [\App\Http\Controllers\Api\UserController::class, 'toggleStatus']);
+        Route::post('users/{id}/password', [\App\Http\Controllers\Api\UserController::class, 'updatePassword']);
+        Route::get('roles', [\App\Http\Controllers\Api\UserController::class, 'getRoles']);
+        Route::post('profile', [\App\Http\Controllers\Api\UserController::class, 'updateProfile']);
+        
+        // Ders programı yönetimi
+        Route::apiResource('schedules', \App\Http\Controllers\Api\ScheduleController::class);
+        Route::get('schedules/weekly/view', [\App\Http\Controllers\Api\ScheduleController::class, 'weeklyView']);
+        Route::get('schedules/teacher/{teacherId?}', [\App\Http\Controllers\Api\ScheduleController::class, 'teacherSchedule']);
+        Route::get('schedules/class/{classId}', [\App\Http\Controllers\Api\ScheduleController::class, 'classSchedule']);
+        Route::post('schedules/generate', [\App\Http\Controllers\Api\ScheduleController::class, 'generateSchedule']);
+        
+        // Ders yönetimi
+        Route::apiResource('subjects', \App\Http\Controllers\Api\SubjectController::class);
+        Route::post('subjects/{id}/toggle-status', [\App\Http\Controllers\Api\SubjectController::class, 'toggleStatus']);
+        Route::get('classes', function () {
+            return response()->json(\App\Models\ClassRoom::where('school_id', auth()->user()->school_id)->get());
+        });
+        Route::get('teachers', function () {
+            return response()->json(\App\Models\User::where('school_id', auth()->user()->school_id)
+                ->whereHas('role', function($query) {
+                    $query->where('name', 'teacher');
+                })->get(['id', 'name', 'email']));
+        });
+        
+    });
+    
+    // Test rotası
+    Route::get('test', function () {
+        return response()->json([
+            'message' => 'API çalışıyor!',
+            'user' => auth()->user()->name,
+            'role' => auth()->user()->role->display_name,
+            'school' => auth()->user()->school->name ?? 'Okul yok',
+            'permissions' => auth()->user()->role->permissions
+        ]);
+    });
+});

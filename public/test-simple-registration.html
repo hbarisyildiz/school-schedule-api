@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basit Kayıt Testi</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Basit Kayıt Testi</h1>
+    <button onclick="testRegistration()">Test Kayıt</button>
+    <div id="result"></div>
+
+    <script>
+        async function testRegistration() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Test yapılıyor...';
+
+            try {
+                const response = await axios.post('http://localhost:8004/api/register-school', {
+                    school_name: 'Test Okulu',
+                    email: 'test@testokulu.com',
+                    password: '123456',
+                    password_confirmation: '123456',
+                    city_id: 1, // Adana
+                    district_id: 1  // Seyhan
+                });
+
+                result.innerHTML = `
+                    <h3>Başarılı!</h3>
+                    <p><strong>Mesaj:</strong> ${response.data.message}</p>
+                    <p><strong>Okul Kodu:</strong> ${response.data.school_code}</p>
+                    <p><strong>Detay:</strong> ${response.data.message_detail}</p>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                result.innerHTML = `
+                    <h3>Hata!</h3>
+                    <p>${error.response?.data?.message || error.message}</p>
+                    <pre>${JSON.stringify(error.response?.data, null, 2)}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

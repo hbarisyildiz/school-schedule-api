@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Doğrulama - Ders Programı Sistemi</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 40px 30px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            color: #721c24;
+            background: #f8d7da;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        .loading {
+            padding: 40px;
+            color: #666;
+        }
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>📧 Email Doğrulama</h1>
+                <p>Kayıt işleminizi tamamlayın</p>
+            </div>
+
+            <div class="content">
+                <!-- Loading -->
+                <div v-if="loading" class="loading">
+                    <div class="icon">⏳</div>
+                    <h3>Email doğrulanıyor...</h3>
+                    <p>Lütfen bekleyiniz</p>
+                </div>
+
+                <!-- Success -->
+                <div v-if="success && !loading">
+                    <div class="icon">✅</div>
+                    <div class="success">
+                        <h3>Email Başarıyla Doğrulandı!</h3>
+                        <p>{{ message }}</p>
+                    </div>
+                    <p>Kayıt talebiniz sistem yöneticilerimiz tarafından incelenecek ve size bilgi verilecektir.</p>
+                    <a href="/school-registration.html" class="btn">Yeni Başvuru</a>
+                </div>
+
+                <!-- Error -->
+                <div v-if="error && !loading">
+                    <div class="icon">❌</div>
+                    <div class="error">
+                        <h3>Doğrulama Başarısız</h3>
+                        <p>{{ error }}</p>
+                    </div>
+                    <p>Lütfen doğrulama linkinin doğru olduğundan emin olun veya yeni bir kayıt talebinde bulunun.</p>
+                    <a href="/school-registration.html" class="btn">Yeni Başvuru</a>
+                </div>
+
+                <!-- No Token -->
+                <div v-if="!token && !loading">
+                    <div class="icon">⚠️</div>
+                    <div class="error">
+                        <h3>Geçersiz Doğrulama Linki</h3>
+                        <p>Doğrulama token'ı bulunamadı.</p>
+                    </div>
+                    <p>Lütfen emailinizdeki doğrulama linkini kullanın.</p>
+                    <a href="/school-registration.html" class="btn">Yeni Başvuru</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    loading: false,
+                    success: false,
+                    error: '',
+                    message: '',
+                    token: null
+                }
+            },
+            async mounted() {
+                // Get token from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                this.token = urlParams.get('token');
+
+                if (this.token) {
+                    await this.verifyEmail();
+                }
+            },
+            methods: {
+                async verifyEmail() {
+                    this.loading = true;
+                    this.error = '';
+
+                    try {
+                        const response = await axios.post('http://localhost:8000/api/verify-school-email', {
+                            token: this.token
+                        });
+
+                        this.success = true;
+                        this.message = response.data.message;
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Email doğrulama işlemi başarısız oldu';
+                        console.error('Email verification error:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
