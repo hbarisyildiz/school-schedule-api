@@ -200,7 +200,7 @@
                     this.success = '';
 
                     try {
-                        const response = await axios.post('http://localhost:8004/api/login', this.form);
+                        const response = await axios.post('http://localhost:8000/api/login', this.form);
                         
                         // Token'ı sakla
                         localStorage.setItem('access_token', response.data.access_token);
