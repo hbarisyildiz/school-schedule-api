@@ -17,9 +17,8 @@ class DatabaseSeeder extends Seeder
             SubscriptionPlanSeeder::class,
             RoleSeeder::class,
             CitySeeder::class,
-            DistrictSeeder::class,
-            SchoolSeeder::class,
-            UserSeeder::class,
+            CompleteDistrictSeeder::class, // Tüm Türkiye ilçeleri
+            UserSeeder::class, // Sadece Super Admin
         ]);
     }
 }

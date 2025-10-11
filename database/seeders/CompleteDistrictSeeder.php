@@ -130,8 +130,8 @@ class CompleteDistrictSeeder extends Seeder
             'Gümüşhane' => [
                 'Gümüşhane Merkez', 'Kelkit', 'Köse', 'Kürtün', 'Şiran', 'Torul'
             ],
-            'Hakkari' => [
-                'Çukurca', 'Hakkari Merkez', 'Şemdinli', 'Yüksekova'
+            'Hakkâri' => [
+                'Çukurca', 'Hakkâri Merkez', 'Şemdinli', 'Yüksekova'
             ],
             'Hatay' => [
                 'Altınözü', 'Antakya', 'Arsuz', 'Belen', 'Defne', 'Dörtyol', 'Erzin', 'Hassa', 
