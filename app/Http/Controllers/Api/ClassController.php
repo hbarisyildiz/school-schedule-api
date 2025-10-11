@@ -45,9 +45,7 @@ class ClassController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'grade' => 'required|string|max:10',
-            'branch' => 'nullable|string|max:5',
-            'capacity' => 'required|integer|min:1|max:100',
-            'classroom' => 'nullable|string|max:50',
+            'branch' => 'required|string|max:5',
             'class_teacher_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string'
         ]);
@@ -57,8 +55,7 @@ class ClassController extends Controller
             'name' => $request->name,
             'grade' => $request->grade,
             'branch' => $request->branch,
-            'capacity' => $request->capacity,
-            'classroom' => $request->classroom,
+            'capacity' => 30, // Default kapasite
             'class_teacher_id' => $request->class_teacher_id,
             'description' => $request->description,
             'is_active' => true
@@ -101,16 +98,13 @@ class ClassController extends Controller
         $request->validate([
             'name' => 'string|max:255',
             'grade' => 'string|max:10',
-            'branch' => 'nullable|string|max:5',
-            'capacity' => 'integer|min:1|max:100',
-            'classroom' => 'nullable|string|max:50',
+            'branch' => 'string|max:5',
             'class_teacher_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string'
         ]);
 
         $class->update($request->only([
-            'name', 'grade', 'branch', 'capacity', 'classroom', 
-            'class_teacher_id', 'description'
+            'name', 'grade', 'branch', 'class_teacher_id', 'description'
         ]));
 
         return response()->json([

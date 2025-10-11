@@ -99,8 +99,6 @@ createApp({
                 name: '',
                 grade: '',
                 branch: '',
-                capacity: 30,
-                classroom: '',
                 class_teacher_id: '',
                 description: ''
             },
@@ -742,8 +740,6 @@ createApp({
                     name: '',
                     grade: '',
                     branch: '',
-                    capacity: 30,
-                    classroom: '',
                     class_teacher_id: '',
                     description: ''
                 };

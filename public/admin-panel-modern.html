@@ -423,8 +423,6 @@
                                 <th>Sınıf</th>
                                 <th>Seviye</th>
                                 <th>Şube</th>
-                                <th>Kapasite</th>
-                                <th>Mevcudi</th>
                                 <th>Sınıf Öğretmeni</th>
                                 <th>Durum</th>
                                 <th>İşlemler</th>
@@ -433,10 +431,8 @@
                         <tbody>
                             <tr v-for="classItem in classes" :key="classItem.id">
                                 <td><strong>{{ classItem.name }}</strong></td>
-                                <td>{{ classItem.grade }}</td>
+                                <td>{{ classItem.grade }}. Sınıf</td>
                                 <td>{{ classItem.branch || '-' }}</td>
-                                <td>{{ classItem.capacity }}</td>
-                                <td>{{ classItem.current_students }}</td>
                                 <td>{{ classItem.class_teacher?.name || '-' }}</td>
                                 <td>
                                     <span :class="['status-badge', classItem.is_active ? 'status-active' : 'status-inactive']">
@@ -761,12 +757,6 @@
                 <button @click="addClassModal = false" class="close-btn">×</button>
                 <h2>🏛️ Yeni Sınıf Ekle</h2>
                 
-                <div class="form-group">
-                    <label>Sınıf Adı: *</label>
-                    <input v-model="newClass.name" type="text" placeholder="Örn: 9-A, 10-B" required>
-                    <small style="color: #7f8c8d; font-size: 12px;">Örnek: 9-A, 10-B, 11-C</small>
-                </div>
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Seviye: *</label>
@@ -780,27 +770,21 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Şube:</label>
-                        <input v-model="newClass.branch" type="text" placeholder="A, B, C" maxlength="5">
+                        <label>Şube: *</label>
+                        <input v-model="newClass.branch" type="text" placeholder="A, B, C, D" maxlength="5" required>
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Kapasite: *</label>
-                        <input v-model.number="newClass.capacity" type="number" min="1" max="100" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Derslik:</label>
-                        <input v-model="newClass.classroom" type="text" placeholder="Örn: 301, A-Blok">
-                    </div>
+                <div class="form-group">
+                    <label>Sınıf Adı: *</label>
+                    <input v-model="newClass.name" type="text" placeholder="Örn: 9-A, 10-B" required>
+                    <small style="color: #7f8c8d; font-size: 12px;">Otomatik: Seviye + Şube (Örn: 9-A)</small>
                 </div>
                 
                 <div class="form-group">
                     <label>Sınıf Öğretmeni:</label>
                     <select v-model="newClass.class_teacher_id">
-                        <option value="">Seçiniz</option>
+                        <option value="">Seçiniz (İsteğe Bağlı)</option>
                         <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
                             {{ teacher.name }}
                         </option>
@@ -809,7 +793,7 @@
                 
                 <div class="form-group">
                     <label>Açıklama:</label>
-                    <textarea v-model="newClass.description" rows="3" placeholder="Sınıf hakkında notlar..."></textarea>
+                    <textarea v-model="newClass.description" rows="3" placeholder="Sınıf hakkında notlar (isteğe bağlı)..."></textarea>
                 </div>
                 
                 <div class="modal-footer">
@@ -824,11 +808,6 @@
             <div class="modal">
                 <button @click="editClassModal = false" class="close-btn">×</button>
                 <h2>🏛️ Sınıf Düzenle</h2>
-                
-                <div class="form-group">
-                    <label>Sınıf Adı:</label>
-                    <input v-model="editClassData.name" type="text">
-                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
@@ -847,16 +826,9 @@
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Kapasite:</label>
-                        <input v-model.number="editClassData.capacity" type="number" min="1" max="100">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Derslik:</label>
-                        <input v-model="editClassData.classroom" type="text">
-                    </div>
+                <div class="form-group">
+                    <label>Sınıf Adı:</label>
+                    <input v-model="editClassData.name" type="text">
                 </div>
                 
                 <div class="form-group">
