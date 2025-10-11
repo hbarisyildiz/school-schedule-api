@@ -8,6 +8,8 @@ use App\Models\Schedule;
 use App\Models\Subject;
 use App\Models\ClassRoom;
 use App\Models\User;
+use App\Models\ScheduleChangeLog;
+use App\Services\ScheduleConflictService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,35 +65,59 @@ class ScheduleController extends Controller
     public function store(StoreScheduleRequest $request)
     {
         try {
-            // Çakışma kontrolü
-            $conflicts = $this->checkConflicts($request->validated());
-            if (!empty($conflicts)) {
-                return $this->errorResponse(
-                    'Ders programında çakışma var',
-                    422,
-                    ['conflicts' => $conflicts]
-                );
-            }
-
-            $schedule = Schedule::create([
+            $schedule = new Schedule([
                 'school_id' => auth()->user()->school_id,
                 'subject_id' => $request->subject_id,
                 'teacher_id' => $request->teacher_id,
                 'class_id' => $request->class_id,
-                'classroom_id' => $request->classroom_id,
+                'classroom' => $request->classroom,
                 'day_of_week' => $request->day_of_week,
+                'period' => $request->period,
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
-                'semester' => $request->semester,
-                'academic_year' => $request->academic_year,
-                'is_active' => true,
-                'created_by' => auth()->id()
+                'start_date' => $request->start_date ?? now(),
+                'end_date' => $request->end_date,
+                'notes' => $request->notes,
+                'is_active' => true
             ]);
-
-            return $this->createdResponse(
-                $schedule->load(['subject', 'teacher', 'classroom']),
-                'Ders programı başarıyla oluşturuldu'
+            
+            // Çakışma kontrolü - Yeni service kullan
+            $conflictService = new ScheduleConflictService();
+            $conflicts = $conflictService->checkConflicts($schedule);
+            
+            // Error severity çakışmalar varsa izin verme
+            $errors = $conflicts->where('severity', 'error');
+            if ($errors->isNotEmpty()) {
+                return response()->json([
+                    'message' => 'Ders programı oluşturulamadı - Çakışma var',
+                    'conflicts' => $errors->values()->all()
+                ], 422);
+            }
+            
+            // Warning'ler varsa uyar ama devam et
+            $warnings = $conflicts->where('severity', 'warning');
+            
+            // Programı kaydet
+            $schedule->save();
+            
+            // Çakışmaları kaydet (varsa)
+            if ($conflicts->isNotEmpty()) {
+                $conflictService->saveConflicts($schedule, $conflicts);
+            }
+            
+            // Değişiklik logla
+            ScheduleChangeLog::logChange(
+                $schedule->id,
+                'created',
+                null,
+                $schedule->toArray()
             );
+
+            return response()->json([
+                'message' => 'Ders programı başarıyla oluşturuldu',
+                'schedule' => $schedule->load(['subject', 'teacher', 'class']),
+                'warnings' => $warnings->isNotEmpty() ? $warnings->values()->all() : null
+            ], 201);
 
         } catch (\Exception $e) {
             return $this->handleException($e);

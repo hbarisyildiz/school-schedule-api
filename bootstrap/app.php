@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'school.access' => \App\Http\Middleware\EnsureSchoolAccess::class,
             'role' => \App\Http\Middleware\CheckRole::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'log.activity' => \App\Http\Middleware\LogActivity::class,
+        ]);
+        
+        // Global middleware - her API isteğinde çalışsın
+        $middleware->api(append: [
+            \App\Http\Middleware\LogActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
