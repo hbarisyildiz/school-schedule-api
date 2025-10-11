@@ -135,6 +135,12 @@
                     👥 Kullanıcılar
                 </button>
                 <button 
+                    @click="changeTab('classes')" 
+                    :class="['btn', {active: activeTab === 'classes'}]"
+                >
+                    🏛️ Sınıflar
+                </button>
+                <button 
                     @click="changeTab('subjects')" 
                     :class="['btn', {active: activeTab === 'subjects'}]"
                 >
@@ -372,6 +378,70 @@
                                 <td class="actions">
                                     <button @click="editUser(user)" class="btn btn-primary btn-small">Düzenle</button>
                                     <button @click="deleteUser(user)" class="btn btn-danger btn-small">Sil</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ========== CLASSES TAB ========== -->
+            <div v-if="activeTab === 'classes'" class="card">
+                <div class="flex-between mb-20">
+                    <h2>🏛️ Sınıflar</h2>
+                    <div class="flex gap-10">
+                        <input 
+                            v-model="searchQuery" 
+                            type="text" 
+                            placeholder="Ara..." 
+                            style="width: 250px;"
+                        >
+                        <button @click="openAddClassModal" class="btn btn-success">+ Sınıf Ekle</button>
+                    </div>
+                </div>
+                
+                <div v-if="classesLoading" class="text-center">
+                    <div class="spinner"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+                
+                <div v-else-if="classes.length === 0" class="empty-state">
+                    <div class="empty-state-icon">🏛️</div>
+                    <h3>Sınıf Bulunamadı</h3>
+                    <p>Henüz tanımlı sınıf bulunmamaktadır.</p>
+                    <button @click="openAddClassModal" class="btn btn-success">İlk Sınıfı Ekle</button>
+                </div>
+                
+                <div v-else class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sınıf</th>
+                                <th>Seviye</th>
+                                <th>Şube</th>
+                                <th>Kapasite</th>
+                                <th>Mevcudi</th>
+                                <th>Sınıf Öğretmeni</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="classItem in classes" :key="classItem.id">
+                                <td><strong>{{ classItem.name }}</strong></td>
+                                <td>{{ classItem.grade }}</td>
+                                <td>{{ classItem.branch || '-' }}</td>
+                                <td>{{ classItem.capacity }}</td>
+                                <td>{{ classItem.current_students }}</td>
+                                <td>{{ classItem.class_teacher?.name || '-' }}</td>
+                                <td>
+                                    <span :class="['status-badge', classItem.is_active ? 'status-active' : 'status-inactive']">
+                                        {{ classItem.is_active ? 'Aktif' : 'Pasif' }}
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <button @click="editClass(classItem)" class="btn btn-primary btn-small">Düzenle</button>
+                                    <button @click="deleteClass(classItem)" class="btn btn-danger btn-small">Sil</button>
                                 </td>
                             </tr>
                         </tbody>

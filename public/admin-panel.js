@@ -93,6 +93,19 @@ createApp({
             // Classes
             classes: [],
             classesLoading: false,
+            addClassModal: false,
+            editClassModal: false,
+            newClass: {
+                name: '',
+                grade: '',
+                branch: '',
+                capacity: 30,
+                classroom: '',
+                class_teacher_id: '',
+                description: ''
+            },
+            editClassData: {},
+            teachers: [],
             
             // Schedules
             schedules: [],
@@ -677,6 +690,9 @@ createApp({
                 case 'users':
                     this.loadUsers();
                     break;
+                case 'classes':
+                    this.loadClasses();
+                    break;
                 case 'subjects':
                     this.loadSubjects();
                     break;
@@ -686,6 +702,85 @@ createApp({
                 case 'dashboard':
                     this.loadDashboard();
                     break;
+            }
+        },
+        
+        // ===== Classes Management =====
+        async loadClasses() {
+            this.classesLoading = true;
+            try {
+                const response = await axios.get(`${API_BASE_URL}/classes`);
+                this.classes = response.data.data || response.data;
+            } catch (error) {
+                this.error = 'Sınıflar yüklenemedi';
+                console.error('Classes load error:', error);
+            } finally {
+                this.classesLoading = false;
+            }
+        },
+        
+        async openAddClassModal() {
+            await this.loadTeachers();
+            this.addClassModal = true;
+        },
+        
+        async loadTeachers() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/teachers`);
+                this.teachers = response.data;
+            } catch (error) {
+                console.error('Teachers load error:', error);
+            }
+        },
+        
+        async addClass() {
+            try {
+                await axios.post(`${API_BASE_URL}/classes`, this.newClass);
+                this.message = 'Sınıf başarıyla eklendi';
+                this.addClassModal = false;
+                this.newClass = {
+                    name: '',
+                    grade: '',
+                    branch: '',
+                    capacity: 30,
+                    classroom: '',
+                    class_teacher_id: '',
+                    description: ''
+                };
+                this.loadClasses();
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Sınıf eklenemedi';
+            }
+        },
+        
+        editClass(classItem) {
+            this.editClassData = { ...classItem };
+            this.loadTeachers();
+            this.editClassModal = true;
+        },
+        
+        async updateClass() {
+            try {
+                await axios.put(`${API_BASE_URL}/classes/${this.editClassData.id}`, this.editClassData);
+                this.message = 'Sınıf başarıyla güncellendi';
+                this.editClassModal = false;
+                this.loadClasses();
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Sınıf güncellenemedi';
+            }
+        },
+        
+        async deleteClass(classItem) {
+            if (!confirm(`${classItem.name} sınıfını silmek istediğinizden emin misiniz?`)) {
+                return;
+            }
+            
+            try {
+                await axios.delete(`${API_BASE_URL}/classes/${classItem.id}`);
+                this.message = 'Sınıf başarıyla silindi';
+                this.loadClasses();
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Sınıf silinemedi';
             }
         },
         

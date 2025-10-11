@@ -78,6 +78,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('users/{id}/toggle-status', [\App\Http\Controllers\Api\UserController::class, 'toggleStatus']);
         Route::post('users/{id}/password', [\App\Http\Controllers\Api\UserController::class, 'updatePassword']);
         Route::get('roles', [\App\Http\Controllers\Api\UserController::class, 'getRoles']);
+        
+        // Sınıf yönetimi
+        Route::apiResource('classes', \App\Http\Controllers\Api\ClassController::class);
+        Route::post('classes/{id}/toggle-status', [\App\Http\Controllers\Api\ClassController::class, 'toggleStatus']);
+        Route::get('teachers', [\App\Http\Controllers\Api\ClassController::class, 'getTeachers']);
         Route::post('profile', [\App\Http\Controllers\Api\UserController::class, 'updateProfile']);
         
         // Ders programı yönetimi
