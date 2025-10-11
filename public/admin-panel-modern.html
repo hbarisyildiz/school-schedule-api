@@ -755,6 +755,132 @@
             </div>
         </div>
         
+        <!-- Add Class Modal -->
+        <div v-if="addClassModal" class="modal-overlay" @click.self="addClassModal = false">
+            <div class="modal">
+                <button @click="addClassModal = false" class="close-btn">×</button>
+                <h2>🏛️ Yeni Sınıf Ekle</h2>
+                
+                <div class="form-group">
+                    <label>Sınıf Adı: *</label>
+                    <input v-model="newClass.name" type="text" placeholder="Örn: 9-A, 10-B" required>
+                    <small style="color: #7f8c8d; font-size: 12px;">Örnek: 9-A, 10-B, 11-C</small>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Seviye: *</label>
+                        <select v-model="newClass.grade" required>
+                            <option value="">Seçiniz</option>
+                            <option value="9">9. Sınıf</option>
+                            <option value="10">10. Sınıf</option>
+                            <option value="11">11. Sınıf</option>
+                            <option value="12">12. Sınıf</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Şube:</label>
+                        <input v-model="newClass.branch" type="text" placeholder="A, B, C" maxlength="5">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Kapasite: *</label>
+                        <input v-model.number="newClass.capacity" type="number" min="1" max="100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Derslik:</label>
+                        <input v-model="newClass.classroom" type="text" placeholder="Örn: 301, A-Blok">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Sınıf Öğretmeni:</label>
+                    <select v-model="newClass.class_teacher_id">
+                        <option value="">Seçiniz</option>
+                        <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+                            {{ teacher.name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Açıklama:</label>
+                    <textarea v-model="newClass.description" rows="3" placeholder="Sınıf hakkında notlar..."></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="addClassModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="addClass" class="btn btn-success">Sınıf Oluştur</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Class Modal -->
+        <div v-if="editClassModal" class="modal-overlay" @click.self="editClassModal = false">
+            <div class="modal">
+                <button @click="editClassModal = false" class="close-btn">×</button>
+                <h2>🏛️ Sınıf Düzenle</h2>
+                
+                <div class="form-group">
+                    <label>Sınıf Adı:</label>
+                    <input v-model="editClassData.name" type="text">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Seviye:</label>
+                        <select v-model="editClassData.grade">
+                            <option value="9">9. Sınıf</option>
+                            <option value="10">10. Sınıf</option>
+                            <option value="11">11. Sınıf</option>
+                            <option value="12">12. Sınıf</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Şube:</label>
+                        <input v-model="editClassData.branch" type="text" maxlength="5">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Kapasite:</label>
+                        <input v-model.number="editClassData.capacity" type="number" min="1" max="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Derslik:</label>
+                        <input v-model="editClassData.classroom" type="text">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Sınıf Öğretmeni:</label>
+                    <select v-model="editClassData.class_teacher_id">
+                        <option value="">Seçiniz</option>
+                        <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+                            {{ teacher.name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Açıklama:</label>
+                    <textarea v-model="editClassData.description" rows="3"></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="editClassModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="updateClass" class="btn btn-success">Güncelle</button>
+                </div>
+            </div>
+        </div>
+        
         <!-- Add Subject Modal -->
         <div v-if="addSubjectModal" class="modal-overlay" @click.self="addSubjectModal = false">
             <div class="modal">
