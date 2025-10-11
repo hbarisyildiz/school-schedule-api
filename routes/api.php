@@ -34,6 +34,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [AuthController::class, 'user']);
     Route::post('logout', [AuthController::class, 'logout']);
     
+    // Dashboard & Notifications
+    Route::get('dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+    Route::get('dashboard/activities', [\App\Http\Controllers\Api\DashboardController::class, 'recentActivities']);
+    Route::get('notifications', [\App\Http\Controllers\Api\DashboardController::class, 'notifications']);
+    Route::post('notifications/{id}/read', [\App\Http\Controllers\Api\DashboardController::class, 'markNotificationAsRead']);
+    Route::post('notifications/read-all', [\App\Http\Controllers\Api\DashboardController::class, 'markAllNotificationsAsRead']);
+    
     // Süper Admin rotaları
     Route::middleware(['role:super_admin'])->group(function () {
         Route::apiResource('schools', \App\Http\Controllers\Api\SchoolController::class);

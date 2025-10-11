@@ -215,17 +215,47 @@ createApp({
         // ===== Dashboard =====
         async loadDashboard() {
             try {
-                // Load statistics
-                const [schoolsRes, usersRes] = await Promise.all([
-                    axios.get(`${API_BASE_URL}/schools`),
-                    axios.get(`${API_BASE_URL}/users`)
-                ]);
+                // Load real statistics from API
+                const response = await axios.get(`${API_BASE_URL}/dashboard/stats`);
                 
-                this.stats.totalSchools = schoolsRes.data.total || schoolsRes.data.length;
-                this.stats.totalUsers = usersRes.data.total || usersRes.data.length;
+                const statsData = response.data.stats;
+                
+                // Super Admin stats
+                if (response.data.user_type === 'super_admin') {
+                    this.stats = {
+                        totalSchools: statsData.total_schools || 0,
+                        activeSchools: statsData.active_schools || 0,
+                        totalUsers: statsData.total_users || 0,
+                        totalTeachers: statsData.total_teachers || 0,
+                        totalStudents: statsData.total_students || 0,
+                        totalClasses: statsData.total_classes || 0,
+                        totalSubjects: statsData.total_subjects || 0,
+                        totalSchedules: statsData.total_schedules || 0,
+                        activeSubscriptions: statsData.active_subscriptions || 0,
+                        expiredSubscriptions: statsData.expired_subscriptions || 0,
+                        trialEndingSoon: statsData.trial_ending_soon || 0,
+                        schoolsThisMonth: statsData.schools_this_month || 0,
+                        activeToday: statsData.active_today || 0
+                    };
+                } else {
+                    // School Admin stats
+                    this.stats = {
+                        schoolName: statsData.school_name,
+                        totalTeachers: statsData.total_teachers || 0,
+                        totalStudents: statsData.total_students || 0,
+                        totalClasses: statsData.total_classes || 0,
+                        totalSubjects: statsData.total_subjects || 0,
+                        totalSchedules: statsData.total_schedules || 0,
+                        subscriptionPlan: statsData.subscription_plan,
+                        subscriptionEndsAt: statsData.subscription_ends_at,
+                        daysLeft: statsData.days_left,
+                        unreadNotifications: statsData.unread_notifications || 0
+                    };
+                }
                 
             } catch (error) {
                 console.error('Dashboard load error:', error);
+                this.error = 'İstatistikler yüklenemedi';
             }
         },
         

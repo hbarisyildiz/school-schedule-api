@@ -152,29 +152,105 @@
             <div v-if="activeTab === 'dashboard'" class="card">
                 <h2>📊 Genel Bakış</h2>
                 
-                <div class="stats-grid">
-                    <div class="stat-card">
+                <!-- Super Admin Dashboard -->
+                <div v-if="user.role?.name === 'super_admin'" class="stats-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
                         <h3>Toplam Okullar</h3>
-                        <div class="number">{{ stats.totalSchools }}</div>
-                        <div class="label">Kayıtlı okul sayısı</div>
+                        <div class="number">{{ stats.totalSchools || 0 }}</div>
+                        <div class="label">{{ stats.activeSchools || 0 }} aktif</div>
                     </div>
                     
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
                         <h3>Toplam Kullanıcılar</h3>
-                        <div class="number">{{ stats.totalUsers }}</div>
-                        <div class="label">Aktif kullanıcı sayısı</div>
+                        <div class="number">{{ stats.totalUsers || 0 }}</div>
+                        <div class="label">{{ stats.activeToday || 0 }} bugün aktif</div>
                     </div>
                     
-                    <div class="stat-card">
-                        <h3>Toplam Sınıflar</h3>
-                        <div class="number">{{ stats.totalClasses }}</div>
-                        <div class="label">Kayıtlı sınıf sayısı</div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                        <h3>Öğretmenler</h3>
+                        <div class="number">{{ stats.totalTeachers || 0 }}</div>
+                        <div class="label">Sistemde kayıtlı</div>
                     </div>
                     
-                    <div class="stat-card">
-                        <h3>Toplam Dersler</h3>
-                        <div class="number">{{ stats.totalSubjects }}</div>
-                        <div class="label">Tanımlı ders sayısı</div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                        <h3>Öğrenciler</h3>
+                        <div class="number">{{ stats.totalStudents || 0 }}</div>
+                        <div class="label">Sistemde kayıtlı</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                        <h3>Sınıflar</h3>
+                        <div class="number">{{ stats.totalClasses || 0 }}</div>
+                        <div class="label">Toplam sınıf</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
+                        <h3>Dersler</h3>
+                        <div class="number">{{ stats.totalSubjects || 0 }}</div>
+                        <div class="label">Tanımlı ders</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #d35400, #e67e22);">
+                        <h3>Ders Programları</h3>
+                        <div class="number">{{ stats.totalSchedules || 0 }}</div>
+                        <div class="label">Oluşturulmuş program</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                        <h3>Bu Ay</h3>
+                        <div class="number">{{ stats.schoolsThisMonth || 0 }}</div>
+                        <div class="label">Yeni okul kaydı</div>
+                    </div>
+                </div>
+                
+                <!-- School Admin Dashboard -->
+                <div v-else class="stats-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                        <h3>Okul Adı</h3>
+                        <div class="number" style="font-size: 20px;">{{ stats.schoolName || '-' }}</div>
+                        <div class="label">Abonelik: {{ stats.subscriptionPlan || 'Basic' }}</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                        <h3>Öğretmenler</h3>
+                        <div class="number">{{ stats.totalTeachers || 0 }}</div>
+                        <div class="label">Kayıtlı öğretmen</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                        <h3>Öğrenciler</h3>
+                        <div class="number">{{ stats.totalStudents || 0 }}</div>
+                        <div class="label">Kayıtlı öğrenci</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                        <h3>Sınıflar</h3>
+                        <div class="number">{{ stats.totalClasses || 0 }}</div>
+                        <div class="label">{{ stats.activeClasses || 0 }} aktif</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
+                        <h3>Dersler</h3>
+                        <div class="number">{{ stats.totalSubjects || 0 }}</div>
+                        <div class="label">Tanımlı ders</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                        <h3>Ders Programları</h3>
+                        <div class="number">{{ stats.totalSchedules || 0 }}</div>
+                        <div class="label">{{ stats.activeSchedules || 0 }} aktif</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #d35400, #e67e22);">
+                        <h3>Abonelik Süresi</h3>
+                        <div class="number">{{ stats.daysLeft || 0 }}</div>
+                        <div class="label">{{ stats.subscriptionEndsAt || '-' }} tarihine kadar</div>
+                    </div>
+                    
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                        <h3>Bildirimler</h3>
+                        <div class="number">{{ stats.unreadNotifications || 0 }}</div>
+                        <div class="label">Okunmamış bildirim</div>
                     </div>
                 </div>
             </div>
