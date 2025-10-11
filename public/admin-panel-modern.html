@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏫 Okul Yönetim Sistemi - Admin Panel</title>
+    
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="admin-panel.css">
+</head>
+<body>
+    <div id="app" class="app">
+        
+        <!-- ========== LOGIN SCREEN ========== -->
+        <div v-if="showLogin && !user" class="login-overlay">
+            <div class="login-container">
+                <div class="login-header">
+                    <div class="login-icon">🏫</div>
+                    <h1>Okul Yönetim Sistemi</h1>
+                    <p>Hesabınıza giriş yapın</p>
+                </div>
+                
+                <form @submit.prevent="login" class="login-form">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-icon">📧</div>
+                            <input 
+                                type="email" 
+                                v-model="loginForm.email" 
+                                placeholder="E-posta adresiniz"
+                                required
+                                class="form-input"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-icon">🔒</div>
+                            <input 
+                                type="password" 
+                                v-model="loginForm.password" 
+                                placeholder="Şifreniz"
+                                required
+                                class="form-input"
+                            >
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="login-btn" :disabled="isLoggingIn">
+                        <span v-if="isLoggingIn">Giriş yapılıyor...</span>
+                        <span v-else>Giriş Yap</span>
+                    </button>
+                    
+                    <div v-if="loginError" class="error-message">
+                        {{ loginError }}
+                    </div>
+                </form>
+                
+                <!-- Quick Login Section -->
+                <div class="quick-login">
+                    <div class="divider">
+                        <span>Hızlı Test Girişi</span>
+                    </div>
+                    
+                    <div class="quick-login-buttons">
+                        <button @click="quickLogin('admin@schoolschedule.com')" class="quick-btn admin">
+                            <div class="quick-btn-icon">👑</div>
+                            <div class="quick-btn-text">
+                                <div class="quick-btn-title">Super Admin</div>
+                                <div class="quick-btn-subtitle">admin123</div>
+                            </div>
+                        </button>
+                        
+                        <button @click="quickLogin('mudur@ataturklisesi.edu.tr')" class="quick-btn manager">
+                            <div class="quick-btn-icon">🎓</div>
+                            <div class="quick-btn-text">
+                                <div class="quick-btn-title">Okul Müdürü</div>
+                                <div class="quick-btn-subtitle">mudur123</div>
+                            </div>
+                        </button>
+                        
+                        <button @click="quickLogin('ayse.yilmaz@ataturklisesi.edu.tr')" class="quick-btn teacher">
+                            <div class="quick-btn-icon">👩‍🏫</div>
+                            <div class="quick-btn-text">
+                                <div class="quick-btn-title">Öğretmen</div>
+                                <div class="quick-btn-subtitle">teacher123</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ========== MAIN CONTENT ========== -->
+        <div v-if="!showLogin && user">
+            
+            <!-- Header -->
+            <div class="header">
+                <div class="flex-between">
+                    <div>
+                        <h1>🏫 Hoş Geldiniz, {{ user.name }}</h1>
+                        <p>{{ user.role?.display_name }} - {{ user.school?.name || 'Sistem Yöneticisi' }}</p>
+                    </div>
+                    <button @click="logout" class="btn btn-danger">Çıkış Yap</button>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            <div v-if="message" class="success">{{ message }}</div>
+            <div v-if="error" class="error">{{ error }}</div>
+            
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button 
+                    @click="changeTab('dashboard')" 
+                    :class="['btn', {active: activeTab === 'dashboard'}]"
+                >
+                    📊 Dashboard
+                </button>
+                <button 
+                    @click="changeTab('schools')" 
+                    :class="['btn', {active: activeTab === 'schools'}]"
+                >
+                    🏫 Okullar
+                </button>
+                <button 
+                    @click="changeTab('users')" 
+                    :class="['btn', {active: activeTab === 'users'}]"
+                >
+                    👥 Kullanıcılar
+                </button>
+                <button 
+                    @click="changeTab('subjects')" 
+                    :class="['btn', {active: activeTab === 'subjects'}]"
+                >
+                    📚 Dersler
+                </button>
+                <button 
+                    @click="changeTab('schedules')" 
+                    :class="['btn', {active: activeTab === 'schedules'}]"
+                >
+                    📅 Ders Programları
+                </button>
+            </div>
+            
+            <!-- ========== DASHBOARD TAB ========== -->
+            <div v-if="activeTab === 'dashboard'" class="card">
+                <h2>📊 Genel Bakış</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Toplam Okullar</h3>
+                        <div class="number">{{ stats.totalSchools }}</div>
+                        <div class="label">Kayıtlı okul sayısı</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Toplam Kullanıcılar</h3>
+                        <div class="number">{{ stats.totalUsers }}</div>
+                        <div class="label">Aktif kullanıcı sayısı</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Toplam Sınıflar</h3>
+                        <div class="number">{{ stats.totalClasses }}</div>
+                        <div class="label">Kayıtlı sınıf sayısı</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>Toplam Dersler</h3>
+                        <div class="number">{{ stats.totalSubjects }}</div>
+                        <div class="label">Tanımlı ders sayısı</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ========== SCHOOLS TAB ========== -->
+            <div v-if="activeTab === 'schools'" class="card">
+                <div class="flex-between mb-20">
+                    <h2>🏫 Okullar</h2>
+                    <div class="flex gap-10">
+                        <input 
+                            v-model="searchQuery" 
+                            type="text" 
+                            placeholder="Ara..." 
+                            style="width: 250px;"
+                        >
+                        <select v-model="filterStatus" style="width: 150px;">
+                            <option value="all">Tümü</option>
+                            <option value="active">Aktif</option>
+                            <option value="expired">Süresi Dolmuş</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div v-if="schoolsLoading" class="text-center">
+                    <div class="spinner"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+                
+                <div v-else-if="filteredSchools.length === 0" class="empty-state">
+                    <div class="empty-state-icon">🏫</div>
+                    <h3>Okul Bulunamadı</h3>
+                    <p>Henüz kayıtlı okul bulunmamaktadır.</p>
+                </div>
+                
+                <div v-else class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Okul Adı</th>
+                                <th>Email</th>
+                                <th>İl/İlçe</th>
+                                <th>Abonelik</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="school in filteredSchools" :key="school.id">
+                                <td>{{ school.name }}</td>
+                                <td>{{ school.email }}</td>
+                                <td>{{ school.city?.name }} / {{ school.district?.name }}</td>
+                                <td>{{ school.subscription_plan?.name || 'Basic' }}</td>
+                                <td>
+                                    <span :class="['status-badge', school.is_active ? 'status-active' : 'status-inactive']">
+                                        {{ school.is_active ? 'Aktif' : 'Pasif' }}
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <button @click="viewSchool(school)" class="btn btn-info btn-small">Detay</button>
+                                    <button @click="editSchool(school)" class="btn btn-primary btn-small">Düzenle</button>
+                                    <button @click="deleteSchool(school)" class="btn btn-danger btn-small">Sil</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ========== USERS TAB ========== -->
+            <div v-if="activeTab === 'users'" class="card">
+                <div class="flex-between mb-20">
+                    <h2>👥 Kullanıcılar</h2>
+                    <div class="flex gap-10">
+                        <input 
+                            v-model="searchQuery" 
+                            type="text" 
+                            placeholder="Ara..." 
+                            style="width: 250px;"
+                        >
+                        <button @click="openAddUserModal" class="btn btn-success">+ Kullanıcı Ekle</button>
+                    </div>
+                </div>
+                
+                <div v-if="usersLoading" class="text-center">
+                    <div class="spinner"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+                
+                <div v-else-if="filteredUsers.length === 0" class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <h3>Kullanıcı Bulunamadı</h3>
+                    <p>Henüz kayıtlı kullanıcı bulunmamaktadır.</p>
+                </div>
+                
+                <div v-else class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ad Soyad</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Okul</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="user in filteredUsers" :key="user.id">
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.role?.display_name }}</td>
+                                <td>{{ user.school?.name || '-' }}</td>
+                                <td>
+                                    <span :class="['status-badge', user.is_active ? 'status-active' : 'status-inactive']">
+                                        {{ user.is_active ? 'Aktif' : 'Pasif' }}
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <button @click="editUser(user)" class="btn btn-primary btn-small">Düzenle</button>
+                                    <button @click="deleteUser(user)" class="btn btn-danger btn-small">Sil</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ========== SUBJECTS TAB ========== -->
+            <div v-if="activeTab === 'subjects'" class="card">
+                <div class="flex-between mb-20">
+                    <h2>📚 Dersler</h2>
+                    <button @click="openAddSubjectModal" class="btn btn-success">+ Ders Ekle</button>
+                </div>
+                
+                <div v-if="subjectsLoading" class="text-center">
+                    <div class="spinner"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+                
+                <div v-else-if="subjects.length === 0" class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <h3>Ders Bulunamadı</h3>
+                    <p>Henüz tanımlı ders bulunmamaktadır.</p>
+                </div>
+                
+                <div v-else class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ders Adı</th>
+                                <th>Kod</th>
+                                <th>Haftalık Saat</th>
+                                <th>Açıklama</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="subject in subjects" :key="subject.id">
+                                <td>{{ subject.name }}</td>
+                                <td>{{ subject.code }}</td>
+                                <td>{{ subject.weekly_hours }}</td>
+                                <td>{{ subject.description || '-' }}</td>
+                                <td class="actions">
+                                    <button @click="editSubject(subject)" class="btn btn-primary btn-small">Düzenle</button>
+                                    <button @click="deleteSubject(subject)" class="btn btn-danger btn-small">Sil</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ========== SCHEDULES TAB ========== -->
+            <div v-if="activeTab === 'schedules'" class="card">
+                <h2>📅 Ders Programları</h2>
+                
+                <div v-if="schedulesLoading" class="text-center">
+                    <div class="spinner"></div>
+                    <p>Yükleniyor...</p>
+                </div>
+                
+                <div v-else-if="schedules.length === 0" class="empty-state">
+                    <div class="empty-state-icon">📅</div>
+                    <h3>Ders Programı Bulunamadı</h3>
+                    <p>Henüz oluşturulmuş ders programı bulunmamaktadır.</p>
+                </div>
+                
+                <div v-else class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ders</th>
+                                <th>Öğretmen</th>
+                                <th>Sınıf</th>
+                                <th>Gün</th>
+                                <th>Saat</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="schedule in schedules" :key="schedule.id">
+                                <td>{{ schedule.subject?.name }}</td>
+                                <td>{{ schedule.teacher?.name }}</td>
+                                <td>{{ schedule.class?.name }}</td>
+                                <td>{{ schedule.day_of_week }}</td>
+                                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                <td class="actions">
+                                    <button @click="editSchedule(schedule)" class="btn btn-primary btn-small">Düzenle</button>
+                                    <button @click="deleteSchedule(schedule)" class="btn btn-danger btn-small">Sil</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- ========== MODALS ========== -->
+        
+        <!-- Edit School Modal -->
+        <div v-if="editSchoolModal" class="modal-overlay" @click.self="editSchoolModal = false">
+            <div class="modal">
+                <button @click="editSchoolModal = false" class="close-btn">×</button>
+                <h2>🏫 Okul Düzenle</h2>
+                
+                <div class="form-group">
+                    <label>Okul Adı:</label>
+                    <input v-model="editSchoolData.name" type="text">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input v-model="editSchoolData.email" type="email">
+                </div>
+                
+                <div class="form-group">
+                    <label>Telefon:</label>
+                    <input v-model="editSchoolData.phone" type="text">
+                </div>
+                
+                <div class="form-group">
+                    <label>Website:</label>
+                    <input v-model="editSchoolData.website" type="text">
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="editSchoolModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="updateSchool" class="btn btn-success">Güncelle</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- View School Modal -->
+        <div v-if="viewSchoolModal" class="modal-overlay" @click.self="viewSchoolModal = false">
+            <div class="modal">
+                <button @click="viewSchoolModal = false" class="close-btn">×</button>
+                <h2>🏫 Okul Detayları</h2>
+                
+                <div v-if="selectedSchool">
+                    <p><strong>Ad:</strong> {{ selectedSchool.name }}</p>
+                    <p><strong>Email:</strong> {{ selectedSchool.email }}</p>
+                    <p><strong>Telefon:</strong> {{ selectedSchool.phone || '-' }}</p>
+                    <p><strong>İl/İlçe:</strong> {{ selectedSchool.city?.name }} / {{ selectedSchool.district?.name }}</p>
+                    <p><strong>Abonelik:</strong> {{ selectedSchool.subscription_plan?.name }}</p>
+                    <p><strong>Durum:</strong> {{ selectedSchool.is_active ? 'Aktif' : 'Pasif' }}</p>
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="viewSchoolModal = false" class="btn btn-primary">Kapat</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add User Modal -->
+        <div v-if="addUserModal" class="modal-overlay" @click.self="addUserModal = false">
+            <div class="modal">
+                <button @click="addUserModal = false" class="close-btn">×</button>
+                <h2>👤 Kullanıcı Ekle</h2>
+                
+                <div class="form-group">
+                    <label>Ad Soyad:</label>
+                    <input v-model="newUser.name" type="text" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input v-model="newUser.email" type="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Şifre:</label>
+                    <input v-model="newUser.password" type="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Şifre Tekrar:</label>
+                    <input v-model="newUser.password_confirmation" type="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Rol:</label>
+                    <select v-model="newUser.role_id" required>
+                        <option value="">Seçiniz</option>
+                        <option v-for="role in roles" :key="role.id" :value="role.id">
+                            {{ role.display_name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Telefon:</label>
+                    <input v-model="newUser.phone" type="text">
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="addUserModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="addUser" class="btn btn-success">Ekle</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit User Modal -->
+        <div v-if="editUserModal" class="modal-overlay" @click.self="editUserModal = false">
+            <div class="modal">
+                <button @click="editUserModal = false" class="close-btn">×</button>
+                <h2>👤 Kullanıcı Düzenle</h2>
+                
+                <div class="form-group">
+                    <label>Ad Soyad:</label>
+                    <input v-model="editUserData.name" type="text">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input v-model="editUserData.email" type="email">
+                </div>
+                
+                <div class="form-group">
+                    <label>Telefon:</label>
+                    <input v-model="editUserData.phone" type="text">
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="editUserModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="updateUser" class="btn btn-success">Güncelle</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Subject Modal -->
+        <div v-if="addSubjectModal" class="modal-overlay" @click.self="addSubjectModal = false">
+            <div class="modal">
+                <button @click="addSubjectModal = false" class="close-btn">×</button>
+                <h2>📚 Ders Ekle</h2>
+                
+                <div class="form-group">
+                    <label>Ders Adı:</label>
+                    <input v-model="newSubject.name" type="text" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Ders Kodu:</label>
+                    <input v-model="newSubject.code" type="text" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Haftalık Saat:</label>
+                    <input v-model.number="newSubject.weekly_hours" type="number" min="1" max="20">
+                </div>
+                
+                <div class="form-group">
+                    <label>Açıklama:</label>
+                    <textarea v-model="newSubject.description"></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="addSubjectModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="addSubject" class="btn btn-success">Ekle</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Subject Modal -->
+        <div v-if="editSubjectModal" class="modal-overlay" @click.self="editSubjectModal = false">
+            <div class="modal">
+                <button @click="editSubjectModal = false" class="close-btn">×</button>
+                <h2>📚 Ders Düzenle</h2>
+                
+                <div class="form-group">
+                    <label>Ders Adı:</label>
+                    <input v-model="editSubjectData.name" type="text">
+                </div>
+                
+                <div class="form-group">
+                    <label>Ders Kodu:</label>
+                    <input v-model="editSubjectData.code" type="text">
+                </div>
+                
+                <div class="form-group">
+                    <label>Haftalık Saat:</label>
+                    <input v-model.number="editSubjectData.weekly_hours" type="number" min="1" max="20">
+                </div>
+                
+                <div class="form-group">
+                    <label>Açıklama:</label>
+                    <textarea v-model="editSubjectData.description"></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="editSubjectModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="updateSubject" class="btn btn-success">Güncelle</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Custom JavaScript -->
+    <script src="admin-panel.js"></script>
+</body>
+</html>
+
