@@ -1,211 +1,81 @@
-# 🏫 School Schedule API
+# 🏫 Okul Ders Programı Sistemi
 
-**Modern Laravel Okul Ders Programı Yönetim Sistemi**
+**Docker ile Modern Laravel Okul Yönetim Sistemi**
+
+> **🎯 Tamamen stabil Docker ortamı ile geliştirme ve production ready!**
 
 ## 📋 Proje Hakkında
 
-Bu proje, okulların ders programlarını dijital olarak yönetebilmelerini sağlayan kapsamlı bir SaaS (Software as a Service) sistemidir. Laravel 11 ve Vue.js teknolojileri kullanılarak geliştirilmiştir.
+Bu proje, okulların ders programlarını dijital olarak yönetebilmelerini sağlayan kapsamlı bir SaaS (Software as a Service) sistemidir. Laravel 11 ve Docker teknolojileri kullanılarak geliştirilmiştir.
 
-## ✨ Özellikler
+## ✨ Ana Özellikler
 
-### 🔐 Kimlik Doğrulama & Yetkilendirme
-- **Laravel Sanctum** ile API token bazlı authentication
-- **Çok seviyeli rol sistemi** (Super Admin, School Admin, Teacher)
-- **Multi-tenant** yapı (her okul kendi verileri)
-- **Middleware** tabanlı erişim kontrolü
+### � Docker Stack
+- **Laravel 11** - PHP 8.3-FPM
+- **MySQL 8.0** - Veritabanı
+- **Nginx Alpine** - Web server
+- **Redis** - Cache & Session
+- **phpMyAdmin** - DB yönetimi
 
-### 🏢 Okul Yönetimi
-- **Basitleştirilmiş kayıt sistemi** (sadece temel bilgiler)
-- **Otomatik okul kodu** üretimi
-- **Anında aktivasyon** (email doğrulama yok)
-- **Hoş geldiniz email sistemi**
-- **İl/İlçe** bazlı lokasyon yönetimi
-
-### 📚 Ders Programı
-- **Haftalık ders programı** görünümü
-- **Öğretmen bazlı** program görüntüleme
-- **Sınıf bazlı** program görüntüleme
-- **Otomatik program** oluşturma algoritması
+### 🔐 Authentication & Authorization
+- **Laravel Sanctum** - API token authentication
+- **Multi-tenant** - Her okul kendi verisi
+- **Role-based** - Super Admin, Okul Müdürü, Öğretmen
 
 ### 🌍 Türkiye Coğrafi Veritabanı
-- **81 İl** verisi
-- **973 İlçe** verisi
-- **Güncel ve doğru** coğrafi bilgiler
+- ✅ **81 İl** verisi
+- ✅ **973 İlçe** verisi
+- ✅ **Güncel ve doğru** coğrafi bilgiler
 
-## 🛠️ Teknologi Stack
+## � Hızlı Kurulum
 
-### Backend
-- **Laravel 11** - PHP Framework
-- **MySQL** - Veritabanı
-- **Laravel Sanctum** - API Authentication
-- **Laravel Mail** - Email sistemi
+### Ön Gereksinimler
+- Docker Desktop (Windows/Mac/Linux)
+- Git
 
-### Frontend
-- **Vue.js 3** - JavaScript Framework
-- **Axios** - HTTP Client
-- **Bootstrap** benzeri custom CSS
-
-### Development
-- **MAMP/Laragon** - Development Environment
-- **Composer** - PHP Dependency Manager
-- **Git** - Version Control
-
-## 🗄️ Veritabanı Yapısı
-
-### Ana Tablolar
-- `users` - Kullanıcılar
-- `schools` - Okullar
-- `roles` - Roller
-- `subjects` - Dersler
-- `schedules` - Ders Programları
-- `cities` - İller
-- `districts` - İlçeler
-- `school_registration_requests` - Kayıt Talepleri
-
-## 🚀 Kurulum
-
-### Gereksinimler
-- PHP 8.2+
-- MySQL 5.7+
-- Composer
-- Node.js (frontend için)
-
-### Adımlar
+### Kurulum Adımları
 ```bash
-# Repository klonla
-git clone https://github.com/username/school-schedule-api.git
+# 1. Repository klonla
+git clone <repository-url>
 cd school-schedule-api
 
-# Dependencies yükle
-composer install
+# 2. Docker containers başlat
+docker-compose up -d
 
-# Environment dosyası oluştur
-cp .env.example .env
-
-# Uygulama anahtarı oluştur
-php artisan key:generate
-
-# Veritabanı konfigürasyonu (.env dosyasında)
-DB_DATABASE=school_schedule
-DB_USERNAME=root
-DB_PASSWORD=
-
-# Veritabanı migration'ları çalıştır
-php artisan migrate
-
-# Seed verilerini yükle
-php artisan db:seed
-
-# Development server başlat
-php artisan serve
+# 3. İlk kurulum
+docker-compose exec app composer install
+docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan migrate
+docker-compose exec app php artisan db:seed
 ```
 
-## 📡 API Endpoints
+## � Erişim URL'leri
 
-### Public Endpoints
-```
-POST /api/register-school     # Okul kaydı
-GET  /api/cities             # İl listesi
-GET  /api/cities/{id}/districts  # İlçe listesi
-POST /api/login              # Giriş
-```
+| Servis | URL | Açıklama |
+|--------|-----|----------|
+| **Ana Uygulama** | http://localhost | Web interface |
+| **phpMyAdmin** | http://localhost:8080 | DB yönetimi |
+| **API** | http://localhost/api | REST API |
 
-### Protected Endpoints
-```
-GET  /api/user               # Kullanıcı bilgileri
-GET  /api/my-school          # Okul bilgileri
-GET  /api/schedules          # Ders programları
-POST /api/schedules          # Yeni program
-GET  /api/subjects           # Dersler
-POST /api/users              # Kullanıcı ekleme
-```
+## 👤 Test Kullanıcıları
 
-## 🎨 Frontend Sayfaları
+| Rol | Email | Şifre |
+|-----|-------|-------|
+| **Super Admin** | admin@schoolschedule.com | admin123 |
+| **Okul Müdürü** | mudur@ataturklisesi.edu.tr | mudur123 |
+| **Öğretmen** | ayse.yilmaz@ataturklisesi.edu.tr | teacher123 |
 
-- `school-registration.html` - Okul kayıt formu
-- `login.html` - Giriş sayfası
-- `admin-panel.html` - Yönetim paneli
-- `dashboard.html` - Ana dashboard
+## � API Endpoints
 
-## 🧪 Test
+### Public
+- `GET /api/cities` - Türkiye şehirleri
+- `GET /api/districts/{city_id}` - İlçeler
+- `POST /api/auth/login` - Giriş
 
-```bash
-# API test sayfası
-http://localhost:8000/api-test.html
-
-# Basit kayıt testi
-http://localhost:8000/test-simple-registration.html
-```
-
-## 📂 Proje Yapısı
-
-```
-school-schedule-api/
-├── app/
-│   ├── Http/Controllers/Api/    # API Controllers
-│   ├── Models/                  # Eloquent Models
-│   ├── Mail/                    # Email sınıfları
-│   └── Middleware/              # Custom middleware
-├── database/
-│   ├── migrations/              # Veritabanı migration'ları
-│   └── seeders/                 # Seed verileri
-├── public/                      # Frontend dosyaları
-├── resources/
-│   └── views/emails/            # Email template'leri
-└── routes/
-    └── api.php                  # API route'ları
-```
-
-## 🔧 Konfigürasyon
-
-### Email Ayarları (.env)
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-password
-```
-
-### Veritabanı Ayarları (.env)
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=school_schedule
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-## 🚨 Bilinen Sorunlar
-
-- MAMP PHP zip modülü uyarısı (çalışmayı etkilemiyor)
-- Server port değişikliği gerekebilir (8000, 8002, 8004 gibi)
-
-## 🤝 Katkıda Bulunma
-
-1. Repository'yi fork edin
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Commit yapın (`git commit -m 'Add some AmazingFeature'`)
-4. Branch'i push edin (`git push origin feature/AmazingFeature`)
-5. Pull Request oluşturun
-
-## 📝 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
-
-## 👥 Geliştiriciler
-
-- **School Schedule Developer** - *İlk geliştirme* - dev@schoolschedule.com
-
-## 📞 İletişim
-
-- Email: dev@schoolschedule.com
-- Project Link: [https://github.com/username/school-schedule-api](https://github.com/username/school-schedule-api)
-
----
-
-**⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!**
+### Protected (Token Required)
+- `GET /api/user` - Kullanıcı bilgileri
+- `GET /api/my-school` - Okul bilgileri
+- `GET /api/schools` - Tüm okullar (Super Admin)
 
 ## About Laravel
 

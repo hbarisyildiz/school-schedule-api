@@ -23,8 +23,6 @@ class SchoolSeeder extends Seeder
             'code' => 'AAL001',
             'email' => 'info@ataturklisesi.edu.tr',
             'phone' => '0312 123 45 67',
-            'address' => 'Çankaya, Ankara',
-            'website' => 'https://ataturklisesi.edu.tr',
             'subscription_plan_id' => $basicPlan->id,
             'subscription_starts_at' => now(),
             'subscription_ends_at' => now()->addYear(),

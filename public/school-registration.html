@@ -247,7 +247,7 @@
                 async loadResources() {
                     try {
                         // Load cities
-                        const citiesResponse = await axios.get('http://localhost:8000/api/cities');
+                        const citiesResponse = await axios.get('http://school-schedule-api.test/api/cities');
                         this.cities = citiesResponse.data;
                     } catch (error) {
                         this.error = 'Veriler yüklenirken hata oluştu';
@@ -262,7 +262,7 @@
                     if (!this.form.city_id) return;
 
                     try {
-                        const response = await axios.get(`http://localhost:8000/api/cities/${this.form.city_id}/districts`);
+                        const response = await axios.get(`http://school-schedule-api.test/api/cities/${this.form.city_id}/districts`);
                         this.districts = response.data;
                     } catch (error) {
                         this.error = 'İlçeler yüklenirken hata oluştu';
@@ -276,7 +276,7 @@
                     this.error = '';
 
                     try {
-                        const response = await axios.post('http://localhost:8000/api/register-school', this.form);
+                        const response = await axios.post('http://school-schedule-api.test/api/register-school', this.form);
                         this.successMessage = response.data.message;
                         this.schoolCode = response.data.school_code;
                         this.registrationSuccess = true;

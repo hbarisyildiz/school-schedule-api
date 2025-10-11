@@ -1,0 +1,24 @@
+VERITABANI YEDEK BİLGİLERİ
+========================
+Tarih: 10 Ekim 2025
+Proje: School Schedule API
+
+Mevcut Veriler:
+- Okullar: 167 kayıt
+- Şehirler: 81 kayıt  
+- İlçeler: 973 kayıt
+
+MAMP MySQL Bağlantı Bilgileri (.env dosyasından):
+- Host: localhost
+- Port: 3306 (varsayılan)
+- Database: school_schedule_db
+- Username: root
+- Password: (boş veya "root")
+
+Migration Durumu:
+- Tüm migrationlar çalıştırıldı
+- Test verileri eklendi
+
+Notlar:
+- Bu bilgiler Laragon kurulumu sonrası veritabanı kurulumu için saklanmıştır
+- Git repository'de kod yedeklendi

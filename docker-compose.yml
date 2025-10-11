@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Laravel Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: school-schedule-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - school-network
+    depends_on:
+      - db
+      - redis
+
+  # Nginx Web Server
+  webserver:
+    image: nginx:alpine
+    container_name: school-schedule-webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - school-network
+    depends_on:
+      - app
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: school-schedule-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: school_schedule
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+    ports:
+      - "3307:3306"
+    networks:
+      - school-network
+
+  # Redis Cache
+  redis:
+    image: redis:alpine
+    container_name: school-schedule-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - school-network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: school-schedule-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: laravel_user
+      PMA_PASSWORD: laravel_password
+    ports:
+      - "8080:80"
+    networks:
+      - school-network
+    depends_on:
+      - db
+
+# Docker Networks
+networks:
+  school-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  dbdata:
+    driver: local

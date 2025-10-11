@@ -22,3 +22,20 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Docker
+docker-compose.override.yml
+/docker/mysql/data
+/storage/app/public
+/storage/logs/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
