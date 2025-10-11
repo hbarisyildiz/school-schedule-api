@@ -122,12 +122,16 @@
                 >
                     📊 Dashboard
                 </button>
+                
+                <!-- Sadece Super Admin için Okullar sekmesi -->
                 <button 
+                    v-if="user.role?.name === 'super_admin'"
                     @click="changeTab('schools')" 
                     :class="['btn', {active: activeTab === 'schools'}]"
                 >
                     🏫 Okullar
                 </button>
+                
                 <button 
                     @click="changeTab('users')" 
                     :class="['btn', {active: activeTab === 'users'}]"
