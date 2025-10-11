@@ -17,8 +17,13 @@ Route::get('/verify-email', function () {
     return response()->file(public_path('verify-email.html'));
 });
 
-// Admin paneli
+// Admin paneli - Modern version
 Route::get('/admin-panel', function () {
+    return response()->file(public_path('admin-panel-modern.html'));
+});
+
+// Eski admin panel (Backward compatibility)
+Route::get('/admin-panel-old', function () {
     return response()->file(public_path('admin-panel.html'));
 });
 
