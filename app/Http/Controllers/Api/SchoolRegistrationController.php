@@ -20,7 +20,7 @@ use App\Mail\SchoolWelcome;
 class SchoolRegistrationController extends Controller
 {
     /**
-     * Okul kayıt talebi oluştur (Public endpoint)
+     * Okul kayıt işlemi - Direkt aktif okul oluştur (Public endpoint)
      */
     public function register(Request $request)
     {
@@ -35,24 +35,60 @@ class SchoolRegistrationController extends Controller
         // Otomatik okul kodu üret
         $schoolCode = 'SCH' . strtoupper(Str::random(6));
 
-        $registrationRequest = SchoolRegistrationRequest::create([
-            'school_name' => $request->school_name,
-            'school_code' => $schoolCode,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'city_id' => $request->city_id,
-            'district_id' => $request->district_id,
-            'subscription_plan_id' => 1, // Basic plan
-            'status' => 'verified', // Email doğrulama yok, direkt onaylı
-            'email_verified_at' => now()
-        ]);
+        DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Okul kaydınız başarıyla oluşturuldu!',
-            'school_code' => $schoolCode,
-            'status' => 'verified',
-            'next_step' => 'Sistemimize giriş yapabilirsiniz.'
-        ], 201);
+        try {
+            // Direkt okul oluştur - artık pending durumu yok
+            $school = School::create([
+                'name' => $request->school_name,
+                'slug' => Str::slug($request->school_name),
+                'code' => $schoolCode,
+                'email' => $request->email,
+                'city_id' => $request->city_id,
+                'district_id' => $request->district_id,
+                'subscription_plan_id' => 1, // Basic plan
+                'subscription_status' => 'active',
+                'subscription_starts_at' => now(),
+                'subscription_ends_at' => now()->addMonth(),
+                'is_active' => true
+            ]);
+
+            // School Admin rolünü bul
+            $schoolAdminRole = Role::where('name', 'school_admin')->first();
+            
+            if (!$schoolAdminRole) {
+                throw new \Exception('School admin rolü bulunamadı');
+            }
+
+            // Okul yöneticisi kullanıcısı oluştur
+            $schoolAdmin = User::create([
+                'name' => $request->school_name . ' Yöneticisi',
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'school_id' => $school->id,
+                'role_id' => $schoolAdminRole->id,
+                'is_active' => true,
+                'email_verified_at' => now()
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Okul kaydınız başarıyla tamamlandı! Hemen giriş yapabilirsiniz.',
+                'school_code' => $schoolCode,
+                'school_name' => $school->name,
+                'login_email' => $request->email,
+                'status' => 'active',
+                'subscription_ends_at' => $school->subscription_ends_at->format('d.m.Y')
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'message' => 'Okul kaydı oluşturulurken hata oluştu: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

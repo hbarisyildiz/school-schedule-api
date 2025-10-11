@@ -195,6 +195,7 @@
                             <option value="active">Aktif</option>
                             <option value="expired">Süresi Dolmuş</option>
                         </select>
+                        <button @click="openAddSchoolModal" class="btn btn-success">+ Okul Ekle</button>
                     </div>
                 </div>
                 
@@ -445,6 +446,77 @@
                 
                 <div class="modal-footer">
                     <button @click="viewSchoolModal = false" class="btn btn-primary">Kapat</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add School Modal -->
+        <div v-if="addSchoolModal" class="modal-overlay" @click.self="addSchoolModal = false">
+            <div class="modal">
+                <button @click="addSchoolModal = false" class="close-btn">×</button>
+                <h2>🏫 Yeni Okul Ekle</h2>
+                
+                <div class="form-group">
+                    <label>Okul Adı: *</label>
+                    <input v-model="newSchool.name" type="text" placeholder="Örn: Atatürk Lisesi" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>E-posta: * (Okul yöneticisi için)</label>
+                    <input v-model="newSchool.email" type="email" placeholder="mudur@okul.edu.tr" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Şifre: * (İlk yönetici için)</label>
+                    <input v-model="newSchool.password" type="password" placeholder="Minimum 6 karakter" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Telefon:</label>
+                    <input v-model="newSchool.phone" type="text" placeholder="(555) 123-4567">
+                </div>
+                
+                <div class="form-group">
+                    <label>İl: *</label>
+                    <select v-model="newSchool.city_id" @change="loadDistrictsForCity" required>
+                        <option value="">İl Seçiniz</option>
+                        <option v-for="city in cities" :key="city.id" :value="city.id">
+                            {{ city.name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>İlçe: *</label>
+                    <select v-model="newSchool.district_id" :disabled="!newSchool.city_id" required>
+                        <option value="">İlçe Seçiniz</option>
+                        <option v-for="district in districts" :key="district.id" :value="district.id">
+                            {{ district.name }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Website:</label>
+                    <input v-model="newSchool.website" type="text" placeholder="https://okul.edu.tr">
+                </div>
+                
+                <div class="form-group">
+                    <label>Abonelik Planı: *</label>
+                    <select v-model="newSchool.subscription_plan_id" required>
+                        <option value="">Plan Seçiniz</option>
+                        <option v-for="plan in subscriptionPlans" :key="plan.id" :value="plan.id">
+                            {{ plan.name }} - {{ plan.monthly_price }}₺/ay
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="modal-footer">
+                    <button @click="addSchoolModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="addSchool" class="btn btn-success" :disabled="isAddingSchool">
+                        <span v-if="isAddingSchool">Oluşturuluyor...</span>
+                        <span v-else">Okul Oluştur</span>
+                    </button>
                 </div>
             </div>
         </div>

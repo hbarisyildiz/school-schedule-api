@@ -42,6 +42,21 @@ createApp({
             editSchoolData: {},
             viewSchoolModal: false,
             selectedSchool: null,
+            addSchoolModal: false,
+            isAddingSchool: false,
+            newSchool: {
+                name: '',
+                email: '',
+                password: '',
+                phone: '',
+                city_id: '',
+                district_id: '',
+                website: '',
+                subscription_plan_id: ''
+            },
+            cities: [],
+            districts: [],
+            subscriptionPlans: [],
             
             // Users
             users: [],
@@ -255,6 +270,84 @@ createApp({
         viewSchool(school) {
             this.selectedSchool = school;
             this.viewSchoolModal = true;
+        },
+        
+        async openAddSchoolModal() {
+            await this.loadCities();
+            await this.loadSubscriptionPlans();
+            this.addSchoolModal = true;
+        },
+        
+        async loadCities() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/cities`);
+                this.cities = response.data;
+            } catch (error) {
+                console.error('Cities load error:', error);
+            }
+        },
+        
+        async loadDistrictsForCity() {
+            if (!this.newSchool.city_id) {
+                this.districts = [];
+                return;
+            }
+            
+            try {
+                const response = await axios.get(`${API_BASE_URL}/cities/${this.newSchool.city_id}/districts`);
+                this.districts = response.data;
+                this.newSchool.district_id = ''; // Reset district selection
+            } catch (error) {
+                console.error('Districts load error:', error);
+            }
+        },
+        
+        async loadSubscriptionPlans() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/subscription-plans`);
+                this.subscriptionPlans = response.data;
+            } catch (error) {
+                console.error('Subscription plans load error:', error);
+            }
+        },
+        
+        async addSchool() {
+            // Validation
+            if (!this.newSchool.name || !this.newSchool.email || !this.newSchool.password || 
+                !this.newSchool.city_id || !this.newSchool.district_id || !this.newSchool.subscription_plan_id) {
+                this.error = 'Lütfen tüm zorunlu alanları doldurun!';
+                return;
+            }
+            
+            this.isAddingSchool = true;
+            
+            try {
+                const response = await axios.post(`${API_BASE_URL}/schools`, this.newSchool);
+                
+                this.message = `${this.newSchool.name} başarıyla oluşturuldu! Okul yöneticisi: ${response.data.admin.email}`;
+                this.addSchoolModal = false;
+                
+                // Reset form
+                this.newSchool = {
+                    name: '',
+                    email: '',
+                    password: '',
+                    phone: '',
+                    city_id: '',
+                    district_id: '',
+                    website: '',
+                    subscription_plan_id: ''
+                };
+                this.districts = [];
+                
+                // Reload schools list
+                this.loadSchools();
+                
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Okul oluşturulurken hata oluştu';
+            } finally {
+                this.isAddingSchool = false;
+            }
         },
         
         async deleteSchool(school) {

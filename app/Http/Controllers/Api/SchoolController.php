@@ -35,32 +35,71 @@ class SchoolController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:schools,email',
-            'phone' => 'required|string',
+            'password' => 'required|string|min:6',
+            'phone' => 'nullable|string',
             'city_id' => 'required|exists:cities,id',
             'district_id' => 'required|exists:districts,id',
             'subscription_plan_id' => 'required|exists:subscription_plans,id'
         ]);
 
-        $school = School::create([
-            'name' => $request->name,
-            'slug' => \Str::slug($request->name),
-            'code' => 'SCH' . rand(1000, 9999),
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'city_id' => $request->city_id,
-            'district_id' => $request->district_id,
-            'website' => $request->website,
-            'subscription_plan_id' => $request->subscription_plan_id,
-            'subscription_starts_at' => now(),
-            'subscription_ends_at' => now()->addMonth(),
-            'subscription_status' => 'active',
-            'is_active' => true
-        ]);
+        // Database transaction ile okul ve yönetici kullanıcısını oluştur
+        DB::beginTransaction();
+        
+        try {
+            // Okul oluştur
+            $school = School::create([
+                'name' => $request->name,
+                'slug' => \Str::slug($request->name),
+                'code' => 'SCH' . rand(1000, 9999),
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'city_id' => $request->city_id,
+                'district_id' => $request->district_id,
+                'website' => $request->website,
+                'subscription_plan_id' => $request->subscription_plan_id,
+                'subscription_starts_at' => now(),
+                'subscription_ends_at' => now()->addMonth(),
+                'subscription_status' => 'active',
+                'is_active' => true
+            ]);
 
-        return response()->json([
-            'message' => 'Okul başarıyla oluşturuldu',
-            'school' => $school->load(['subscriptionPlan', 'city', 'district'])
-        ], 201);
+            // School Admin rolünü bul
+            $schoolAdminRole = \App\Models\Role::where('name', 'school_admin')->first();
+            
+            if (!$schoolAdminRole) {
+                throw new \Exception('School admin rolü bulunamadı');
+            }
+
+            // Okul yöneticisi kullanıcısı oluştur
+            $schoolAdmin = \App\Models\User::create([
+                'name' => $request->name . ' Yöneticisi',
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'school_id' => $school->id,
+                'role_id' => $schoolAdminRole->id,
+                'is_active' => true,
+                'email_verified_at' => now()
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Okul ve yönetici hesabı başarıyla oluşturuldu',
+                'school' => $school->load(['subscriptionPlan', 'city', 'district']),
+                'admin' => [
+                    'name' => $schoolAdmin->name,
+                    'email' => $schoolAdmin->email,
+                    'role' => 'school_admin'
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'message' => 'Okul oluşturulurken hata oluştu: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

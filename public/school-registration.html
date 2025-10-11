@@ -197,13 +197,22 @@
                 <div class="success">
                     <h3>🎉 Kayıt Başarılı!</h3>
                     <p><strong>{{ successMessage }}</strong></p>
-                    <p>Okul Kodunuz: <strong>{{ schoolCode }}</strong></p>
+                    <p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <strong>📋 Giriş Bilgileriniz:</strong><br>
+                        <strong>Okul:</strong> {{ schoolName }}<br>
+                        <strong>Okul Kodu:</strong> {{ schoolCode }}<br>
+                        <strong>Email:</strong> {{ loginEmail }}<br>
+                        <strong>Abonelik Süresi:</strong> {{ subscriptionEndsAt }} tarihine kadar (30 gün ücretsiz)
+                    </p>
                 </div>
                 
                 <div class="verification-note">
-                    <h3>📧 Hoş Geldiniz!</h3>
-                    <p>{{ form.email }} adresine hoş geldiniz mesajı gönderildi.</p>
-                    <p>Artık sisteme giriş yapabilirsiniz!</p>
+                    <h3>✅ Sistemimize Hoş Geldiniz!</h3>
+                    <p>Kaydınız <strong>onaylandı</strong> ve <strong>aktif durumda</strong>.</p>
+                    <p>{{ loginEmail }} adresi ile hemen giriş yapabilirsiniz!</p>
+                    <p style="margin-top: 15px;">
+                        <strong>30 gün boyunca</strong> tüm özellikleri <strong>ücretsiz</strong> kullanabilirsiniz.
+                    </p>
                 </div>
 
                 <button @click="goToLogin" class="btn" style="margin-top: 20px;">
@@ -230,6 +239,9 @@
                     districts: [],
                     successMessage: '',
                     schoolCode: '',
+                    schoolName: '',
+                    loginEmail: '',
+                    subscriptionEndsAt: '',
                     form: {
                         school_name: '',
                         email: '',
@@ -247,7 +259,7 @@
                 async loadResources() {
                     try {
                         // Load cities
-                        const citiesResponse = await axios.get('http://school-schedule-api.test/api/cities');
+                        const citiesResponse = await axios.get('http://localhost/api/cities');
                         this.cities = citiesResponse.data;
                     } catch (error) {
                         this.error = 'Veriler yüklenirken hata oluştu';
@@ -262,7 +274,7 @@
                     if (!this.form.city_id) return;
 
                     try {
-                        const response = await axios.get(`http://school-schedule-api.test/api/cities/${this.form.city_id}/districts`);
+                        const response = await axios.get(`http://localhost/api/cities/${this.form.city_id}/districts`);
                         this.districts = response.data;
                     } catch (error) {
                         this.error = 'İlçeler yüklenirken hata oluştu';
@@ -276,9 +288,12 @@
                     this.error = '';
 
                     try {
-                        const response = await axios.post('http://school-schedule-api.test/api/register-school', this.form);
+                        const response = await axios.post('http://localhost/api/register-school', this.form);
                         this.successMessage = response.data.message;
                         this.schoolCode = response.data.school_code;
+                        this.schoolName = response.data.school_name;
+                        this.loginEmail = response.data.login_email;
+                        this.subscriptionEndsAt = response.data.subscription_ends_at;
                         this.registrationSuccess = true;
                     } catch (error) {
                         if (error.response?.data?.errors) {
