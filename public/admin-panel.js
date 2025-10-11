@@ -44,6 +44,8 @@ createApp({
             selectedSchool: null,
             addSchoolModal: false,
             isAddingSchool: false,
+            isLoadingDistricts: false,
+            schoolModalError: '',
             newSchool: {
                 name: '',
                 email: '',
@@ -303,6 +305,10 @@ createApp({
         },
         
         async openAddSchoolModal() {
+            this.schoolModalError = '';
+            this.districts = [];
+            this.isLoadingDistricts = false;
+            
             await this.loadCities();
             await this.loadSubscriptionPlans();
             this.addSchoolModal = true;
@@ -320,15 +326,22 @@ createApp({
         async loadDistrictsForCity() {
             if (!this.newSchool.city_id) {
                 this.districts = [];
+                this.isLoadingDistricts = false;
                 return;
             }
+            
+            this.isLoadingDistricts = true;
+            this.newSchool.district_id = ''; // Reset district selection
+            this.schoolModalError = '';
             
             try {
                 const response = await axios.get(`${API_BASE_URL}/cities/${this.newSchool.city_id}/districts`);
                 this.districts = response.data;
-                this.newSchool.district_id = ''; // Reset district selection
             } catch (error) {
                 console.error('Districts load error:', error);
+                this.schoolModalError = 'İlçeler yüklenirken hata oluştu';
+            } finally {
+                this.isLoadingDistricts = false;
             }
         },
         
@@ -342,10 +355,26 @@ createApp({
         },
         
         async addSchool() {
+            // Clear previous errors
+            this.schoolModalError = '';
+            
             // Validation
             if (!this.newSchool.name || !this.newSchool.email || !this.newSchool.password || 
                 !this.newSchool.city_id || !this.newSchool.district_id || !this.newSchool.subscription_plan_id) {
-                this.error = 'Lütfen tüm zorunlu alanları doldurun!';
+                this.schoolModalError = '❌ Lütfen tüm zorunlu (*) alanları doldurun!';
+                return;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(this.newSchool.email)) {
+                this.schoolModalError = '❌ Geçerli bir email adresi giriniz!';
+                return;
+            }
+            
+            // Password validation
+            if (this.newSchool.password.length < 6) {
+                this.schoolModalError = '❌ Şifre en az 6 karakter olmalıdır!';
                 return;
             }
             
@@ -354,8 +383,9 @@ createApp({
             try {
                 const response = await axios.post(`${API_BASE_URL}/schools`, this.newSchool);
                 
-                this.message = `${this.newSchool.name} başarıyla oluşturuldu! Okul yöneticisi: ${response.data.admin.email}`;
+                this.message = `✅ ${this.newSchool.name} başarıyla oluşturuldu! Okul yöneticisi: ${response.data.admin.email}`;
                 this.addSchoolModal = false;
+                this.schoolModalError = '';
                 
                 // Reset form
                 this.newSchool = {
@@ -374,7 +404,18 @@ createApp({
                 this.loadSchools();
                 
             } catch (error) {
-                this.error = error.response?.data?.message || 'Okul oluşturulurken hata oluştu';
+                console.error('Add school error:', error);
+                
+                // Detaylı hata mesajı göster
+                if (error.response?.data?.errors) {
+                    // Validation errors
+                    const errors = Object.values(error.response.data.errors).flat();
+                    this.schoolModalError = '❌ ' + errors.join(', ');
+                } else if (error.response?.data?.message) {
+                    this.schoolModalError = '❌ ' + error.response.data.message;
+                } else {
+                    this.schoolModalError = '❌ Okul oluşturulurken hata oluştu. Lütfen tekrar deneyin.';
+                }
             } finally {
                 this.isAddingSchool = false;
             }
