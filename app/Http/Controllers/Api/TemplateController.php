@@ -13,8 +13,13 @@ class TemplateController extends Controller
      */
     public function downloadTeacherTemplate()
     {
-        $fileName = 'ogretmen_sablonu_' . date('Y-m-d') . '.xlsx';
+        $filePath = storage_path('templates/ogretmen_sablonu.xlsx');
+        $fileName = 'ogretmen_sablonu.xlsx';
         
-        return Excel::download(new TeachersTemplateExport, $fileName);
+        if (!file_exists($filePath)) {
+            return response()->json(['error' => 'Şablon dosyası bulunamadı'], 404);
+        }
+        
+        return response()->download($filePath, $fileName);
     }
 }
