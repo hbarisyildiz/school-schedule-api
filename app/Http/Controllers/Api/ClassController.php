@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ClassRoomResource;
 use App\Models\ClassRoom;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class ClassController extends Controller
 
         $classes = $query->orderBy('grade')->orderBy('branch')->paginate(15);
 
-        return response()->json($classes);
+        return ClassRoomResource::collection($classes);
     }
 
     /**
@@ -65,7 +66,7 @@ class ClassController extends Controller
 
         return response()->json([
             'message' => 'Sınıf başarıyla oluşturuldu',
-            'class' => $class
+            'class' => new ClassRoomResource($class)
         ], 201);
     }
 
@@ -111,7 +112,7 @@ class ClassController extends Controller
 
         return response()->json([
             'message' => 'Sınıf başarıyla güncellendi',
-            'class' => $class->fresh()->load(['classTeacher', 'school'])
+            'class' => new ClassRoomResource($class->fresh()->load(['classTeacher', 'school']))
         ]);
     }
 

@@ -26,8 +26,6 @@ class ClassRoom extends Model
     protected $casts = [
         'is_active' => 'boolean'
     ];
-    
-    protected $appends = ['class_teacher'];
 
     /**
      * Okul ilişkisi
@@ -93,17 +91,5 @@ class ClassRoom extends Model
     public function canAddStudent(): bool
     {
         return !$this->isFull();
-    }
-    
-    /**
-     * class_teacher accessor (frontend uyumluluğu için)
-     */
-    public function getClassTeacherAttribute()
-    {
-        // İlişki yüklenmişse döndür, yoksa yükle
-        if (!$this->relationLoaded('classTeacher')) {
-            $this->load('classTeacher');
-        }
-        return $this->getRelation('classTeacher');
     }
 }
