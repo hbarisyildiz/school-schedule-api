@@ -466,7 +466,12 @@
                                 <td><strong>{{ classItem.name }}</strong></td>
                                 <td>{{ classItem.grade }}. Sınıf</td>
                                 <td>{{ classItem.branch || '-' }}</td>
-                                <td>{{ classItem.class_teacher?.name || '-' }}</td>
+                                <td @click="console.log('Class data:', classItem)">
+                                    {{ classItem.class_teacher?.name || classItem.classTeacher?.name || '-' }}
+                                    <span v-if="!classItem.class_teacher && !classItem.classTeacher" style="color: red; font-size: 10px;" :title="JSON.stringify(classItem)">
+                                        (debug: click)
+                                    </span>
+                                </td>
                                 <td>
                                     <span :class="['status-badge', classItem.is_active ? 'status-active' : 'status-inactive']">
                                         {{ classItem.is_active ? 'Aktif' : 'Pasif' }}
