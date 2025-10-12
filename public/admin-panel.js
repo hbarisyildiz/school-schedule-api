@@ -806,10 +806,12 @@ createApp({
                 return;
             }
             
-            // İlk adın ilk 4 harfi + Soyadın ilk 2 harfi
-            const firstName = parts[0].substring(0, 4).toUpperCase();
-            const lastName = parts[parts.length - 1].substring(0, 2).toUpperCase();
-            this.newUser.short_name = (firstName + lastName).substring(0, 6);
+            // İlk adın ilk 4 harfi + Soyadın ilk 2 harfi - sadece boşsa otomatik doldur
+            if (!this.newUser.short_name || this.newUser.short_name.trim() === '') {
+                const firstName = parts[0].substring(0, 4).toUpperCase();
+                const lastName = parts[parts.length - 1].substring(0, 2).toUpperCase();
+                this.newUser.short_name = (firstName + lastName).substring(0, 6);
+            }
         },
         
         isTeacherRole(roleId) {

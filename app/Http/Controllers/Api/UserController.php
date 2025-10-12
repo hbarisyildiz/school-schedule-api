@@ -108,6 +108,8 @@ class UserController extends Controller
         
         $request->validate([
             'name' => 'string|max:255',
+            'short_name' => 'nullable|string|max:6',
+            'branch' => 'nullable|string|max:100',
             'email' => ['email', Rule::unique('users')->ignore($user->id)],
             'role_id' => 'exists:roles,id',
             'phone' => 'nullable|string',
@@ -122,7 +124,7 @@ class UserController extends Controller
         }
 
         $user->update($request->only([
-            'name', 'email', 'role_id', 'phone', 'address'
+            'name', 'short_name', 'branch', 'email', 'role_id', 'phone', 'address'
         ]));
 
         return response()->json([
