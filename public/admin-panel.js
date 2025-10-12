@@ -725,6 +725,7 @@ createApp({
             try {
                 const response = await axios.get(`${API_BASE_URL}/classes`);
                 this.classes = response.data.data || response.data;
+                console.log('Loaded classes:', this.classes);
             } catch (error) {
                 this.error = 'Sınıflar yüklenemedi';
                 console.error('Classes load error:', error);
@@ -751,9 +752,22 @@ createApp({
         async addClass() {
             this.modalError = '';
             try {
-                await axios.post(`${API_BASE_URL}/classes`, this.newClass);
+                const response = await axios.post(`${API_BASE_URL}/classes`, this.newClass);
                 this.message = 'Sınıf başarıyla eklendi';
                 this.addClassModal = false;
+                
+                // Yeni eklenen sınıfı direkt listeye ekle (daha hızlı)
+                if (response.data.class) {
+                    console.log('New class added:', response.data.class);
+                    // Eğer classes bir array ise push et, pagination varsa başa ekle
+                    if (Array.isArray(this.classes)) {
+                        this.classes.unshift(response.data.class);
+                    } else {
+                        // Pagination varsa yenile
+                        this.loadClasses();
+                    }
+                }
+                
                 this.newClass = {
                     name: '',
                     grade: '',
@@ -761,7 +775,6 @@ createApp({
                     class_teacher_id: '',
                     description: ''
                 };
-                this.loadClasses();
             } catch (error) {
                 this.modalError = error.response?.data?.message || 'Sınıf eklenemedi';
             }
@@ -777,10 +790,20 @@ createApp({
         async updateClass() {
             this.modalError = '';
             try {
-                await axios.put(`${API_BASE_URL}/classes/${this.editClassData.id}`, this.editClassData);
+                const response = await axios.put(`${API_BASE_URL}/classes/${this.editClassData.id}`, this.editClassData);
                 this.message = 'Sınıf başarıyla güncellendi';
                 this.editClassModal = false;
-                this.loadClasses();
+                
+                // Güncellenen sınıfı listede bul ve değiştir (daha hızlı)
+                if (response.data.class) {
+                    console.log('Updated class:', response.data.class);
+                    const index = this.classes.findIndex(c => c.id === response.data.class.id);
+                    if (index !== -1) {
+                        this.classes[index] = response.data.class;
+                    } else {
+                        this.loadClasses();
+                    }
+                }
             } catch (error) {
                 this.modalError = error.response?.data?.message || 'Sınıf güncellenemedi';
             }
