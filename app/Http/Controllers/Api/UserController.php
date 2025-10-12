@@ -55,14 +55,15 @@ class UserController extends Controller
 
             $newUser = User::create([
                 'name' => $request->name,
+                'short_name' => $request->short_name,
+                'branch' => $request->branch,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'role_id' => $request->role_id,
                 'school_id' => $user->school_id,
                 'phone' => $request->phone,
                 'address' => $request->address,
-                'is_active' => true,
-                'created_by' => $user->id
+                'is_active' => true
             ]);
 
             return $this->createdResponse(

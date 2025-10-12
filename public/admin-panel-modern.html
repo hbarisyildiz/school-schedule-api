@@ -341,8 +341,14 @@
                             placeholder="Ara..." 
                             style="width: 250px;"
                         >
+                        <a href="/templates/ogretmen-sablonu.csv" download class="btn btn-info">📥 Excel Şablonu İndir</a>
                         <button @click="openAddUserModal" class="btn btn-success">+ Kullanıcı Ekle</button>
                     </div>
+                </div>
+                
+                <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                    <strong>💡 İpucu:</strong> Çok sayıda öğretmen eklemek için Excel şablonunu indirin, doldurun ve yükleyin!
+                    (Yakında: Toplu Excel yükleme özelliği eklenecek)
                 </div>
                 
                 <div v-if="usersLoading" class="text-center">
@@ -682,27 +688,35 @@
                 <h2>👤 Kullanıcı Ekle</h2>
                 
                 <div class="form-group">
-                    <label>Ad Soyad:</label>
-                    <input v-model="newUser.name" type="text" required>
+                    <label>Ad Soyad: *</label>
+                    <input v-model="newUser.name" @input="generateShortName" type="text" placeholder="Örn: Ahmet Yılmaz" required>
                 </div>
                 
                 <div class="form-group">
-                    <label>Email:</label>
-                    <input v-model="newUser.email" type="email" required>
+                    <label>Kısa Ad: (Otomatik)</label>
+                    <input v-model="newUser.short_name" type="text" maxlength="6" placeholder="AHMTYL" readonly style="background: #f0f0f0;">
+                    <small style="color: #7f8c8d; font-size: 12px;">İlk ad 4 harf + Soyad 2 harf</small>
                 </div>
                 
                 <div class="form-group">
-                    <label>Şifre:</label>
-                    <input v-model="newUser.password" type="password" required>
+                    <label>Email: *</label>
+                    <input v-model="newUser.email" type="email" placeholder="ogretmen@okul.edu.tr" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Şifre: *</label>
+                        <input v-model="newUser.password" type="password" placeholder="Min 8 karakter" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Şifre Tekrar: *</label>
+                        <input v-model="newUser.password_confirmation" type="password" required>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <label>Şifre Tekrar:</label>
-                    <input v-model="newUser.password_confirmation" type="password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Rol:</label>
+                    <label>Rol: *</label>
                     <select v-model="newUser.role_id" required>
                         <option value="">Seçiniz</option>
                         <option v-for="role in roles" :key="role.id" :value="role.id">
@@ -711,9 +725,14 @@
                     </select>
                 </div>
                 
+                <div class="form-group" v-if="isTeacherRole(newUser.role_id)">
+                    <label>Branş: * (Öğretmenler için)</label>
+                    <input v-model="newUser.branch" type="text" placeholder="Örn: Matematik, Türkçe, Fen Bilgisi" required>
+                </div>
+                
                 <div class="form-group">
                     <label>Telefon:</label>
-                    <input v-model="newUser.phone" type="text">
+                    <input v-model="newUser.phone" type="text" placeholder="(555) 123-4567">
                 </div>
                 
                 <div class="modal-footer">
@@ -925,4 +944,5 @@
     <script src="admin-panel.js"></script>
 </body>
 </html>
+
 

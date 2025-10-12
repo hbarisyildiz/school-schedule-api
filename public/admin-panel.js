@@ -68,6 +68,8 @@ createApp({
             addUserModal: false,
             newUser: {
                 name: '',
+                short_name: '',
+                branch: '',
                 email: '',
                 password: '',
                 password_confirmation: '',
@@ -778,6 +780,33 @@ createApp({
             } catch (error) {
                 this.error = error.response?.data?.message || 'Sınıf silinemedi';
             }
+        },
+        
+        // ===== User Helper Methods =====
+        generateShortName() {
+            const name = this.newUser.name.trim();
+            if (!name) {
+                this.newUser.short_name = '';
+                return;
+            }
+            
+            const parts = name.split(' ');
+            if (parts.length < 2) {
+                // Sadece tek kelime varsa, ilk 6 harfi al
+                this.newUser.short_name = parts[0].substring(0, 6).toUpperCase();
+                return;
+            }
+            
+            // İlk adın ilk 4 harfi + Soyadın ilk 2 harfi
+            const firstName = parts[0].substring(0, 4).toUpperCase();
+            const lastName = parts[parts.length - 1].substring(0, 2).toUpperCase();
+            this.newUser.short_name = (firstName + lastName).substring(0, 6);
+        },
+        
+        isTeacherRole(roleId) {
+            if (!roleId || !this.roles.length) return false;
+            const role = this.roles.find(r => r.id === roleId);
+            return role && role.name === 'teacher';
         },
         
         // ===== Utility Methods =====
