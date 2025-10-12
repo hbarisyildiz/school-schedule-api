@@ -35,8 +35,11 @@ class ClassController extends Controller
         $classes = $query->orderBy('grade')->orderBy('branch')->paginate(15);
         
         // classTeacher ilişkisini class_teacher olarak da ekle (frontend uyumluluğu için)
-        $classes->getCollection()->transform(function($class) {
-            $class->class_teacher = $class->classTeacher;
+        $classes->through(function($class) {
+            // Eğer classTeacher yüklenmişse, class_teacher olarak da ekle
+            if ($class->relationLoaded('classTeacher')) {
+                $class->class_teacher = $class->classTeacher;
+            }
             return $class;
         });
 
