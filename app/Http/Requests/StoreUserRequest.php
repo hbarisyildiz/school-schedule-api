@@ -22,7 +22,7 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
@@ -30,6 +30,18 @@ class StoreUserRequest extends FormRequest
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
         ];
+        
+        // Öğretmen ise short_name ve branch zorunlu
+        $role = \App\Models\Role::find($this->role_id);
+        if ($role && $role->name === 'teacher') {
+            $rules['short_name'] = 'required|string|max:6';
+            $rules['branch'] = 'required|string|max:100';
+        } else {
+            $rules['short_name'] = 'nullable|string|max:6';
+            $rules['branch'] = 'nullable|string|max:100';
+        }
+        
+        return $rules;
     }
 
     /**
@@ -50,6 +62,10 @@ class StoreUserRequest extends FormRequest
             'role_id.exists' => 'Seçilen rol geçerli değil.',
             'phone.max' => 'Telefon numarası en fazla 20 karakterde olmalıdır.',
             'address.max' => 'Adres en fazla 500 karakterde olmalıdır.',
+            'short_name.required' => 'Kısa ad zorunludur (Öğretmenler için).',
+            'short_name.max' => 'Kısa ad en fazla 6 karakter olmalıdır.',
+            'branch.required' => 'Branş zorunludur (Öğretmenler için).',
+            'branch.max' => 'Branş en fazla 100 karakter olmalıdır.',
         ];
     }
 

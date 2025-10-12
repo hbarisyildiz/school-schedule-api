@@ -497,11 +497,18 @@ createApp({
         
         async addUser() {
             try {
+                // Eğer öğretmen ise ve kısa ad boşsa, otomatik oluştur
+                if (this.isTeacherRole(this.newUser.role_id) && !this.newUser.short_name) {
+                    this.generateShortName();
+                }
+                
                 await axios.post(`${API_BASE_URL}/users`, this.newUser);
                 this.message = 'Kullanıcı başarıyla eklendi';
                 this.addUserModal = false;
                 this.newUser = {
                     name: '',
+                    short_name: '',
+                    branch: '',
                     email: '',
                     password: '',
                     password_confirmation: '',
@@ -512,6 +519,7 @@ createApp({
                 this.loadUsers();
             } catch (error) {
                 this.error = error.response?.data?.message || 'Kullanıcı eklenemedi';
+                console.error('Add user error:', error.response?.data);
             }
         },
         
