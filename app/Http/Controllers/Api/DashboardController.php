@@ -23,74 +23,100 @@ class DashboardController extends Controller
         
         // Super Admin tüm sistem istatistiklerini görür
         if ($isSuperAdmin) {
+            // Tek sorguda tüm user role sayılarını al
+            $userCounts = User::selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN DATE(last_login_at) = CURDATE() THEN 1 ELSE 0 END) as active_today,
+                SUM(CASE WHEN MONTH(created_at) = MONTH(NOW()) THEN 1 ELSE 0 END) as this_month
+            ')->first();
+            
+            // Role bazlı sayılar
+            $teacherCount = \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.id')
+                ->where('roles.name', 'teacher')
+                ->count();
+                
+            $studentCount = \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.id')
+                ->where('roles.name', 'student')
+                ->count();
+            
+            // Okul istatistikleri tek sorguda
+            $schoolCounts = School::selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN subscription_status = "active" THEN 1 ELSE 0 END) as active_subs,
+                SUM(CASE WHEN subscription_status = "expired" THEN 1 ELSE 0 END) as expired_subs,
+                SUM(CASE WHEN subscription_ends_at <= DATE_ADD(NOW(), INTERVAL 7 DAY) AND subscription_status = "active" THEN 1 ELSE 0 END) as ending_soon,
+                SUM(CASE WHEN MONTH(created_at) = MONTH(NOW()) THEN 1 ELSE 0 END) as this_month
+            ')->first();
+            
             $stats = [
-                'total_schools' => School::count(),
-                'active_schools' => School::where('is_active', true)->count(),
-                'total_users' => User::count(),
-                'active_users' => User::where('is_active', true)->count(),
-                'total_teachers' => User::whereHas('role', function($q) {
-                    $q->where('name', 'teacher');
-                })->count(),
-                'total_students' => User::whereHas('role', function($q) {
-                    $q->where('name', 'student');
-                })->count(),
+                'total_schools' => $schoolCounts->total,
+                'active_schools' => $schoolCounts->active,
+                'total_users' => $userCounts->total,
+                'active_users' => $userCounts->active,
+                'total_teachers' => $teacherCount,
+                'total_students' => $studentCount,
                 'total_classes' => ClassRoom::count(),
                 'active_classes' => ClassRoom::where('is_active', true)->count(),
                 'total_subjects' => Subject::count(),
                 'total_schedules' => Schedule::count(),
-                
-                // Abonelik istatistikleri
-                'active_subscriptions' => School::where('subscription_status', 'active')->count(),
-                'expired_subscriptions' => School::where('subscription_status', 'expired')->count(),
-                'trial_ending_soon' => School::where('subscription_ends_at', '<=', now()->addDays(7))
-                    ->where('subscription_status', 'active')
-                    ->count(),
-                
-                // Bu ay
-                'schools_this_month' => School::whereMonth('created_at', now()->month)->count(),
-                'users_this_month' => User::whereMonth('created_at', now()->month)->count(),
-                
-                // Bugün
-                'active_today' => User::whereDate('last_login_at', today())->count(),
+                'active_subscriptions' => $schoolCounts->active_subs,
+                'expired_subscriptions' => $schoolCounts->expired_subs,
+                'trial_ending_soon' => $schoolCounts->ending_soon,
+                'schools_this_month' => $schoolCounts->this_month,
+                'users_this_month' => $userCounts->this_month,
+                'active_today' => $userCounts->active_today,
             ];
         } else {
             // Okul yöneticisi sadece kendi okulunu görür
             $schoolId = $user->school_id;
             
+            // Tek sorguda okul bazlı sayılar
+            $teacherCount = \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.id')
+                ->where('users.school_id', $schoolId)
+                ->where('roles.name', 'teacher')
+                ->count();
+                
+            $studentCount = \DB::table('users')
+                ->join('roles', 'users.role_id', '=', 'roles.id')
+                ->where('users.school_id', $schoolId)
+                ->where('roles.name', 'student')
+                ->count();
+            
+            $classCounts = ClassRoom::where('school_id', $schoolId)
+                ->selectRaw('
+                    COUNT(*) as total,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active
+                ')->first();
+            
+            $scheduleCounts = Schedule::where('school_id', $schoolId)
+                ->selectRaw('
+                    COUNT(*) as total,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+                    SUM(CASE WHEN start_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as this_week
+                ', [now()->startOfWeek(), now()->endOfWeek()])
+                ->first();
+            
             $stats = [
                 'school_name' => $user->school->name,
                 'school_code' => $user->school->code,
-                'total_teachers' => User::where('school_id', $schoolId)
-                    ->whereHas('role', function($q) {
-                        $q->where('name', 'teacher');
-                    })->count(),
-                'total_students' => User::where('school_id', $schoolId)
-                    ->whereHas('role', function($q) {
-                        $q->where('name', 'student');
-                    })->count(),
-                'total_classes' => ClassRoom::where('school_id', $schoolId)->count(),
-                'active_classes' => ClassRoom::where('school_id', $schoolId)
-                    ->where('is_active', true)->count(),
+                'total_teachers' => $teacherCount,
+                'total_students' => $studentCount,
+                'total_classes' => $classCounts->total,
+                'active_classes' => $classCounts->active,
                 'total_subjects' => Subject::where('school_id', $schoolId)->count(),
-                'total_schedules' => Schedule::where('school_id', $schoolId)->count(),
-                'active_schedules' => Schedule::where('school_id', $schoolId)
-                    ->where('is_active', true)->count(),
-                
-                // Abonelik bilgileri
+                'total_schedules' => $scheduleCounts->total,
+                'active_schedules' => $scheduleCounts->active,
                 'subscription_plan' => $user->school->subscriptionPlan->name,
                 'subscription_status' => $user->school->subscription_status,
                 'subscription_ends_at' => $user->school->subscription_ends_at->format('d.m.Y'),
                 'days_left' => $user->school->subscription_ends_at->diffInDays(now()),
-                
-                // Bu hafta
-                'schedules_this_week' => Schedule::where('school_id', $schoolId)
-                    ->whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()])
-                    ->count(),
-                
-                // Bildirimler
-                'unread_notifications' => Notification::where('user_id', $user->id)
-                    ->whereNull('read_at')
-                    ->count(),
+                'schedules_this_week' => $scheduleCounts->this_week,
+                'unread_notifications' => Notification::where('user_id', $user->id)->whereNull('read_at')->count(),
             ];
         }
         
