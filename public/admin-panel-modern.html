@@ -374,7 +374,7 @@
                         <span style="color: #3498db; margin-left: 10px;">Öğretmenler yükleniyor...</span>
                     </div>
                     <div style="margin-top: 10px; font-size: 13px; color: #888;">
-                        ℹ️ Gerekli alanlar: Ad Soyad, Email, Branş | Varsayılan şifre: <code>12345678</code> | Max: 2MB
+                        ℹ️ Gerekli alanlar: Ad Soyad, Email, Branş | Varsayılan şifre: <code>123456</code> | Max: 2MB
                     </div>
                 </div>
                 
@@ -714,6 +714,11 @@
                 <button @click="addUserModal = false" class="close-btn">×</button>
                 <h2>👤 Kullanıcı Ekle</h2>
                 
+                <!-- Modal içi hata mesajı -->
+                <div v-if="modalError" class="error" style="margin-bottom: 15px;">
+                    {{ modalError }}
+                </div>
+                
                 <div class="form-group">
                     <label>Ad Soyad: *</label>
                     <input v-model="newUser.name" @input="generateShortName" type="text" placeholder="Örn: Ahmet Yılmaz" required>
@@ -740,7 +745,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Şifre: *</label>
-                        <input v-model="newUser.password" type="password" placeholder="Min 8 karakter" required>
+                        <input v-model="newUser.password" type="password" placeholder="Min 6 karakter" required>
                     </div>
                     
                     <div class="form-group">
@@ -781,6 +786,11 @@
             <div class="modal">
                 <button @click="editUserModal = false" class="close-btn">×</button>
                 <h2>👤 Kullanıcı Düzenle</h2>
+                
+                <!-- Modal içi hata mesajı -->
+                <div v-if="modalError" class="error" style="margin-bottom: 15px;">
+                    {{ modalError }}
+                </div>
                 
                 <div class="form-group">
                     <label>Ad Soyad:</label>
@@ -825,6 +835,11 @@
             <div class="modal">
                 <button @click="addClassModal = false" class="close-btn">×</button>
                 <h2>🏛️ Yeni Sınıf Ekle</h2>
+                
+                <!-- Modal içi hata mesajı -->
+                <div v-if="modalError" class="error" style="margin-bottom: 15px;">
+                    {{ modalError }}
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
@@ -877,6 +892,11 @@
             <div class="modal">
                 <button @click="editClassModal = false" class="close-btn">×</button>
                 <h2>🏛️ Sınıf Düzenle</h2>
+                
+                <!-- Modal içi hata mesajı -->
+                <div v-if="modalError" class="error" style="margin-bottom: 15px;">
+                    {{ modalError }}
+                </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">

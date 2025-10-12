@@ -24,7 +24,7 @@ Bu klasör, öğretmen toplu yükleme için Excel şablon indirme endpoint'ini b
 - ✅ Başlık satırını (1. satır) silmeyin
 - ✅ Örnek verileri silin (açık mavi renkli satırlar)
 - ✅ Email adresleri benzersiz olmalıdır
-- ✅ Varsayılan şifre: `12345678` (öğretmenler ilk girişte değiştirmelidir)
+- ✅ Varsayılan şifre: `123456` (öğretmenler ilk girişte değiştirmelidir)
 - ✅ Maksimum dosya boyutu: 2MB
 - ⚠️ Hatalı satırlar atlanır, başarılı olanlar eklenir
 

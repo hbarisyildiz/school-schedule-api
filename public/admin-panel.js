@@ -26,6 +26,7 @@ createApp({
             // Messages
             message: '',
             error: '',
+            modalError: '',
             
             // Dashboard Stats
             stats: {
@@ -491,11 +492,13 @@ createApp({
         },
         
         openAddUserModal() {
+            this.modalError = '';
             this.loadRoles();
             this.addUserModal = true;
         },
         
         async addUser() {
+            this.modalError = '';
             try {
                 // Eğer öğretmen ise ve kısa ad boşsa, otomatik oluştur
                 if (this.isTeacherRole(this.newUser.role_id) && !this.newUser.short_name) {
@@ -518,24 +521,26 @@ createApp({
                 };
                 this.loadUsers();
             } catch (error) {
-                this.error = error.response?.data?.message || 'Kullanıcı eklenemedi';
+                this.modalError = error.response?.data?.message || 'Kullanıcı eklenemedi';
                 console.error('Add user error:', error.response?.data);
             }
         },
         
         editUser(user) {
+            this.modalError = '';
             this.editUserData = { ...user };
             this.editUserModal = true;
         },
         
         async updateUser() {
+            this.modalError = '';
             try {
                 await axios.put(`${API_BASE_URL}/users/${this.editUserData.id}`, this.editUserData);
                 this.message = 'Kullanıcı başarıyla güncellendi';
                 this.editUserModal = false;
                 this.loadUsers();
             } catch (error) {
-                this.error = error.response?.data?.message || 'Kullanıcı güncellenemedi';
+                this.modalError = error.response?.data?.message || 'Kullanıcı güncellenemedi';
             }
         },
         
@@ -729,6 +734,7 @@ createApp({
         },
         
         async openAddClassModal() {
+            this.modalError = '';
             await this.loadTeachers();
             this.addClassModal = true;
         },
@@ -743,6 +749,7 @@ createApp({
         },
         
         async addClass() {
+            this.modalError = '';
             try {
                 await axios.post(`${API_BASE_URL}/classes`, this.newClass);
                 this.message = 'Sınıf başarıyla eklendi';
@@ -756,24 +763,26 @@ createApp({
                 };
                 this.loadClasses();
             } catch (error) {
-                this.error = error.response?.data?.message || 'Sınıf eklenemedi';
+                this.modalError = error.response?.data?.message || 'Sınıf eklenemedi';
             }
         },
         
         editClass(classItem) {
+            this.modalError = '';
             this.editClassData = { ...classItem };
             this.loadTeachers();
             this.editClassModal = true;
         },
         
         async updateClass() {
+            this.modalError = '';
             try {
                 await axios.put(`${API_BASE_URL}/classes/${this.editClassData.id}`, this.editClassData);
                 this.message = 'Sınıf başarıyla güncellendi';
                 this.editClassModal = false;
                 this.loadClasses();
             } catch (error) {
-                this.error = error.response?.data?.message || 'Sınıf güncellenemedi';
+                this.modalError = error.response?.data?.message || 'Sınıf güncellenemedi';
             }
         },
         

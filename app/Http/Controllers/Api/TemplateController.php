@@ -109,7 +109,7 @@ class TemplateController extends Controller
             '• (*) işaretli alanlar zorunludur',
             '• Email adresleri benzersiz olmalıdır',
             '• Kısa ad boş bırakılırsa otomatik oluşturulur (max 6 karakter)',
-            '• Varsayılan şifre: 12345678 (Öğretmenler ilk girişte değiştirmelidir)',
+            '• Varsayılan şifre: 123456 (Öğretmenler ilk girişte değiştirmelidir)',
             '• Maksimum dosya boyutu: 2MB'
         ];
         
@@ -125,15 +125,16 @@ class TemplateController extends Controller
             $sheet->mergeCells("A{$r}:E{$r}");
         }
         
-        // Excel dosyasını indir
+        // Excel dosyasını response olarak döndür
         $fileName = 'ogretmen_sablonu_' . date('Y-m-d') . '.xlsx';
         
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $fileName . '"');
-        header('Cache-Control: max-age=0');
-        
+        // Temporary file'a yaz
+        $temp_file = tempnam(sys_get_temp_dir(), 'excel_');
         $writer = new Xlsx($spreadsheet);
-        $writer->save('php://output');
-        exit;
+        $writer->save($temp_file);
+        
+        return response()->download($temp_file, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 }

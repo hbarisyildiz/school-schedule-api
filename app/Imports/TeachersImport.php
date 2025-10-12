@@ -48,7 +48,7 @@ class TeachersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
             'branch' => $row['brans'],
             'email' => $row['email'],
             'phone' => $row['telefon'] ?? null,
-            'password' => Hash::make('12345678'), // Default şifre, sonra değiştirsinler
+            'password' => Hash::make('123456'), // Default şifre, sonra değiştirsinler
             'is_active' => true,
             'email_verified_at' => now()
         ]);

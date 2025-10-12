@@ -25,7 +25,7 @@ class StoreUserRequest extends FormRequest
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:6|confirmed',
             'role_id' => 'required|exists:roles,id',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -56,7 +56,7 @@ class StoreUserRequest extends FormRequest
             'email.email' => 'Geçerli bir e-posta adresi giriniz.',
             'email.unique' => 'Bu e-posta adresi zaten kullanılıyor.',
             'password.required' => 'Şifre zorunludur.',
-            'password.min' => 'Şifre en az 8 karakterde olmalıdır.',
+            'password.min' => 'Şifre en az 6 karakterde olmalıdır.',
             'password.confirmed' => 'Şifre onayı eşleşmiyor.',
             'role_id.required' => 'Rol seçimi zorunludur.',
             'role_id.exists' => 'Seçilen rol geçerli değil.',

@@ -143,7 +143,7 @@ class UserController extends Controller
 
         $request->validate([
             'current_password' => $user->id === $currentUser->id ? 'required' : 'nullable',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         // Kendi şifresini değiştiriyorsa mevcut şifre kontrolü
