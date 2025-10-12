@@ -63,6 +63,7 @@ createApp({
             // Users
             users: [],
             usersLoading: false,
+            isUploadingExcel: false,
             editUserModal: false,
             editUserData: {},
             addUserModal: false,
@@ -807,6 +808,53 @@ createApp({
             if (!roleId || !this.roles.length) return false;
             const role = this.roles.find(r => r.id === roleId);
             return role && role.name === 'teacher';
+        },
+        
+        async handleExcelFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            this.isUploadingExcel = true;
+            this.error = '';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await axios.post(`${API_BASE_URL}/users/import-teachers`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                
+                if (response.data.error_count > 0) {
+                    // Kısmi başarı
+                    this.message = response.data.message;
+                    console.log('Import errors:', response.data.errors);
+                    
+                    // Hata detaylarını göster
+                    let errorDetails = `\n\nHatalar:\n`;
+                    response.data.errors.forEach(err => {
+                        errorDetails += `Satır ${err.row}: ${err.errors.join(', ')}\n`;
+                    });
+                    alert(response.data.message + errorDetails);
+                } else {
+                    // Tam başarı
+                    this.message = `✅ ${response.data.success_count} öğretmen başarıyla eklendi!`;
+                }
+                
+                // Kullanıcı listesini yenile
+                this.loadUsers();
+                
+                // File input'u temizle
+                event.target.value = '';
+                
+            } catch (error) {
+                console.error('Excel import error:', error);
+                this.error = error.response?.data?.message || 'Excel yüklenirken hata oluştu';
+            } finally {
+                this.isUploadingExcel = false;
+            }
         },
         
         // ===== Utility Methods =====

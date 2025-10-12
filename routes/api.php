@@ -77,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('users', \App\Http\Controllers\Api\UserController::class);
         Route::post('users/{id}/toggle-status', [\App\Http\Controllers\Api\UserController::class, 'toggleStatus']);
         Route::post('users/{id}/password', [\App\Http\Controllers\Api\UserController::class, 'updatePassword']);
+        Route::post('users/import-teachers', [\App\Http\Controllers\Api\UserController::class, 'importTeachers']);
         Route::get('roles', [\App\Http\Controllers\Api\UserController::class, 'getRoles']);
         
         // Sınıf yönetimi

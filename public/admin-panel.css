@@ -746,3 +746,13 @@ input::placeholder, textarea::placeholder {
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .gap-10 { gap: 10px; }
 
+/* === Code Style === */
+code {
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #d63031;
+}
+

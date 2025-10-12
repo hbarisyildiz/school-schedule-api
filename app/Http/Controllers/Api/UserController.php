@@ -7,9 +7,11 @@ use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
 use App\Models\Role;
 use App\Traits\ApiResponseTrait;
+use App\Imports\TeachersImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -256,5 +258,50 @@ class UserController extends Controller
             'message' => 'Profil güncellendi',
             'user' => $user->fresh()->load(['role', 'school'])
         ]);
+    }
+    
+    /**
+     * Excel'den toplu öğretmen yükleme
+     */
+    public function importTeachers(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
+        ]);
+        
+        try {
+            $import = new TeachersImport(auth()->user()->school_id);
+            Excel::import($import, $request->file('file'));
+            
+            $failures = $import->failures();
+            $successCount = $import->getRowCount() - count($failures);
+            
+            if (count($failures) > 0) {
+                return response()->json([
+                    'message' => "{$successCount} öğretmen başarıyla eklendi, " . count($failures) . " satırda hata var",
+                    'success_count' => $successCount,
+                    'error_count' => count($failures),
+                    'errors' => $failures->map(function($failure) {
+                        return [
+                            'row' => $failure->row(),
+                            'attribute' => $failure->attribute(),
+                            'errors' => $failure->errors(),
+                            'values' => $failure->values()
+                        ];
+                    })
+                ], 206); // 206 = Partial Content
+            }
+            
+            return response()->json([
+                'message' => "Tüm öğretmenler başarıyla eklendi! ({$successCount} öğretmen)",
+                'success_count' => $successCount
+            ], 201);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Excel yüklenirken hata oluştu',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

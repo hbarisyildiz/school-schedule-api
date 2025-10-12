@@ -341,14 +341,42 @@
                             placeholder="Ara..." 
                             style="width: 250px;"
                         >
-                        <a href="/templates/ogretmen-sablonu.csv" download class="btn btn-info">📥 Excel Şablonu İndir</a>
+                        <div class="flex gap-10">
+                            <a href="/templates/ogretmen-sablonu.xlsx" download class="btn btn-info">📥 Excel Şablonu (.xlsx)</a>
+                            <a href="/templates/ogretmen-sablonu.csv" download class="btn btn-info">📥 CSV Şablonu</a>
+                        </div>
                         <button @click="openAddUserModal" class="btn btn-success">+ Kullanıcı Ekle</button>
                     </div>
                 </div>
                 
                 <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-                    <strong>💡 İpucu:</strong> Çok sayıda öğretmen eklemek için Excel şablonunu indirin, doldurun ve yükleyin!
-                    (Yakında: Toplu Excel yükleme özelliği eklenecek)
+                    <div class="flex-between">
+                        <div>
+                            <strong>📊 Toplu Öğretmen Yükleme</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">
+                                Excel/CSV şablonunu indirin → Öğretmen bilgilerini doldurun → Yükleyin
+                            </p>
+                        </div>
+                        <div class="flex gap-10">
+                            <input 
+                                type="file" 
+                                ref="excelFile" 
+                                @change="handleExcelFile" 
+                                accept=".xlsx,.xls,.csv" 
+                                style="display: none;"
+                            >
+                            <button @click="$refs.excelFile.click()" class="btn btn-success">
+                                📤 Excel/CSV Yükle
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="isUploadingExcel" style="margin-top: 10px;">
+                        <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0; display: inline-block; vertical-align: middle;"></div>
+                        <span style="color: #3498db; margin-left: 10px;">Öğretmenler yükleniyor...</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 13px; color: #888;">
+                        ℹ️ Gerekli alanlar: Ad Soyad, Email, Branş | Varsayılan şifre: <code>12345678</code> | Max: 2MB
+                    </div>
                 </div>
                 
                 <div v-if="usersLoading" class="text-center">
