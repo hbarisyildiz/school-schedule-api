@@ -104,6 +104,6 @@ class ClassRoom extends Model
         if (!$this->relationLoaded('classTeacher')) {
             $this->load('classTeacher');
         }
-        return $this->classTeacher;
+        return $this->getRelation('classTeacher');
     }
 }
