@@ -1,39 +1,47 @@
-# Öğretmen Toplu Yükleme Şablonları
+# Öğretmen Toplu Yükleme Şablonu
 
-Bu klasörde öğretmen toplu yükleme için şablon dosyaları bulunmaktadır.
+Bu klasör, öğretmen toplu yükleme için Excel şablon indirme endpoint'ini barındırır.
 
 ## Kullanım
 
-1. Aşağıdaki şablon dosyalardan birini indirin:
-   - `ogretmen-sablonu.xlsx` - Excel formatı
-   - `ogretmen-sablonu.csv` - CSV formatı
+1. Admin panelde "👥 Kullanıcılar" sekmesine gidin
+2. **"📥 Excel Şablonu İndir (.xlsx)"** butonuna tıklayın
+3. İndirilen Excel dosyasını açın
 
-2. Dosyayı açın ve örnek verileri silin.
+## Excel Şablonu İçeriği
 
-3. Kendi öğretmen bilgilerinizi doldurun:
-   - **ad_soyad** (zorunlu): Öğretmenin adı soyadı
-   - **email** (zorunlu): Benzersiz email adresi
-   - **brans** (zorunlu): Öğretmenin branşı (örn: Matematik, Türkçe, İngilizce)
-   - **kisa_ad** (opsiyonel): 6 karakterlik kısa ad. Boş bırakılırsa otomatik oluşturulur.
-   - **telefon** (opsiyonel): Telefon numarası
+### Kolonlar:
+- **ad_soyad*** (Zorunlu): Öğretmenin adı soyadı
+- **email*** (Zorunlu): Benzersiz email adresi
+- **brans*** (Zorunlu): Öğretmenin branşı
+- **kisa_ad** (Opsiyonel): 6 karakterlik kısa ad (boş bırakılırsa otomatik oluşturulur)
+- **telefon** (Opsiyonel): Telefon numarası
 
-4. Admin panelinde "📤 Excel Yükle" butonuna tıklayın.
+### Örnek Veriler:
+Şablon içinde örnek 5 öğretmen verisi bulunur. Bu verileri silin ve kendi verilerinizi ekleyin.
 
-5. Doldurduğunuz dosyayı seçin ve yükleyin.
-
-## Önemli Notlar
-
-- ✅ İlk satır (başlıklar) mutlaka korunmalıdır
+### Önemli Notlar:
+- ✅ Başlık satırını (1. satır) silmeyin
+- ✅ Örnek verileri silin (açık mavi renkli satırlar)
 - ✅ Email adresleri benzersiz olmalıdır
 - ✅ Varsayılan şifre: `12345678` (öğretmenler ilk girişte değiştirmelidir)
+- ✅ Maksimum dosya boyutu: 2MB
 - ⚠️ Hatalı satırlar atlanır, başarılı olanlar eklenir
-- ⚠️ Maksimum dosya boyutu: 2MB
 
-## Örnek Satır
+## Dinamik Excel Oluşturma
 
-```
-Ahmet Yılmaz,ahmet.yilmaz@okul.com,Matematik,AHMYIL,5551234567
-```
+Excel şablonu `/api/templates/teacher-import` endpoint'i üzerinden dinamik olarak oluşturulur:
+- Profesyonel başlık formatı (mavi arka plan, beyaz yazı)
+- Örnek veriler (açık mavi arka plan)
+- Kullanım talimatları (alt kısımda)
+- Otomatik kolon genişlikleri
+- Tarihli dosya adı: `ogretmen_sablonu_YYYY-MM-DD.xlsx`
+
+## Teknik Detaylar
+
+**Controller**: `App\Http\Controllers\Api\TemplateController@downloadTeacherTemplate`
+**Package**: `PhpOffice\PhpSpreadsheet`
+**Format**: `.xlsx` (Excel 2007+)
 
 ## Branş Örnekleri
 
@@ -47,4 +55,9 @@ Ahmet Yılmaz,ahmet.yilmaz@okul.com,Matematik,AHMYIL,5551234567
 - Görsel Sanatlar
 - Din Kültürü ve Ahlak Bilgisi
 - Teknoloji ve Tasarım
+- Bilişim Teknolojileri
+- Rehberlik
 
+---
+
+**Not**: Excel şablonu her indirmede güncel tarihle oluşturulur.

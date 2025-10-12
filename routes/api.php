@@ -80,6 +80,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('users/import-teachers', [\App\Http\Controllers\Api\UserController::class, 'importTeachers']);
         Route::get('roles', [\App\Http\Controllers\Api\UserController::class, 'getRoles']);
         
+        // Şablon indirme
+        Route::get('templates/teacher-import', [\App\Http\Controllers\Api\TemplateController::class, 'downloadTeacherTemplate']);
+        
         // Sınıf yönetimi
         Route::apiResource('classes', \App\Http\Controllers\Api\ClassController::class);
         Route::post('classes/{id}/toggle-status', [\App\Http\Controllers\Api\ClassController::class, 'toggleStatus']);
