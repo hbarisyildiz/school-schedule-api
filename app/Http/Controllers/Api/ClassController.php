@@ -33,15 +33,6 @@ class ClassController extends Controller
         }
 
         $classes = $query->orderBy('grade')->orderBy('branch')->paginate(15);
-        
-        // classTeacher ilişkisini class_teacher olarak da ekle (frontend uyumluluğu için)
-        $classes->through(function($class) {
-            // Eğer classTeacher yüklenmişse, class_teacher olarak da ekle
-            if ($class->relationLoaded('classTeacher')) {
-                $class->class_teacher = $class->classTeacher;
-            }
-            return $class;
-        });
 
         return response()->json($classes);
     }
@@ -71,7 +62,6 @@ class ClassController extends Controller
         ]);
         
         $class->load(['classTeacher', 'school']);
-        $class->class_teacher = $class->classTeacher;
 
         return response()->json([
             'message' => 'Sınıf başarıyla oluşturuldu',
@@ -118,13 +108,10 @@ class ClassController extends Controller
         $class->update($request->only([
             'name', 'grade', 'branch', 'class_teacher_id', 'description'
         ]));
-        
-        $class = $class->fresh()->load(['classTeacher', 'school']);
-        $class->class_teacher = $class->classTeacher;
 
         return response()->json([
             'message' => 'Sınıf başarıyla güncellendi',
-            'class' => $class
+            'class' => $class->fresh()->load(['classTeacher', 'school'])
         ]);
     }
 
