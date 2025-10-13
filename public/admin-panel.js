@@ -1114,16 +1114,38 @@ createApp({
         },
         
         // ===== Class Schedule Modal =====
-        openClassScheduleModal(classItem) {
+        async openClassScheduleModal(classItem) {
             this.selectedClassForSchedule = classItem;
             
-            // Mevcut veriyi yükle veya varsayılan değerleri kullan
-            const existingData = this.schoolSettings.class_daily_lesson_counts[classItem.name];
-            
-            if (existingData) {
-                this.classScheduleData = { ...existingData };
-            } else {
-                // Varsayılan değerler
+            try {
+                // API'den mevcut veriyi çek
+                const token = localStorage.getItem('auth_token');
+                const response = await axios.get(`${API_BASE_URL}/school/class-daily-schedules`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                // Bu sınıfın verilerini filtrele
+                const classSchedules = response.data.filter(s => s.class_id === classItem.id);
+                
+                if (classSchedules.length > 0) {
+                    // Mevcut veriyi yükle
+                    this.classScheduleData = {};
+                    classSchedules.forEach(schedule => {
+                        this.classScheduleData[schedule.day] = schedule.lesson_count;
+                    });
+                } else {
+                    // Varsayılan değerler
+                    this.classScheduleData = {
+                        monday: 8,
+                        tuesday: 8,
+                        wednesday: 8,
+                        thursday: 8,
+                        friday: 8
+                    };
+                }
+            } catch (error) {
+                console.error('Sınıf saatleri yüklenemedi:', error);
+                // Hata durumunda varsayılan değerler
                 this.classScheduleData = {
                     monday: 8,
                     tuesday: 8,
@@ -1153,15 +1175,22 @@ createApp({
         
         async saveClassSchedule() {
             try {
-                // Sadece değişen sınıfın verisini gönder (tüm schoolSettings'i değil)
+                // Yeni API yapısına göre veriyi hazırla
                 const token = localStorage.getItem('auth_token');
-                const updateData = {
-                    class_daily_lesson_counts: {
-                        [this.selectedClassForSchedule.name]: { ...this.classScheduleData }
-                    }
-                };
+                const schedules = [];
                 
-                await axios.put(`${API_BASE_URL}/school/settings`, updateData, {
+                // Her gün için schedule objesi oluştur
+                for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
+                    schedules.push({
+                        day: day,
+                        lesson_count: this.classScheduleData[day] || 0
+                    });
+                }
+                
+                // Yeni API endpoint'ine gönder
+                await axios.put(`${API_BASE_URL}/school/class-daily-schedules/${this.selectedClassForSchedule.id}`, {
+                    schedules: schedules
+                }, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
@@ -1181,16 +1210,38 @@ createApp({
         },
         
         // Öğretmen Ders Saatleri Modal Fonksiyonları
-        openTeacherScheduleModal(teacher) {
+        async openTeacherScheduleModal(teacher) {
             this.selectedTeacherForSchedule = teacher;
             
-            // Mevcut veriyi yükle veya varsayılan değerleri kullan
-            const existingData = this.schoolSettings.teacher_daily_lesson_counts?.[teacher.id];
-            
-            if (existingData) {
-                this.teacherScheduleData = { ...existingData };
-            } else {
-                // Varsayılan değerler - Tüm saatler açık (12 saat)
+            try {
+                // API'den mevcut veriyi çek
+                const token = localStorage.getItem('auth_token');
+                const response = await axios.get(`${API_BASE_URL}/school/teacher-daily-schedules`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                // Bu öğretmenin verilerini filtrele
+                const teacherSchedules = response.data.filter(s => s.teacher_id === teacher.id);
+                
+                if (teacherSchedules.length > 0) {
+                    // Mevcut veriyi yükle
+                    this.teacherScheduleData = {};
+                    teacherSchedules.forEach(schedule => {
+                        this.teacherScheduleData[schedule.day] = schedule.lesson_count;
+                    });
+                } else {
+                    // Varsayılan değerler - Tüm saatler açık (12 saat)
+                    this.teacherScheduleData = {
+                        monday: 12,
+                        tuesday: 12,
+                        wednesday: 12,
+                        thursday: 12,
+                        friday: 12
+                    };
+                }
+            } catch (error) {
+                console.error('Öğretmen saatleri yüklenemedi:', error);
+                // Hata durumunda varsayılan değerler
                 this.teacherScheduleData = {
                     monday: 12,
                     tuesday: 12,
@@ -1217,15 +1268,22 @@ createApp({
         
         async saveTeacherSchedule() {
             try {
-                // Sadece değişen öğretmenin verisini gönder (tüm schoolSettings'i değil)
+                // Yeni API yapısına göre veriyi hazırla
                 const token = localStorage.getItem('auth_token');
-                const updateData = {
-                    teacher_daily_lesson_counts: {
-                        [this.selectedTeacherForSchedule.id]: { ...this.teacherScheduleData }
-                    }
-                };
+                const schedules = [];
                 
-                await axios.put(`${API_BASE_URL}/school/settings`, updateData, {
+                // Her gün için schedule objesi oluştur
+                for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
+                    schedules.push({
+                        day: day,
+                        lesson_count: this.teacherScheduleData[day] || 0
+                    });
+                }
+                
+                // Yeni API endpoint'ine gönder
+                await axios.put(`${API_BASE_URL}/school/teacher-daily-schedules/${this.selectedTeacherForSchedule.id}`, {
+                    schedules: schedules
+                }, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
