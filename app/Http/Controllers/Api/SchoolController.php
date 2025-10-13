@@ -279,17 +279,32 @@ class SchoolController extends Controller
             'teacher_daily_lesson_counts' => 'array'
         ]);
 
-        $school->update($request->only([
+        // Sadece gönderilen alanları güncelle
+        $updateData = $request->only([
             'class_days',
             'lesson_duration',
             'break_durations',
             'school_hours',
             'weekly_lesson_count',
             'schedule_settings',
-            'daily_lesson_counts',
-            'class_daily_lesson_counts',
-            'teacher_daily_lesson_counts'
-        ]));
+            'daily_lesson_counts'
+        ]);
+        
+        // class_daily_lesson_counts için merge yap (mevcut veriyi koru)
+        if ($request->has('class_daily_lesson_counts')) {
+            $existingClassCounts = $school->class_daily_lesson_counts ?? [];
+            $newClassCounts = $request->input('class_daily_lesson_counts', []);
+            $updateData['class_daily_lesson_counts'] = array_merge($existingClassCounts, $newClassCounts);
+        }
+        
+        // teacher_daily_lesson_counts için merge yap (mevcut veriyi koru)
+        if ($request->has('teacher_daily_lesson_counts')) {
+            $existingTeacherCounts = $school->teacher_daily_lesson_counts ?? [];
+            $newTeacherCounts = $request->input('teacher_daily_lesson_counts', []);
+            $updateData['teacher_daily_lesson_counts'] = array_merge($existingTeacherCounts, $newTeacherCounts);
+        }
+        
+        $school->update($updateData);
 
         return response()->json([
             'message' => 'Okul ayarları başarıyla güncellendi',
