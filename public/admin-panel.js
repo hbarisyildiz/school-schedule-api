@@ -1153,14 +1153,23 @@ createApp({
         
         async saveClassSchedule() {
             try {
-                // Veriyi schoolSettings'e kaydet
-                this.schoolSettings.class_daily_lesson_counts[this.selectedClassForSchedule.name] = { ...this.classScheduleData };
-                
-                // API'ye kaydet
+                // Sadece değişen sınıfın verisini gönder (tüm schoolSettings'i değil)
                 const token = localStorage.getItem('auth_token');
-                await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
+                const updateData = {
+                    class_daily_lesson_counts: {
+                        [this.selectedClassForSchedule.name]: { ...this.classScheduleData }
+                    }
+                };
+                
+                await axios.put(`${API_BASE_URL}/school/settings`, updateData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                
+                // Local state'i güncelle
+                if (!this.schoolSettings.class_daily_lesson_counts) {
+                    this.schoolSettings.class_daily_lesson_counts = {};
+                }
+                this.schoolSettings.class_daily_lesson_counts[this.selectedClassForSchedule.name] = { ...this.classScheduleData };
                 
                 this.message = `${this.selectedClassForSchedule.name} sınıfının ders saatleri kaydedildi!`;
                 this.classScheduleModal = false;
@@ -1208,19 +1217,23 @@ createApp({
         
         async saveTeacherSchedule() {
             try {
-                // teacher_daily_lesson_counts yoksa oluştur
+                // Sadece değişen öğretmenin verisini gönder (tüm schoolSettings'i değil)
+                const token = localStorage.getItem('auth_token');
+                const updateData = {
+                    teacher_daily_lesson_counts: {
+                        [this.selectedTeacherForSchedule.id]: { ...this.teacherScheduleData }
+                    }
+                };
+                
+                await axios.put(`${API_BASE_URL}/school/settings`, updateData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                // Local state'i güncelle
                 if (!this.schoolSettings.teacher_daily_lesson_counts) {
                     this.schoolSettings.teacher_daily_lesson_counts = {};
                 }
-                
-                // Veriyi schoolSettings'e kaydet
                 this.schoolSettings.teacher_daily_lesson_counts[this.selectedTeacherForSchedule.id] = { ...this.teacherScheduleData };
-                
-                // API'ye kaydet
-                const token = localStorage.getItem('auth_token');
-                await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
                 
                 this.message = `${this.selectedTeacherForSchedule.name} öğretmeninin ders saatleri kaydedildi!`;
                 this.teacherScheduleModal = false;
