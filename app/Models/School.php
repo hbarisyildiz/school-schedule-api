@@ -289,4 +289,28 @@ class School extends Model
         
         return $this->getDailyLessonCounts();
     }
+
+    /**
+     * Okul tenefüs süreleri ilişkisi
+     */
+    public function breakDurations(): HasMany
+    {
+        return $this->hasMany(SchoolBreakDuration::class);
+    }
+
+    /**
+     * Sınıf günlük ders programları ilişkisi
+     */
+    public function classDailySchedules(): HasMany
+    {
+        return $this->hasMany(ClassDailySchedule::class, 'class_id');
+    }
+
+    /**
+     * Öğretmen günlük ders programları ilişkisi
+     */
+    public function teacherDailySchedules(): HasMany
+    {
+        return $this->hasMany(TeacherDailySchedule::class, 'teacher_id');
+    }
 }

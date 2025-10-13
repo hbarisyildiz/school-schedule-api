@@ -98,6 +98,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Günlük ders programları ilişkisi (öğretmen için)
+     */
+    public function teacherDailySchedules()
+    {
+        return $this->hasMany(TeacherDailySchedule::class, 'teacher_id');
+    }
+
+    /**
      * Rol kontrol metodları
      */
     public function isSuperAdmin(): bool

@@ -322,4 +322,181 @@ class SchoolController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Okul tenefüs sürelerini getir
+     */
+    public function getBreakDurations(Request $request)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $breakDurations = \App\Models\SchoolBreakDuration::where('school_id', $school->id)
+            ->orderBy('after_period')
+            ->get();
+
+        return response()->json($breakDurations);
+    }
+
+    /**
+     * Okul tenefüs sürelerini güncelle
+     */
+    public function updateBreakDurations(Request $request)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $request->validate([
+            'breaks' => 'required|array',
+            'breaks.*.after_period' => 'required|integer|min:1|max:12',
+            'breaks.*.duration' => 'required|integer|min:5|max:60',
+            'breaks.*.is_lunch_break' => 'boolean'
+        ]);
+
+        // Mevcut tenefüsleri sil
+        \App\Models\SchoolBreakDuration::where('school_id', $school->id)->delete();
+
+        // Yeni tenefüsleri ekle
+        foreach ($request->breaks as $break) {
+            \App\Models\SchoolBreakDuration::create([
+                'school_id' => $school->id,
+                'after_period' => $break['after_period'],
+                'duration' => $break['duration'],
+                'is_lunch_break' => $break['is_lunch_break'] ?? false
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Tenefüs süreleri başarıyla güncellendi',
+            'breaks' => \App\Models\SchoolBreakDuration::where('school_id', $school->id)
+                ->orderBy('after_period')
+                ->get()
+        ]);
+    }
+
+    /**
+     * Sınıf günlük ders programlarını getir
+     */
+    public function getClassDailySchedules(Request $request)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $schedules = \App\Models\ClassDailySchedule::whereHas('classRoom', function($query) use ($school) {
+            $query->where('school_id', $school->id);
+        })->with('classRoom:id,name')->get();
+
+        return response()->json($schedules);
+    }
+
+    /**
+     * Sınıf günlük ders programını güncelle
+     */
+    public function updateClassDailySchedule(Request $request, $classId)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $request->validate([
+            'schedules' => 'required|array',
+            'schedules.*.day' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'schedules.*.lesson_count' => 'required|integer|min:0|max:12'
+        ]);
+
+        $class = \App\Models\ClassRoom::where('id', $classId)
+            ->where('school_id', $school->id)
+            ->firstOrFail();
+
+        // Mevcut programları sil
+        \App\Models\ClassDailySchedule::where('class_id', $classId)->delete();
+
+        // Yeni programları ekle
+        foreach ($request->schedules as $schedule) {
+            \App\Models\ClassDailySchedule::create([
+                'class_id' => $classId,
+                'day' => $schedule['day'],
+                'lesson_count' => $schedule['lesson_count']
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Sınıf ders programı başarıyla güncellendi',
+            'schedules' => \App\Models\ClassDailySchedule::where('class_id', $classId)->get()
+        ]);
+    }
+
+    /**
+     * Öğretmen günlük ders programlarını getir
+     */
+    public function getTeacherDailySchedules(Request $request)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $schedules = \App\Models\TeacherDailySchedule::whereHas('teacher', function($query) use ($school) {
+            $query->where('school_id', $school->id);
+        })->with('teacher:id,name')->get();
+
+        return response()->json($schedules);
+    }
+
+    /**
+     * Öğretmen günlük ders programını güncelle
+     */
+    public function updateTeacherDailySchedule(Request $request, $teacherId)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $request->validate([
+            'schedules' => 'required|array',
+            'schedules.*.day' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'schedules.*.lesson_count' => 'required|integer|min:0|max:12'
+        ]);
+
+        $teacher = \App\Models\User::where('id', $teacherId)
+            ->where('school_id', $school->id)
+            ->firstOrFail();
+
+        // Mevcut programları sil
+        \App\Models\TeacherDailySchedule::where('teacher_id', $teacherId)->delete();
+
+        // Yeni programları ekle
+        foreach ($request->schedules as $schedule) {
+            \App\Models\TeacherDailySchedule::create([
+                'teacher_id' => $teacherId,
+                'day' => $schedule['day'],
+                'lesson_count' => $schedule['lesson_count']
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Öğretmen ders programı başarıyla güncellendi',
+            'schedules' => \App\Models\TeacherDailySchedule::where('teacher_id', $teacherId)->get()
+        ]);
+    }
 }

@@ -77,6 +77,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('school/settings', [\App\Http\Controllers\Api\SchoolController::class, 'getSettings']);
         Route::put('school/settings', [\App\Http\Controllers\Api\SchoolController::class, 'updateSettings']);
         
+        // Tenefüs süreleri
+        Route::get('school/break-durations', [\App\Http\Controllers\Api\SchoolController::class, 'getBreakDurations']);
+        Route::put('school/break-durations', [\App\Http\Controllers\Api\SchoolController::class, 'updateBreakDurations']);
+        
+        // Sınıf günlük ders programları
+        Route::get('school/class-daily-schedules', [\App\Http\Controllers\Api\SchoolController::class, 'getClassDailySchedules']);
+        Route::put('school/class-daily-schedules/{classId}', [\App\Http\Controllers\Api\SchoolController::class, 'updateClassDailySchedule']);
+        
+        // Öğretmen günlük ders programları
+        Route::get('school/teacher-daily-schedules', [\App\Http\Controllers\Api\SchoolController::class, 'getTeacherDailySchedules']);
+        Route::put('school/teacher-daily-schedules/{teacherId}', [\App\Http\Controllers\Api\SchoolController::class, 'updateTeacherDailySchedule']);
+        
         // Kullanıcı yönetimi
         Route::apiResource('users', \App\Http\Controllers\Api\UserController::class);
         Route::post('users/{id}/toggle-status', [\App\Http\Controllers\Api\UserController::class, 'toggleStatus']);

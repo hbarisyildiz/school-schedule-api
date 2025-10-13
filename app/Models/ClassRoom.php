@@ -92,4 +92,12 @@ class ClassRoom extends Model
     {
         return !$this->isFull();
     }
+
+    /**
+     * Günlük ders programları ilişkisi
+     */
+    public function dailySchedules(): HasMany
+    {
+        return $this->hasMany(ClassDailySchedule::class, 'class_id');
+    }
 }
