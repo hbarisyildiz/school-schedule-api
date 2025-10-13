@@ -54,7 +54,8 @@ createApp({
                     thursday: 8,
                     friday: 8
                 },
-                class_daily_lesson_counts: {}
+                class_daily_lesson_counts: {},
+                teacher_daily_lesson_counts: {}
             },
             selectedClassForDailyCount: '',
             schoolSettingsLoading: false,
@@ -152,6 +153,12 @@ createApp({
             classScheduleModal: false,
             selectedClassForSchedule: null,
             classScheduleData: {},
+            
+            // Teacher Schedule Modal
+            teacherScheduleModal: false,
+            selectedTeacherForSchedule: null,
+            teacherScheduleData: {},
+            
             editClassData: {},
             teachers: [],
             
@@ -1022,7 +1029,8 @@ createApp({
                         thursday: 8,
                         friday: 8
                     },
-                    class_daily_lesson_counts: response.data.class_daily_lesson_counts || {}
+                    class_daily_lesson_counts: response.data.class_daily_lesson_counts || {},
+                    teacher_daily_lesson_counts: response.data.teacher_daily_lesson_counts || {}
                 };
                 
                 console.log('Loaded school settings:', this.schoolSettings);
@@ -1160,6 +1168,66 @@ createApp({
             } catch (error) {
                 console.error('Sınıf saatleri kaydedilemedi:', error);
                 this.error = error.response?.data?.message || 'Sınıf saatleri kaydedilemedi';
+            }
+        },
+        
+        // Öğretmen Ders Saatleri Modal Fonksiyonları
+        openTeacherScheduleModal(teacher) {
+            this.selectedTeacherForSchedule = teacher;
+            
+            // Mevcut veriyi yükle veya varsayılan değerleri kullan
+            const existingData = this.schoolSettings.teacher_daily_lesson_counts?.[teacher.id];
+            
+            if (existingData) {
+                this.teacherScheduleData = { ...existingData };
+            } else {
+                // Varsayılan değerler
+                this.teacherScheduleData = {
+                    monday: 0,
+                    tuesday: 0,
+                    wednesday: 0,
+                    thursday: 0,
+                    friday: 0
+                };
+            }
+            
+            this.teacherScheduleModal = true;
+        },
+        
+        toggleTeacherSchedulePeriod(day, period) {
+            if (!this.schoolSettings.class_days.includes(day)) return;
+            
+            const currentCount = this.teacherScheduleData[day] || 0;
+            
+            if (currentCount >= period) {
+                this.teacherScheduleData[day] = period - 1;
+            } else {
+                this.teacherScheduleData[day] = period;
+            }
+        },
+        
+        async saveTeacherSchedule() {
+            try {
+                // teacher_daily_lesson_counts yoksa oluştur
+                if (!this.schoolSettings.teacher_daily_lesson_counts) {
+                    this.schoolSettings.teacher_daily_lesson_counts = {};
+                }
+                
+                // Veriyi schoolSettings'e kaydet
+                this.schoolSettings.teacher_daily_lesson_counts[this.selectedTeacherForSchedule.id] = { ...this.teacherScheduleData };
+                
+                // API'ye kaydet
+                const token = localStorage.getItem('auth_token');
+                await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                this.message = `${this.selectedTeacherForSchedule.name} öğretmeninin ders saatleri kaydedildi!`;
+                this.teacherScheduleModal = false;
+                
+            } catch (error) {
+                console.error('Öğretmen saatleri kaydedilemedi:', error);
+                this.error = error.response?.data?.message || 'Öğretmen saatleri kaydedilemedi';
             }
         }
     },

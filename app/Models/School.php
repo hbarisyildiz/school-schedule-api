@@ -34,7 +34,8 @@ class School extends Model
         'weekly_lesson_count',
         'schedule_settings',
         'daily_lesson_counts',
-        'class_daily_lesson_counts'
+        'class_daily_lesson_counts',
+        'teacher_daily_lesson_counts'
     ];
 
     protected $casts = [
@@ -47,7 +48,8 @@ class School extends Model
         'school_hours' => 'array',
         'schedule_settings' => 'array',
         'daily_lesson_counts' => 'array',
-        'class_daily_lesson_counts' => 'array'
+        'class_daily_lesson_counts' => 'array',
+        'teacher_daily_lesson_counts' => 'array'
     ];
 
     /**

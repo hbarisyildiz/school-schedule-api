@@ -422,6 +422,7 @@
                                 <th>Rol</th>
                                 <th v-if="user.role?.name === 'super_admin'">Okul</th>
                                 <th v-else>Kısa Ad</th>
+                                <th v-if="user.role?.name !== 'super_admin'">Günlük Ders Saatleri</th>
                                 <th>Durum</th>
                                 <th>İşlemler</th>
                             </tr>
@@ -434,12 +435,34 @@
                                 <td>{{ user.role?.display_name }}</td>
                                 <td v-if="user.role?.name === 'super_admin'">{{ user.school?.name || '-' }}</td>
                                 <td v-else>{{ user.short_name || '-' }}</td>
+                                <td v-if="user.role?.name !== 'super_admin'">
+                                    <div class="schedule-summary">
+                                        <div class="schedule-days">
+                                            <span v-for="day in weekDays" :key="day.value" 
+                                                  class="schedule-day-badge"
+                                                  :class="{
+                                                      'active': schoolSettings.class_days.includes(day.value),
+                                                      'has-schedule': schoolSettings.teacher_daily_lesson_counts && schoolSettings.teacher_daily_lesson_counts[user.id]?.[day.value] > 0
+                                                  }"
+                                                  :title="day.label + ': ' + (schoolSettings.teacher_daily_lesson_counts && schoolSettings.teacher_daily_lesson_counts[user.id]?.[day.value] || 0) + ' ders'">
+                                                {{ day.label.substring(0, 3) }}
+                                                <span class="lesson-count" v-if="schoolSettings.teacher_daily_lesson_counts && schoolSettings.teacher_daily_lesson_counts[user.id]?.[day.value]">
+                                                    ({{ schoolSettings.teacher_daily_lesson_counts[user.id][day.value] }})
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>
                                     <span :class="['status-badge', user.is_active ? 'status-active' : 'status-inactive']">
                                         {{ user.is_active ? 'Aktif' : 'Pasif' }}
                                     </span>
                                 </td>
                                 <td class="actions">
+                                    <button v-if="user.role?.name !== 'super_admin'" @click="openTeacherScheduleModal(user)" class="btn btn-schedule btn-small">
+                                        <span class="btn-icon">⏰</span>
+                                        <span class="btn-text">Saatleri Düzenle</span>
+                                    </button>
                                     <button @click="editUser(user)" class="btn btn-primary btn-small">Düzenle</button>
                                     <button @click="deleteUser(user)" class="btn btn-danger btn-small">Sil</button>
                                 </td>
@@ -600,6 +623,68 @@
                 <div class="modal-actions">
                     <button @click="classScheduleModal = false" class="btn btn-danger">İptal</button>
                     <button @click="saveClassSchedule" class="btn btn-success">💾 Kaydet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TEACHER SCHEDULE MODAL ========== -->
+        <div v-if="teacherScheduleModal" class="modal-overlay" @click.self="teacherScheduleModal = false">
+            <div class="modal modal-large">
+                <button @click="teacherScheduleModal = false" class="close-btn">×</button>
+                <h2>⏰ {{ selectedTeacherForSchedule?.name }} - Ders Saatleri</h2>
+                
+                <div class="schedule-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="period-header">Periyot</th>
+                                <th v-for="day in weekDays" :key="day.value" :class="{'day-disabled': !schoolSettings.class_days.includes(day.value)}">
+                                    {{ day.label }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="period in 12" :key="period">
+                                <td class="period-cell">{{ period }}</td>
+                                <td v-for="day in weekDays" :key="day.value" 
+                                    :class="[
+                                        'schedule-cell',
+                                        teacherScheduleData[day.value] >= period ? 'available' : 'unavailable',
+                                        {'day-disabled': !schoolSettings.class_days.includes(day.value)}
+                                    ]"
+                                    @click="toggleTeacherSchedulePeriod(day.value, period)">
+                                    <span v-if="teacherScheduleData[day.value] >= period">✓</span>
+                                    <span v-else>✗</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>Toplam:</strong></td>
+                                <td v-for="day in weekDays" :key="day.value" 
+                                    :class="{'day-disabled': !schoolSettings.class_days.includes(day.value)}"
+                                    class="total-cell">
+                                    <strong>{{ teacherScheduleData[day.value] || 0 }}</strong>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="legend">
+                    <span class="legend-item">
+                        <span class="legend-box available"></span>
+                        Ders Yapılabilir
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-box unavailable"></span>
+                        Ders Yapılamaz
+                    </span>
+                </div>
+                
+                <div class="modal-actions">
+                    <button @click="teacherScheduleModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="saveTeacherSchedule" class="btn btn-success">💾 Kaydet</button>
                 </div>
             </div>
         </div>

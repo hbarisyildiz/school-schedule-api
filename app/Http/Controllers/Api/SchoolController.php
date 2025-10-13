@@ -240,7 +240,8 @@ class SchoolController extends Controller
             'schedule_settings' => $school->getDefaultScheduleSettings(),
             'class_days_turkish' => $school->getClassDaysInTurkish(),
             'daily_lesson_counts' => $school->getDailyLessonCounts(),
-            'class_daily_lesson_counts' => $school->getClassDailyLessonCounts()
+            'class_daily_lesson_counts' => $school->getClassDailyLessonCounts(),
+            'teacher_daily_lesson_counts' => $school->teacher_daily_lesson_counts ?? []
         ]);
     }
 
@@ -274,7 +275,8 @@ class SchoolController extends Controller
             'schedule_settings.min_lessons_per_day' => 'integer|min:1|max:12',
             'daily_lesson_counts' => 'array',
             'daily_lesson_counts.*' => 'integer|min:1|max:12',
-            'class_daily_lesson_counts' => 'array'
+            'class_daily_lesson_counts' => 'array',
+            'teacher_daily_lesson_counts' => 'array'
         ]);
 
         $school->update($request->only([
@@ -285,7 +287,8 @@ class SchoolController extends Controller
             'weekly_lesson_count',
             'schedule_settings',
             'daily_lesson_counts',
-            'class_daily_lesson_counts'
+            'class_daily_lesson_counts',
+            'teacher_daily_lesson_counts'
         ]));
 
         return response()->json([
@@ -299,7 +302,8 @@ class SchoolController extends Controller
                 'schedule_settings' => $school->getDefaultScheduleSettings(),
                 'class_days_turkish' => $school->getClassDaysInTurkish(),
                 'daily_lesson_counts' => $school->getDailyLessonCounts(),
-                'class_daily_lesson_counts' => $school->getClassDailyLessonCounts()
+                'class_daily_lesson_counts' => $school->getClassDailyLessonCounts(),
+                'teacher_daily_lesson_counts' => $school->teacher_daily_lesson_counts ?? []
             ]
         ]);
     }
