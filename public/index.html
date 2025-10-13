@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ders Programı Sistemi</title>
+    <title>🏫 Okul Ders Programı SaaS</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,187 +20,194 @@
             justify-content: center;
             padding: 20px;
         }
+        
         .container {
-            max-width: 800px;
             background: white;
             border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-        .header {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 50px;
             text-align: center;
         }
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            font-weight: 300;
+        
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
         }
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        .content {
-            padding: 50px 40px;
-        }
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
             margin-bottom: 40px;
         }
-        .card {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 2px solid transparent;
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
         }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            border-color: #3498db;
-        }
-        .card .icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            display: block;
-        }
-        .card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        .card p {
-            color: #666;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
+        
         .btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            padding: 12px 25px;
+            padding: 20px 30px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 1.1em;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
-            display: inline-block;
-            transition: transform 0.3s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        .btn.secondary {
-            background: linear-gradient(135deg, #6c757d, #495057);
-        }
-        .btn.success {
-            background: linear-gradient(135deg, #28a745, #20c997);
-        }
-        .features {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-        .features h3 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .features ul {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 10px;
+            transition: all 0.3s ease;
+            color: white;
         }
-        .features li {
-            padding: 8px 0;
-            color: #495057;
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        .features li:before {
-            content: "✅ ";
-            margin-right: 8px;
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         }
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            .header p {
-                font-size: 1rem;
-            }
-            .content {
-                padding: 30px 20px;
-            }
-            .cards {
-                grid-template-columns: 1fr;
-            }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn-icon {
+            font-size: 2em;
+        }
+        
+        .features {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+        
+        .features h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: left;
+        }
+        
+        .feature {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .feature-icon {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        .feature h3 {
+            color: #667eea;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🏫 Ders Programı Sistemi</h1>
-            <p>Okullar için modern, akıllı ders programı yönetimi</p>
+        <h1>🏫 Okul Ders Programı</h1>
+        <p class="subtitle">Modern SaaS Tabanlı Okul Yönetim Sistemi</p>
+        
+        <div class="buttons">
+            <a href="/admin-panel-modern.html" class="btn btn-primary">
+                <span class="btn-icon">👑</span>
+                <span>Admin Paneli</span>
+                <small>Sistemi Yönet</small>
+            </a>
+            
+            <a href="/school-registration.html" class="btn btn-success">
+                <span class="btn-icon">🏫</span>
+                <span>Okul Kaydı</span>
+                <small>Yeni Okul Ekle</small>
+            </a>
+            
+            <a href="/SETUP_SCRIPTS.md" class="btn btn-info">
+                <span class="btn-icon">🛠️</span>
+                <span>Kurulum</span>
+                <small>Demo Verisi Oluştur</small>
+            </a>
         </div>
-
-        <div class="content">
-            <div class="cards">
-                <div class="card">
-                    <span class="icon">📝</span>
-                    <h3>Okul Kayıt</h3>
-                    <p>Yeni okul olarak sisteme kayıt olun. Email doğrulama ve onay sürecinden geçerek hemen kullanmaya başlayın.</p>
-                    <a href="/school-registration" class="btn success">Kayıt Ol</a>
+        
+        <div class="features">
+            <h2>✨ Özellikler</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">🏫</div>
+                    <h3>Okul Yönetimi</h3>
+                    <p>Çoklu okul desteği</p>
                 </div>
-
-                <div class="card">
-                    <span class="icon">👨‍💼</span>
-                    <h3>Yönetici Paneli</h3>
-                    <p>Süper admin ve okul yöneticileri için özel panel. Okul yönetimi, ders programları ve tüm sistem ayarları.</p>
-                    <a href="/admin-panel-modern.html" class="btn">Giriş Yap</a>
+                
+                <div class="feature">
+                    <div class="feature-icon">👨‍🏫</div>
+                    <h3>Öğretmen Yönetimi</h3>
+                    <p>Branş bazlı organizasyon</p>
                 </div>
-
-                <div class="card">
-                    <span class="icon">📧</span>
-                    <h3>Email Doğrulama</h3>
-                    <p>Kayıt sonrası gönderilen email ile hesabınızı doğrulayın. Token tabanlı güvenli doğrulama sistemi.</p>
-                    <a href="/verify-email" class="btn secondary">Doğrula</a>
+                
+                <div class="feature">
+                    <div class="feature-icon">🏛️</div>
+                    <h3>Sınıf Yönetimi</h3>
+                    <p>Esnek sınıf sistemi</p>
                 </div>
-            </div>
-
-            <div class="features">
-                <h3>🚀 Sistem Özellikleri</h3>
-                <ul>
-                    <li>Multi-tenant okul yönetimi</li>
-                    <li>Otomatik ders programı oluşturma</li>
-                    <li>Çakışma kontrolü</li>
-                    <li>Öğretmen ve öğrenci yönetimi</li>
-                    <li>Sınıf ve ders tanımlama</li>
-                    <li>Email bildirim sistemi</li>
-                    <li>Role-based erişim kontrolü</li>
-                    <li>Türkiye il/ilçe veri tabanı</li>
-                    <li>Abonelik planı yönetimi</li>
-                    <li>Responsive web arayüzü</li>
-                    <li>RESTful API altyapısı</li>
-                    <li>Laravel + Vue.js teknolojisi</li>
-                </ul>
-            </div>
-
-            <div style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid #dee2e6;">
-                <h4 style="color: #6c757d; margin-bottom: 10px;">�️ Geliştirici Test Alanları</h4>
-                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/api-status.php" class="btn secondary" style="font-size: 14px; padding: 8px 15px;">API Status</a>
-                    <a href="/api-test.php" class="btn secondary" style="font-size: 14px; padding: 8px 15px;">API Test</a>
-                    <a href="/test-dashboard.php" class="btn secondary" style="font-size: 14px; padding: 8px 15px;">Dashboard Test</a>
+                
+                <div class="feature">
+                    <div class="feature-icon">📅</div>
+                    <h3>Ders Programı</h3>
+                    <p>Çakışma kontrolü</p>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <h3>Dashboard</h3>
+                    <p>Anlık istatistikler</p>
+                </div>
+                
+                <div class="feature">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Güvenlik</h3>
+                    <p>Rol bazlı erişim</p>
                 </div>
             </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Test Hesapları:</strong></p>
+            <p>Super Admin: admin@schoolschedule.com / admin123</p>
+            <p>Okul Müdürü: mudur@ataturklisesi.edu.tr / mudur123</p>
+            <p style="margin-top: 20px;">v1.0 - Laravel 11 + Vue 3 + Docker</p>
         </div>
     </div>
-
 </body>
 </html>

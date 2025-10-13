@@ -506,7 +506,8 @@ createApp({
                 }
                 
                 await axios.post(`${API_BASE_URL}/users`, this.newUser);
-                this.message = 'Kullanıcı başarıyla eklendi';
+                const userType = this.user.role?.name === 'super_admin' ? 'Kullanıcı' : 'Öğretmen';
+                this.message = `${userType} başarıyla eklendi`;
                 this.addUserModal = false;
                 this.newUser = {
                     name: '',
@@ -536,7 +537,8 @@ createApp({
             this.modalError = '';
             try {
                 await axios.put(`${API_BASE_URL}/users/${this.editUserData.id}`, this.editUserData);
-                this.message = 'Kullanıcı başarıyla güncellendi';
+                const userType = this.user.role?.name === 'super_admin' ? 'Kullanıcı' : 'Öğretmen';
+                this.message = `${userType} başarıyla güncellendi`;
                 this.editUserModal = false;
                 this.loadUsers();
             } catch (error) {
@@ -551,7 +553,8 @@ createApp({
             
             try {
                 await axios.delete(`${API_BASE_URL}/users/${user.id}`);
-                this.message = 'Kullanıcı başarıyla silindi';
+                const userType = this.user.role?.name === 'super_admin' ? 'Kullanıcı' : 'Öğretmen';
+                this.message = `${userType} başarıyla silindi`;
                 this.loadUsers();
             } catch (error) {
                 this.error = error.response?.data?.message || 'Kullanıcı silinemedi';
@@ -691,6 +694,14 @@ createApp({
         
         // ===== Tab Management =====
         changeTab(tab) {
+            // Super admin sınıf/ders/program yönetimine erişemez
+            if (this.user && this.user.role?.name === 'super_admin') {
+                if (['classes', 'subjects', 'schedules'].includes(tab)) {
+                    this.error = 'Bu bölüme erişim yetkiniz yok. Lütfen bir okul yöneticisi olarak giriş yapın.';
+                    return;
+                }
+            }
+            
             this.activeTab = tab;
             this.searchQuery = '';
             this.filterStatus = 'all';
@@ -724,8 +735,8 @@ createApp({
             this.classesLoading = true;
             try {
                 const response = await axios.get(`${API_BASE_URL}/classes`);
-                this.classes = response.data.data || response.data;
-                console.log('Loaded classes:', this.classes);
+                // API direkt array dönüyor (pagination yok)
+                this.classes = response.data;
             } catch (error) {
                 this.error = 'Sınıflar yüklenemedi';
                 console.error('Classes load error:', error);
@@ -758,7 +769,6 @@ createApp({
                 
                 // Yeni eklenen sınıfı direkt listeye ekle (daha hızlı)
                 if (response.data.class) {
-                    console.log('New class added:', response.data.class);
                     // Eğer classes bir array ise push et, pagination varsa başa ekle
                     if (Array.isArray(this.classes)) {
                         this.classes.unshift(response.data.class);
@@ -796,7 +806,6 @@ createApp({
                 
                 // Güncellenen sınıfı listede bul ve değiştir (daha hızlı)
                 if (response.data.class) {
-                    console.log('Updated class:', response.data.class);
                     const index = this.classes.findIndex(c => c.id === response.data.class.id);
                     if (index !== -1) {
                         this.classes[index] = response.data.class;
@@ -872,7 +881,6 @@ createApp({
                 if (response.data.error_count > 0) {
                     // Kısmi başarı
                     this.message = response.data.message;
-                    console.log('Import errors:', response.data.errors);
                     
                     // Hata detaylarını göster
                     let errorDetails = `\n\nHatalar:\n`;

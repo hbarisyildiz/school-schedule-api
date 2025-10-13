@@ -204,10 +204,17 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         $currentUser = auth()->user();
-        $user = User::where('school_id', $currentUser->school_id)->findOrFail($id);
+        
+        // Super admin tüm kullanıcıları görebilir
+        if ($currentUser->role->name === 'super_admin') {
+            $user = User::findOrFail($id);
+        } else {
+            // Okul müdürü sadece kendi okulunun kullanıcılarını silebilir
+            $user = User::where('school_id', $currentUser->school_id)->findOrFail($id);
+        }
 
-        // Sadece super admin silebilir
-        if ($currentUser->role->name !== 'super_admin') {
+        // Sadece super admin veya okul müdürü silebilir
+        if (!in_array($currentUser->role->name, ['super_admin', 'school_admin'])) {
             return response()->json([
                 'message' => 'Bu işlem için yetkiniz yok'
             ], 403);
@@ -219,11 +226,20 @@ class UserController extends Controller
                 'message' => 'Kendi hesabınızı silemezsiniz'
             ], 422);
         }
+        
+        // Okul müdürü başka okul müdürlerini veya super admin'i silemez
+        if ($currentUser->role->name === 'school_admin') {
+            if (in_array($user->role->name, ['super_admin', 'school_admin'])) {
+                return response()->json([
+                    'message' => 'Okul yöneticilerini silemezsiniz'
+                ], 403);
+            }
+        }
 
         $user->delete();
 
         return response()->json([
-            'message' => 'Kullanıcı silindi'
+            'message' => 'Kullanıcı başarıyla silindi'
         ]);
     }
 

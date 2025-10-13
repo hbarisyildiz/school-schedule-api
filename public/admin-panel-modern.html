@@ -136,21 +136,29 @@
                     @click="changeTab('users')" 
                     :class="['btn', {active: activeTab === 'users'}]"
                 >
-                    👥 Kullanıcılar
+                    <span v-if="user.role?.name === 'super_admin'">👥 Kullanıcılar</span>
+                    <span v-else>👨‍🏫 Öğretmenler</span>
                 </button>
+                
+                <!-- Sadece okul yöneticileri için sınıflar sekmesi -->
                 <button 
+                    v-if="user.role?.name !== 'super_admin'"
                     @click="changeTab('classes')" 
                     :class="['btn', {active: activeTab === 'classes'}]"
                 >
                     🏛️ Sınıflar
                 </button>
+                
                 <button 
+                    v-if="user.role?.name !== 'super_admin'"
                     @click="changeTab('subjects')" 
                     :class="['btn', {active: activeTab === 'subjects'}]"
                 >
                     📚 Dersler
                 </button>
+                
                 <button 
+                    v-if="user.role?.name !== 'super_admin'"
                     @click="changeTab('schedules')" 
                     :class="['btn', {active: activeTab === 'schedules'}]"
                 >
@@ -333,7 +341,8 @@
             <!-- ========== USERS TAB ========== -->
             <div v-if="activeTab === 'users'" class="card">
                 <div class="flex-between mb-20">
-                    <h2>👥 Kullanıcılar</h2>
+                    <h2 v-if="user.role?.name === 'super_admin'">👥 Kullanıcılar</h2>
+                    <h2 v-else>👨‍🏫 Öğretmenler</h2>
                     <div class="flex gap-10">
                         <input 
                             v-model="searchQuery" 
@@ -344,7 +353,10 @@
                         <div class="flex gap-10">
                             <a href="/ogretmen_sablonu.xlsx" class="btn btn-info" download>📥 Excel Şablonu İndir (.xlsx)</a>
                         </div>
-                        <button @click="openAddUserModal" class="btn btn-success">+ Kullanıcı Ekle</button>
+                        <button @click="openAddUserModal" class="btn btn-success">
+                            <span v-if="user.role?.name === 'super_admin'">+ Kullanıcı Ekle</span>
+                            <span v-else>+ Öğretmen Ekle</span>
+                        </button>
                     </div>
                 </div>
                 
@@ -385,8 +397,10 @@
                 
                 <div v-else-if="filteredUsers.length === 0" class="empty-state">
                     <div class="empty-state-icon">👥</div>
-                    <h3>Kullanıcı Bulunamadı</h3>
-                    <p>Henüz kayıtlı kullanıcı bulunmamaktadır.</p>
+                    <h3 v-if="user.role?.name === 'super_admin'">Kullanıcı Bulunamadı</h3>
+                    <h3 v-else>Öğretmen Bulunamadı</h3>
+                    <p v-if="user.role?.name === 'super_admin'">Henüz kayıtlı kullanıcı bulunmamaktadır.</p>
+                    <p v-else>Henüz kayıtlı öğretmen bulunmamaktadır.</p>
                 </div>
                 
                 <div v-else class="table-container">
@@ -394,9 +408,11 @@
                         <thead>
                             <tr>
                                 <th>Ad Soyad</th>
-                                <th>Email</th>
+                                <th v-if="user.role?.name === 'super_admin'">Email</th>
+                                <th v-else>Branş</th>
                                 <th>Rol</th>
-                                <th>Okul</th>
+                                <th v-if="user.role?.name === 'super_admin'">Okul</th>
+                                <th v-else>Kısa Ad</th>
                                 <th>Durum</th>
                                 <th>İşlemler</th>
                             </tr>
@@ -404,9 +420,11 @@
                         <tbody>
                             <tr v-for="user in filteredUsers" :key="user.id">
                                 <td>{{ user.name }}</td>
-                                <td>{{ user.email }}</td>
+                                <td v-if="user.role?.name === 'super_admin'">{{ user.email }}</td>
+                                <td v-else>{{ user.branch || '-' }}</td>
                                 <td>{{ user.role?.display_name }}</td>
-                                <td>{{ user.school?.name || '-' }}</td>
+                                <td v-if="user.role?.name === 'super_admin'">{{ user.school?.name || '-' }}</td>
+                                <td v-else>{{ user.short_name || '-' }}</td>
                                 <td>
                                     <span :class="['status-badge', user.is_active ? 'status-active' : 'status-inactive']">
                                         {{ user.is_active ? 'Aktif' : 'Pasif' }}
@@ -423,7 +441,7 @@
             </div>
             
             <!-- ========== CLASSES TAB ========== -->
-            <div v-if="activeTab === 'classes'" class="card">
+            <div v-if="activeTab === 'classes' && user.role?.name !== 'super_admin'" class="card">
                 <div class="flex-between mb-20">
                     <h2>🏛️ Sınıflar</h2>
                     <div class="flex gap-10">
@@ -466,10 +484,15 @@
                                 <td><strong>{{ classItem.name }}</strong></td>
                                 <td>{{ classItem.grade }}. Sınıf</td>
                                 <td>{{ classItem.branch || '-' }}</td>
-                                <td @click="console.log('Class data:', classItem)">
-                                    {{ classItem.class_teacher?.name || classItem.classTeacher?.name || '-' }}
-                                    <span v-if="!classItem.class_teacher && !classItem.classTeacher" style="color: red; font-size: 10px;" :title="JSON.stringify(classItem)">
-                                        (debug: click)
+                                <td>
+                                    <span v-if="classItem.class_teacher">
+                                        {{ classItem.class_teacher.name }}
+                                        <small style="color: #999; display: block; font-size: 0.85em;">
+                                            {{ classItem.class_teacher.short_name || classItem.class_teacher.email }}
+                                        </small>
+                                    </span>
+                                    <span v-else style="color: #999; font-style: italic;">
+                                        Atanmamış
                                     </span>
                                 </td>
                                 <td>
@@ -488,7 +511,7 @@
             </div>
             
             <!-- ========== SUBJECTS TAB ========== -->
-            <div v-if="activeTab === 'subjects'" class="card">
+            <div v-if="activeTab === 'subjects' && user.role?.name !== 'super_admin'" class="card">
                 <div class="flex-between mb-20">
                     <h2>📚 Dersler</h2>
                     <button @click="openAddSubjectModal" class="btn btn-success">+ Ders Ekle</button>
@@ -533,7 +556,7 @@
             </div>
             
             <!-- ========== SCHEDULES TAB ========== -->
-            <div v-if="activeTab === 'schedules'" class="card">
+            <div v-if="activeTab === 'schedules' && user.role?.name !== 'super_admin'" class="card">
                 <h2>📅 Ders Programları</h2>
                 
                 <div v-if="schedulesLoading" class="text-center">
@@ -717,7 +740,8 @@
         <div v-if="addUserModal" class="modal-overlay" @click.self="addUserModal = false">
             <div class="modal">
                 <button @click="addUserModal = false" class="close-btn">×</button>
-                <h2>👤 Kullanıcı Ekle</h2>
+                <h2 v-if="user.role?.name === 'super_admin'">👤 Kullanıcı Ekle</h2>
+                <h2 v-else>👨‍🏫 Öğretmen Ekle</h2>
                 
                 <!-- Modal içi hata mesajı -->
                 <div v-if="modalError" class="error" style="margin-bottom: 15px;">
@@ -790,7 +814,8 @@
         <div v-if="editUserModal" class="modal-overlay" @click.self="editUserModal = false">
             <div class="modal">
                 <button @click="editUserModal = false" class="close-btn">×</button>
-                <h2>👤 Kullanıcı Düzenle</h2>
+                <h2 v-if="user.role?.name === 'super_admin'">👤 Kullanıcı Düzenle</h2>
+                <h2 v-else>👨‍🏫 Öğretmen Düzenle</h2>
                 
                 <!-- Modal içi hata mesajı -->
                 <div v-if="modalError" class="error" style="margin-bottom: 15px;">

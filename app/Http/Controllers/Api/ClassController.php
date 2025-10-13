@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ClassRoomResource;
+use App\Http\Resources\ClassRoomCollection;
 use App\Models\ClassRoom;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,27 +16,57 @@ class ClassController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ClassRoom::with(['school', 'classTeacher'])
-            ->where('school_id', auth()->user()->school_id);
-
-        // Aktif/pasif filtresi
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
+        $user = auth()->user();
+        $role = $user->role->name;
+        
+        // Query builder ile çek (with eager loading)
+        $query = ClassRoom::with(['classTeacher', 'school'])
+            ->orderBy('grade')
+            ->orderBy('branch');
+        
+        // Super admin değilse sadece kendi okulunun sınıflarını göster
+        if ($role !== 'super_admin') {
+            $query->where('school_id', $user->school_id);
         }
-
-        // Sınıf seviyesi filtresi
-        if ($request->grade) {
-            $query->where('grade', $request->grade);
-        }
-
-        // Arama
-        if ($request->search) {
-            $query->where('name', 'like', "%{$request->search}%");
-        }
-
-        $classes = $query->orderBy('grade')->orderBy('branch')->paginate(15);
-
-        return ClassRoomResource::collection($classes);
+        
+        $classes = $query->get();
+        
+        // Her sınıf için manuel map (öğretmen bilgisini garanti etmek için)
+        $result = $classes->map(function($class) {
+            // Öğretmen bilgisini direkt çek (eager loading yerine)
+            $teacher = null;
+            if ($class->class_teacher_id) {
+                $teacherData = \App\Models\User::find($class->class_teacher_id);
+                if ($teacherData) {
+                    $teacher = [
+                        'id' => $teacherData->id,
+                        'name' => $teacherData->name,
+                        'email' => $teacherData->email,
+                        'short_name' => $teacherData->short_name,
+                        'branch' => $teacherData->branch,
+                    ];
+                }
+            }
+            
+            return [
+                'id' => $class->id,
+                'school_id' => $class->school_id,
+                'name' => $class->name,
+                'grade' => $class->grade,
+                'branch' => $class->branch,
+                'capacity' => $class->capacity,
+                'current_students' => $class->current_students,
+                'classroom' => $class->classroom,
+                'class_teacher_id' => $class->class_teacher_id,
+                'description' => $class->description,
+                'is_active' => $class->is_active,
+                'created_at' => $class->created_at,
+                'updated_at' => $class->updated_at,
+                'class_teacher' => $teacher
+            ];
+        });
+        
+        return response()->json($result);
     }
 
     /**
