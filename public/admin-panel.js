@@ -1063,8 +1063,9 @@ createApp({
                         thursday: 8,
                         friday: 8
                     },
-                    class_daily_lesson_counts: response.data.class_daily_lesson_counts || {},
-                    teacher_daily_lesson_counts: response.data.teacher_daily_lesson_counts || {}
+                    // class_daily_lesson_counts ve teacher_daily_lesson_counts artık ayrı tablolarda
+                    class_daily_lesson_counts: {},
+                    teacher_daily_lesson_counts: {}
                 };
                 
                 console.log('Loaded school settings:', this.schoolSettings);
@@ -1082,7 +1083,10 @@ createApp({
                 const token = localStorage.getItem('auth_token');
                 console.log('Saving settings with token:', token ? 'Token exists' : 'No token');
                 
-                const response = await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
+                // Sadece okul ayarlarını gönder (class_daily_lesson_counts ve teacher_daily_lesson_counts hariç)
+                const { class_daily_lesson_counts, teacher_daily_lesson_counts, ...schoolSettingsToSave } = this.schoolSettings;
+                
+                const response = await axios.put(`${API_BASE_URL}/school/settings`, schoolSettingsToSave, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 

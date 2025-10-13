@@ -239,9 +239,8 @@ class SchoolController extends Controller
             'weekly_lesson_count' => $school->getDefaultWeeklyLessonCount(),
             'schedule_settings' => $school->getDefaultScheduleSettings(),
             'class_days_turkish' => $school->getClassDaysInTurkish(),
-            'daily_lesson_counts' => $school->getDailyLessonCounts(),
-            'class_daily_lesson_counts' => $school->getClassDailyLessonCounts(),
-            'teacher_daily_lesson_counts' => $school->teacher_daily_lesson_counts ?? []
+            'daily_lesson_counts' => $school->getDailyLessonCounts()
+            // class_daily_lesson_counts ve teacher_daily_lesson_counts artık ayrı endpoint'lerden çekiliyor
         ]);
     }
 
@@ -274,9 +273,8 @@ class SchoolController extends Controller
             'schedule_settings.max_lessons_per_day' => 'integer|min:1|max:12',
             'schedule_settings.min_lessons_per_day' => 'integer|min:1|max:12',
             'daily_lesson_counts' => 'array',
-            'daily_lesson_counts.*' => 'integer|min:1|max:12',
-            'class_daily_lesson_counts' => 'array',
-            'teacher_daily_lesson_counts' => 'array'
+            'daily_lesson_counts.*' => 'integer|min:1|max:12'
+            // class_daily_lesson_counts ve teacher_daily_lesson_counts artık ayrı endpoint'lerden kaydediliyor
         ]);
 
         // Sadece gönderilen alanları güncelle
@@ -290,20 +288,6 @@ class SchoolController extends Controller
             'daily_lesson_counts'
         ]);
         
-        // class_daily_lesson_counts için merge yap (mevcut veriyi koru)
-        if ($request->has('class_daily_lesson_counts')) {
-            $existingClassCounts = $school->class_daily_lesson_counts ?? [];
-            $newClassCounts = $request->input('class_daily_lesson_counts', []);
-            $updateData['class_daily_lesson_counts'] = array_merge($existingClassCounts, $newClassCounts);
-        }
-        
-        // teacher_daily_lesson_counts için merge yap (mevcut veriyi koru)
-        if ($request->has('teacher_daily_lesson_counts')) {
-            $existingTeacherCounts = $school->teacher_daily_lesson_counts ?? [];
-            $newTeacherCounts = $request->input('teacher_daily_lesson_counts', []);
-            $updateData['teacher_daily_lesson_counts'] = array_merge($existingTeacherCounts, $newTeacherCounts);
-        }
-        
         $school->update($updateData);
 
         return response()->json([
@@ -316,9 +300,8 @@ class SchoolController extends Controller
                 'weekly_lesson_count' => $school->getDefaultWeeklyLessonCount(),
                 'schedule_settings' => $school->getDefaultScheduleSettings(),
                 'class_days_turkish' => $school->getClassDaysInTurkish(),
-                'daily_lesson_counts' => $school->getDailyLessonCounts(),
-                'class_daily_lesson_counts' => $school->getClassDailyLessonCounts(),
-                'teacher_daily_lesson_counts' => $school->teacher_daily_lesson_counts ?? []
+                'daily_lesson_counts' => $school->getDailyLessonCounts()
+                // class_daily_lesson_counts ve teacher_daily_lesson_counts artık ayrı endpoint'lerden çekiliyor
             ]
         ]);
     }
