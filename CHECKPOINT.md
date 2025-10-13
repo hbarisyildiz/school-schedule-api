@@ -228,15 +228,21 @@ http://localhost/admin-panel-modern.html
 
 ---
 
-## 🚀 DEPLOYMENT PLANI
+## 🚀 DEPLOYMENT PLANLARI
 
+### 1. DigitalOcean + Laravel Forge (Tavsiye)
 **Dosya:** `DEPLOYMENT_PLAN.md`
+- Maliyet: $24/ay (~₺800)
+- Süre: 1 saat
+- Otomatik GitHub deploy
+- Kolay yönetim
 
-- Sunucu önerileri (DigitalOcean + Forge)
-- Adım adım deployment guide
-- Güvenlik checklist
-- Maliyet analizi
-- Scale up planı
+### 2. AWS Free Tier (Ücretsiz 12 Ay!)
+**Dosya:** `AWS_DEPLOYMENT.md`
+- Maliyet: $0 (12 ay ücretsiz)
+- Süre: 3-4 saat (manuel kurulum)
+- EC2 + RDS + Redis
+- Adım adım rehber
 
 ---
 
