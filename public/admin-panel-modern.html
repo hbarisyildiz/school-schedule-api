@@ -583,7 +583,10 @@
                         </thead>
                         <tbody>
                             <tr v-for="period in 12" :key="period">
-                                <td class="period-cell">{{ period }}</td>
+                                <td class="period-cell">
+                                    <div class="period-number">{{ period }}</div>
+                                    <div class="period-time">{{ getPeriodTime(period) }}</div>
+                                </td>
                                 <td v-for="day in weekDays" :key="day.value" 
                                     :class="[
                                         'schedule-cell',
@@ -645,7 +648,10 @@
                         </thead>
                         <tbody>
                             <tr v-for="period in 12" :key="period">
-                                <td class="period-cell">{{ period }}</td>
+                                <td class="period-cell">
+                                    <div class="period-number">{{ period }}</div>
+                                    <div class="period-time">{{ getPeriodTime(period) }}</div>
+                                </td>
                                 <td v-for="day in weekDays" :key="day.value" 
                                     :class="[
                                         'schedule-cell',

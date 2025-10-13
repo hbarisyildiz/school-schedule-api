@@ -1229,6 +1229,47 @@ createApp({
                 console.error('Öğretmen saatleri kaydedilemedi:', error);
                 this.error = error.response?.data?.message || 'Öğretmen saatleri kaydedilemedi';
             }
+        },
+        
+        // Periyot Saatlerini Hesapla
+        getPeriodTime(period) {
+            const startTime = this.schoolSettings.school_hours?.start_time || '08:00';
+            const lessonDuration = this.schoolSettings.lesson_duration || 40;
+            const smallBreak = this.schoolSettings.break_durations?.small_break || 10;
+            const lunchBreak = this.schoolSettings.break_durations?.lunch_break || 20;
+            const lunchBreakAfterPeriod = 5; // Öğle arası 5. saattan sonra
+            
+            // Başlangıç saatini parse et
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            
+            // Toplam geçen dakikayı hesapla
+            let totalMinutes = (startHour * 60) + startMinute;
+            
+            // Her periyot için hesapla
+            for (let i = 1; i < period; i++) {
+                totalMinutes += lessonDuration; // Ders süresi
+                
+                // Öğle arası kontrolü
+                if (i === lunchBreakAfterPeriod) {
+                    totalMinutes += lunchBreak;
+                } else {
+                    totalMinutes += smallBreak; // Küçük tenefüs
+                }
+            }
+            
+            // Başlangıç saati
+            const startTotalMinutes = totalMinutes;
+            const startH = Math.floor(startTotalMinutes / 60);
+            const startM = startTotalMinutes % 60;
+            const startTimeStr = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`;
+            
+            // Bitiş saati
+            const endTotalMinutes = totalMinutes + lessonDuration;
+            const endH = Math.floor(endTotalMinutes / 60);
+            const endM = endTotalMinutes % 60;
+            const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+            
+            return `${startTimeStr} - ${endTimeStr}`;
         }
     },
     
