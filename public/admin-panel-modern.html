@@ -484,6 +484,7 @@
                                 <th>Seviye</th>
                                 <th>Şube</th>
                                 <th>Sınıf Öğretmeni</th>
+                                <th>Günlük Ders Saatleri</th>
                                 <th>Durum</th>
                                 <th>İşlemler</th>
                             </tr>
@@ -505,12 +506,33 @@
                                     </span>
                                 </td>
                                 <td>
+                                    <div class="schedule-summary">
+                                        <div class="schedule-days">
+                                            <span v-for="day in weekDays" :key="day.value" 
+                                                  class="schedule-day-badge"
+                                                  :class="{
+                                                      'active': schoolSettings.class_days.includes(day.value),
+                                                      'has-schedule': schoolSettings.class_daily_lesson_counts[classItem.name]?.[day.value] > 0
+                                                  }"
+                                                  :title="day.label + ': ' + (schoolSettings.class_daily_lesson_counts[classItem.name]?.[day.value] || 0) + ' ders'">
+                                                {{ day.label.substring(0, 3) }}
+                                                <span class="lesson-count" v-if="schoolSettings.class_daily_lesson_counts[classItem.name]?.[day.value]">
+                                                    ({{ schoolSettings.class_daily_lesson_counts[classItem.name][day.value] }})
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
                                     <span :class="['status-badge', classItem.is_active ? 'status-active' : 'status-inactive']">
                                         {{ classItem.is_active ? 'Aktif' : 'Pasif' }}
                                     </span>
                                 </td>
                                 <td class="actions">
-                                    <button @click="openClassScheduleModal(classItem)" class="btn btn-info btn-small">⏰ Saatleri Düzenle</button>
+                                    <button @click="openClassScheduleModal(classItem)" class="btn btn-schedule btn-small">
+                                        <span class="btn-icon">⏰</span>
+                                        <span class="btn-text">Saatleri Düzenle</span>
+                                    </button>
                                     <button @click="editClass(classItem)" class="btn btn-primary btn-small">Düzenle</button>
                                     <button @click="deleteClass(classItem)" class="btn btn-danger btn-small">Sil</button>
                                 </td>

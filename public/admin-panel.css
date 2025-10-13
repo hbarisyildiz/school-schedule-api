@@ -1089,3 +1089,89 @@ code {
     }
 }
 
+/* === Schedule Summary Styles === */
+.schedule-summary {
+    padding: 10px 0;
+}
+
+.schedule-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.schedule-day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #e9ecef;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.schedule-day-badge.active {
+    background: #fff3cd;
+    color: #856404;
+    border-color: #ffc107;
+}
+
+.schedule-day-badge.has-schedule {
+    background: #d4edda;
+    color: #155724;
+    border-color: #28a745;
+    font-weight: 600;
+}
+
+.schedule-day-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-count {
+    font-weight: 700;
+    font-size: 11px;
+}
+
+/* === Schedule Button Styles === */
+.btn-schedule {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-schedule:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-icon {
+    font-size: 16px;
+}
+
+.btn-text {
+    font-weight: 500;
+}
+
+/* Responsive Schedule Summary */
+@media (max-width: 768px) {
+    .schedule-days {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .schedule-day-badge {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
