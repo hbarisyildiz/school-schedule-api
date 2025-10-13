@@ -1181,13 +1181,13 @@ createApp({
             if (existingData) {
                 this.teacherScheduleData = { ...existingData };
             } else {
-                // Varsayılan değerler
+                // Varsayılan değerler - Tüm saatler açık (12 saat)
                 this.teacherScheduleData = {
-                    monday: 0,
-                    tuesday: 0,
-                    wednesday: 0,
-                    thursday: 0,
-                    friday: 0
+                    monday: 12,
+                    tuesday: 12,
+                    wednesday: 12,
+                    thursday: 12,
+                    friday: 12
                 };
             }
             
