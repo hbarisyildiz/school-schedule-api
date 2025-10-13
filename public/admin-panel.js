@@ -28,6 +28,47 @@ createApp({
             error: '',
             modalError: '',
             
+            // School Settings
+            schoolSettings: {
+                class_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+                lesson_duration: 40,
+                break_durations: {
+                    small_break: 10,
+                    lunch_break: 20
+                },
+                school_hours: {
+                    start_time: '08:00',
+                    end_time: '16:00'
+                },
+                weekly_lesson_count: 30,
+                schedule_settings: {
+                    allow_teacher_conflicts: false,
+                    allow_classroom_conflicts: false,
+                    max_lessons_per_day: 8,
+                    min_lessons_per_day: 4
+                },
+                daily_lesson_counts: {
+                    monday: 8,
+                    tuesday: 8,
+                    wednesday: 8,
+                    thursday: 8,
+                    friday: 8
+                },
+                class_daily_lesson_counts: {}
+            },
+            selectedClassForDailyCount: '',
+            schoolSettingsLoading: false,
+            isSavingSettings: false,
+            weekDays: [
+                { value: 'monday', label: 'Pazartesi' },
+                { value: 'tuesday', label: 'Salı' },
+                { value: 'wednesday', label: 'Çarşamba' },
+                { value: 'thursday', label: 'Perşembe' },
+                { value: 'friday', label: 'Cuma' },
+                { value: 'saturday', label: 'Cumartesi' },
+                { value: 'sunday', label: 'Pazar' }
+            ],
+            
             // Dashboard Stats
             stats: {
                 totalSchools: 0,
@@ -106,6 +147,11 @@ createApp({
                 class_teacher_id: '',
                 description: ''
             },
+            
+            // Class Schedule Modal
+            classScheduleModal: false,
+            selectedClassForSchedule: null,
+            classScheduleData: {},
             editClassData: {},
             teachers: [],
             
@@ -694,9 +740,9 @@ createApp({
         
         // ===== Tab Management =====
         changeTab(tab) {
-            // Super admin sınıf/ders/program yönetimine erişemez
+            // Super admin sınıf/ders/program/okul ayarları yönetimine erişemez
             if (this.user && this.user.role?.name === 'super_admin') {
-                if (['classes', 'subjects', 'schedules'].includes(tab)) {
+                if (['classes', 'subjects', 'schedules', 'school-settings'].includes(tab)) {
                     this.error = 'Bu bölüme erişim yetkiniz yok. Lütfen bir okul yöneticisi olarak giriş yapın.';
                     return;
                 }
@@ -704,6 +750,12 @@ createApp({
             
             this.activeTab = tab;
             this.searchQuery = '';
+            
+            // Okul ayarları sekmesine geçildiğinde ayarları ve sınıfları yükle
+            if (tab === 'school-settings') {
+                this.loadSchoolSettings();
+                this.loadClasses();
+            }
             this.filterStatus = 'all';
             this.currentPage = 1;
             
@@ -930,6 +982,185 @@ createApp({
         
         closeModal(modalName) {
             this[modalName] = false;
+        },
+        
+        // ===== School Settings =====
+        async loadSchoolSettings() {
+            if (this.user?.role?.name === 'super_admin') return;
+            
+            this.schoolSettingsLoading = true;
+            try {
+                const token = localStorage.getItem('auth_token');
+                console.log('Loading settings with token:', token ? 'Token exists' : 'No token');
+                
+                const response = await axios.get(`${API_BASE_URL}/school/settings`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                this.schoolSettings = {
+                    class_days: response.data.class_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+                    lesson_duration: response.data.lesson_duration || 40,
+                    break_durations: response.data.break_durations || {
+                        small_break: 10,
+                        lunch_break: 20
+                    },
+                    school_hours: response.data.school_hours || {
+                        start_time: '08:00',
+                        end_time: '16:00'
+                    },
+                    weekly_lesson_count: response.data.weekly_lesson_count || 30,
+                    schedule_settings: response.data.schedule_settings || {
+                        allow_teacher_conflicts: false,
+                        allow_classroom_conflicts: false,
+                        max_lessons_per_day: 8,
+                        min_lessons_per_day: 4
+                    },
+                    daily_lesson_counts: response.data.daily_lesson_counts || {
+                        monday: 8,
+                        tuesday: 8,
+                        wednesday: 8,
+                        thursday: 8,
+                        friday: 8
+                    },
+                    class_daily_lesson_counts: response.data.class_daily_lesson_counts || {}
+                };
+                
+                console.log('Loaded school settings:', this.schoolSettings);
+            } catch (error) {
+                console.error('Okul ayarları yüklenemedi:', error);
+                this.error = 'Okul ayarları yüklenemedi';
+            } finally {
+                this.schoolSettingsLoading = false;
+            }
+        },
+        
+        async saveSchoolSettings() {
+            this.isSavingSettings = true;
+            try {
+                const token = localStorage.getItem('auth_token');
+                console.log('Saving settings with token:', token ? 'Token exists' : 'No token');
+                
+                const response = await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                this.message = 'Okul ayarları başarıyla kaydedildi!';
+                this.error = '';
+                
+                // Güncellenmiş ayarları yükle
+                this.schoolSettings = response.data.settings;
+                
+            } catch (error) {
+                console.error('Okul ayarları kaydedilemedi:', error);
+                this.error = error.response?.data?.message || 'Okul ayarları kaydedilemedi';
+            } finally {
+                this.isSavingSettings = false;
+            }
+        },
+        
+        addClassDailyLessonCounts() {
+            if (!this.selectedClassForDailyCount) return;
+            
+            console.log('Adding class:', this.selectedClassForDailyCount);
+            console.log('Current class_daily_lesson_counts:', this.schoolSettings.class_daily_lesson_counts);
+            
+            // Eğer sınıf zaten varsa, ekleme
+            if (this.schoolSettings.class_daily_lesson_counts[this.selectedClassForDailyCount]) {
+                this.error = 'Bu sınıf zaten eklenmiş!';
+                return;
+            }
+            
+            // Yeni sınıf için günlük ders sayılarını oluştur
+            const dailyCounts = {};
+            this.weekDays.forEach(day => {
+                dailyCounts[day.value] = this.schoolSettings.daily_lesson_counts[day.value] || 8;
+            });
+            
+            console.log('New dailyCounts:', dailyCounts);
+            
+            // Vue 3'te $set gerekmez, direkt atama yapılabilir
+            this.schoolSettings.class_daily_lesson_counts[this.selectedClassForDailyCount] = dailyCounts;
+            this.selectedClassForDailyCount = '';
+            
+            console.log('After adding, class_daily_lesson_counts:', this.schoolSettings.class_daily_lesson_counts);
+        },
+        
+        removeClassDailyLessonCounts(className) {
+            // Vue 3'te $delete gerekmez, delete operatörü kullanılır
+            delete this.schoolSettings.class_daily_lesson_counts[className];
+        },
+        
+        togglePeriod(className, day, period) {
+            // Ders olmayan günlerde işlem yapma
+            if (!this.schoolSettings.class_days.includes(day)) return;
+            
+            const currentCount = this.schoolSettings.class_daily_lesson_counts[className][day] || 0;
+            
+            // Tıklanan periyot aktifse, onu ve sonrasını kapat
+            if (currentCount >= period) {
+                this.schoolSettings.class_daily_lesson_counts[className][day] = period - 1;
+            } else {
+                // Tıklanan periyot pasifse, onu ve öncesini aç
+                this.schoolSettings.class_daily_lesson_counts[className][day] = period;
+            }
+        },
+        
+        // ===== Class Schedule Modal =====
+        openClassScheduleModal(classItem) {
+            this.selectedClassForSchedule = classItem;
+            
+            // Mevcut veriyi yükle veya varsayılan değerleri kullan
+            const existingData = this.schoolSettings.class_daily_lesson_counts[classItem.name];
+            
+            if (existingData) {
+                this.classScheduleData = { ...existingData };
+            } else {
+                // Varsayılan değerler
+                this.classScheduleData = {
+                    monday: 8,
+                    tuesday: 8,
+                    wednesday: 8,
+                    thursday: 8,
+                    friday: 8
+                };
+            }
+            
+            this.classScheduleModal = true;
+        },
+        
+        toggleClassSchedulePeriod(day, period) {
+            // Ders olmayan günlerde işlem yapma
+            if (!this.schoolSettings.class_days.includes(day)) return;
+            
+            const currentCount = this.classScheduleData[day] || 0;
+            
+            // Tıklanan periyot aktifse, onu ve sonrasını kapat
+            if (currentCount >= period) {
+                this.classScheduleData[day] = period - 1;
+            } else {
+                // Tıklanan periyot pasifse, onu ve öncesini aç
+                this.classScheduleData[day] = period;
+            }
+        },
+        
+        async saveClassSchedule() {
+            try {
+                // Veriyi schoolSettings'e kaydet
+                this.schoolSettings.class_daily_lesson_counts[this.selectedClassForSchedule.name] = { ...this.classScheduleData };
+                
+                // API'ye kaydet
+                const token = localStorage.getItem('auth_token');
+                await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                this.message = `${this.selectedClassForSchedule.name} sınıfının ders saatleri kaydedildi!`;
+                this.classScheduleModal = false;
+                
+            } catch (error) {
+                console.error('Sınıf saatleri kaydedilemedi:', error);
+                this.error = error.response?.data?.message || 'Sınıf saatleri kaydedilemedi';
+            }
         }
     },
     

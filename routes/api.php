@@ -73,6 +73,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ]);
         });
         
+        // Okul ayarları
+        Route::get('school/settings', [\App\Http\Controllers\Api\SchoolController::class, 'getSettings']);
+        Route::put('school/settings', [\App\Http\Controllers\Api\SchoolController::class, 'updateSettings']);
+        
         // Kullanıcı yönetimi
         Route::apiResource('users', \App\Http\Controllers\Api\UserController::class);
         Route::post('users/{id}/toggle-status', [\App\Http\Controllers\Api\UserController::class, 'toggleStatus']);

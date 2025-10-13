@@ -140,6 +140,15 @@
                     <span v-else>👨‍🏫 Öğretmenler</span>
                 </button>
                 
+                <!-- Okul Ayarları - Sadece Okul Müdürü için -->
+                <button 
+                    v-if="user.role?.name !== 'super_admin'"
+                    @click="changeTab('school-settings')" 
+                    :class="['btn', {active: activeTab === 'school-settings'}]"
+                >
+                    ⚙️ Okul Ayarları
+                </button>
+                
                 <!-- Sadece okul yöneticileri için sınıflar sekmesi -->
                 <button 
                     v-if="user.role?.name !== 'super_admin'"
@@ -501,6 +510,7 @@
                                     </span>
                                 </td>
                                 <td class="actions">
+                                    <button @click="openClassScheduleModal(classItem)" class="btn btn-info btn-small">⏰ Saatleri Düzenle</button>
                                     <button @click="editClass(classItem)" class="btn btn-primary btn-small">Düzenle</button>
                                     <button @click="deleteClass(classItem)" class="btn btn-danger btn-small">Sil</button>
                                 </td>
@@ -508,9 +518,71 @@
                         </tbody>
                     </table>
                 </div>
+        </div>
+
+        <!-- ========== CLASS SCHEDULE MODAL ========== -->
+        <div v-if="classScheduleModal" class="modal-overlay" @click.self="classScheduleModal = false">
+            <div class="modal modal-large">
+                <button @click="classScheduleModal = false" class="close-btn">×</button>
+                <h2>⏰ {{ selectedClassForSchedule?.name }} - Ders Saatleri</h2>
+                
+                <div class="schedule-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="period-header">Periyot</th>
+                                <th v-for="day in weekDays" :key="day.value" :class="{'day-disabled': !schoolSettings.class_days.includes(day.value)}">
+                                    {{ day.label }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="period in 12" :key="period">
+                                <td class="period-cell">{{ period }}</td>
+                                <td v-for="day in weekDays" :key="day.value" 
+                                    :class="[
+                                        'schedule-cell',
+                                        classScheduleData[day.value] >= period ? 'available' : 'unavailable',
+                                        {'day-disabled': !schoolSettings.class_days.includes(day.value)}
+                                    ]"
+                                    @click="toggleClassSchedulePeriod(day.value, period)">
+                                    <span v-if="classScheduleData[day.value] >= period">✓</span>
+                                    <span v-else>✗</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>Toplam:</strong></td>
+                                <td v-for="day in weekDays" :key="day.value" 
+                                    :class="{'day-disabled': !schoolSettings.class_days.includes(day.value)}"
+                                    class="total-cell">
+                                    <strong>{{ classScheduleData[day.value] || 0 }}</strong>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="legend">
+                    <span class="legend-item">
+                        <span class="legend-box available"></span>
+                        Ders Yapılabilir
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-box unavailable"></span>
+                        Ders Yapılamaz
+                    </span>
+                </div>
+                
+                <div class="modal-actions">
+                    <button @click="classScheduleModal = false" class="btn btn-danger">İptal</button>
+                    <button @click="saveClassSchedule" class="btn btn-success">💾 Kaydet</button>
+                </div>
             </div>
-            
-            <!-- ========== SUBJECTS TAB ========== -->
+        </div>
+
+        <!-- ========== SUBJECTS TAB ========== -->
             <div v-if="activeTab === 'subjects' && user.role?.name !== 'super_admin'" class="card">
                 <div class="flex-between mb-20">
                     <h2>📚 Dersler</h2>
@@ -552,6 +624,189 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- ========== SCHOOL SETTINGS TAB ========== -->
+            <div v-if="activeTab === 'school-settings' && user.role?.name !== 'super_admin'" class="card">
+                <h2>⚙️ Okul Ayarları</h2>
+                
+                <div v-if="schoolSettingsLoading" class="text-center">
+                    <div class="spinner"></div>
+                    <p>Ayarlar yükleniyor...</p>
+                </div>
+                
+                <div v-else class="settings-form">
+                    <form @submit.prevent="saveSchoolSettings">
+                        
+                        <!-- Ders Günleri -->
+                        <div class="form-section">
+                            <h3>📅 Ders Günleri</h3>
+                            <div class="checkbox-group">
+                                <label v-for="day in weekDays" :key="day.value" class="checkbox-item">
+                                    <input 
+                                        type="checkbox" 
+                                        :value="day.value" 
+                                        v-model="schoolSettings.class_days"
+                                        class="checkbox-input"
+                                    >
+                                    <span class="checkbox-label">{{ day.label }}</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Ders Süresi -->
+                        <div class="form-section">
+                            <h3>⏰ Ders Süresi</h3>
+                            <div class="input-group">
+                                <input 
+                                    type="number" 
+                                    v-model="schoolSettings.lesson_duration" 
+                                    min="20" 
+                                    max="120" 
+                                    class="form-input"
+                                    required
+                                >
+                                <span class="input-suffix">dakika</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Tenefüs Süreleri -->
+                        <div class="form-section">
+                            <h3>☕ Tenefüs Süreleri</h3>
+                            <div class="break-settings">
+                                <div class="input-group">
+                                    <label>Küçük Tenefüs:</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="schoolSettings.break_durations.small_break" 
+                                        min="5" 
+                                        max="30" 
+                                        class="form-input"
+                                        required
+                                    >
+                                    <span class="input-suffix">dakika</span>
+                                </div>
+                                <div class="input-group">
+                                    <label>Öğle Arası:</label>
+                                    <input 
+                                        type="number" 
+                                        v-model="schoolSettings.break_durations.lunch_break" 
+                                        min="10" 
+                                        max="60" 
+                                        class="form-input"
+                                        required
+                                    >
+                                    <span class="input-suffix">dakika</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Okul Saatleri -->
+                        <div class="form-section">
+                            <h3>🕐 Okul Saatleri</h3>
+                            <div class="time-settings">
+                                <div class="input-group">
+                                    <label>Başlangıç Saati:</label>
+                                    <input 
+                                        type="time" 
+                                        v-model="schoolSettings.school_hours.start_time" 
+                                        class="form-input"
+                                        required
+                                    >
+                                </div>
+                                <div class="input-group">
+                                    <label>Bitiş Saati:</label>
+                                    <input 
+                                        type="time" 
+                                        v-model="schoolSettings.school_hours.end_time" 
+                                        class="form-input"
+                                        required
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Haftalık Ders Sayısı -->
+                        <div class="form-section">
+                            <h3>📊 Haftalık Ders Sayısı</h3>
+                            <div class="input-group">
+                                <input 
+                                    type="number" 
+                                    v-model="schoolSettings.weekly_lesson_count" 
+                                    min="20" 
+                                    max="50" 
+                                    class="form-input"
+                                    required
+                                >
+                                <span class="input-suffix">ders/hafta</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Ders Programı Ayarları -->
+                        <div class="form-section">
+                            <h3>🎯 Ders Programı Ayarları</h3>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="schoolSettings.schedule_settings.allow_teacher_conflicts"
+                                        class="checkbox-input"
+                                    >
+                                    <span class="checkbox-label">Öğretmen çakışmalarına izin ver</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="schoolSettings.schedule_settings.allow_classroom_conflicts"
+                                        class="checkbox-input"
+                                    >
+                                    <span class="checkbox-label">Sınıf çakışmalarına izin ver</span>
+                                </label>
+                            </div>
+                            <div class="input-group">
+                                <label>Günlük Maksimum Ders:</label>
+                                <input 
+                                    type="number" 
+                                    v-model="schoolSettings.schedule_settings.max_lessons_per_day" 
+                                    min="1" 
+                                    max="12" 
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+                            <div class="input-group">
+                                <label>Günlük Minimum Ders:</label>
+                                <input 
+                                    type="number" 
+                                    v-model="schoolSettings.schedule_settings.min_lessons_per_day" 
+                                    min="1" 
+                                    max="12" 
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+                        </div>
+                        
+                        <!-- Bilgilendirme -->
+                        <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1976d2;">ℹ️ Bilgi</h4>
+                            <p style="margin: 0; color: #555;">
+                                Sınıf ve öğretmen bazlı ders saatleri ayarları, ilgili sayfalardan yapılabilir:<br>
+                                • <strong>Sınıflar</strong> sayfasında → "⏰ Saatleri Düzenle" butonu<br>
+                                • <strong>Öğretmenler</strong> sayfasında → "⏰ Ders Saatleri" butonu
+                            </p>
+                        </div>
+                        
+                        <!-- Kaydet Butonu -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" :disabled="isSavingSettings">
+                                <span v-if="isSavingSettings">Kaydediliyor...</span>
+                                <span v-else>💾 Ayarları Kaydet</span>
+                            </button>
+                        </div>
+                        
+                    </form>
                 </div>
             </div>
             

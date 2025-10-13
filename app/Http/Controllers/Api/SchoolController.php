@@ -218,4 +218,89 @@ class SchoolController extends Controller
             
         return response()->json($districts);
     }
+
+    /**
+     * Okul ayarlarını getir (Okul müdürü için)
+     */
+    public function getSettings(Request $request)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        return response()->json([
+            'class_days' => $school->getDefaultClassDays(),
+            'lesson_duration' => $school->getDefaultLessonDuration(),
+            'break_durations' => $school->getDefaultBreakDurations(),
+            'school_hours' => $school->getDefaultSchoolHours(),
+            'weekly_lesson_count' => $school->getDefaultWeeklyLessonCount(),
+            'schedule_settings' => $school->getDefaultScheduleSettings(),
+            'class_days_turkish' => $school->getClassDaysInTurkish(),
+            'daily_lesson_counts' => $school->getDailyLessonCounts(),
+            'class_daily_lesson_counts' => $school->getClassDailyLessonCounts()
+        ]);
+    }
+
+    /**
+     * Okul ayarlarını güncelle (Okul müdürü için)
+     */
+    public function updateSettings(Request $request)
+    {
+        $user = $request->user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['message' => 'Okul bulunamadı'], 404);
+        }
+
+        $request->validate([
+            'class_days' => 'array',
+            'class_days.*' => 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'lesson_duration' => 'integer|min:20|max:120',
+            'break_durations' => 'array',
+            'break_durations.small_break' => 'integer|min:5|max:30',
+            'break_durations.lunch_break' => 'integer|min:10|max:60',
+            'school_hours' => 'array',
+            'school_hours.start_time' => 'date_format:H:i',
+            'school_hours.end_time' => 'date_format:H:i|after:school_hours.start_time',
+            'weekly_lesson_count' => 'integer|min:20|max:50',
+            'schedule_settings' => 'array',
+            'schedule_settings.allow_teacher_conflicts' => 'boolean',
+            'schedule_settings.allow_classroom_conflicts' => 'boolean',
+            'schedule_settings.max_lessons_per_day' => 'integer|min:1|max:12',
+            'schedule_settings.min_lessons_per_day' => 'integer|min:1|max:12',
+            'daily_lesson_counts' => 'array',
+            'daily_lesson_counts.*' => 'integer|min:1|max:12',
+            'class_daily_lesson_counts' => 'array'
+        ]);
+
+        $school->update($request->only([
+            'class_days',
+            'lesson_duration',
+            'break_durations',
+            'school_hours',
+            'weekly_lesson_count',
+            'schedule_settings',
+            'daily_lesson_counts',
+            'class_daily_lesson_counts'
+        ]));
+
+        return response()->json([
+            'message' => 'Okul ayarları başarıyla güncellendi',
+            'settings' => [
+                'class_days' => $school->getDefaultClassDays(),
+                'lesson_duration' => $school->getDefaultLessonDuration(),
+                'break_durations' => $school->getDefaultBreakDurations(),
+                'school_hours' => $school->getDefaultSchoolHours(),
+                'weekly_lesson_count' => $school->getDefaultWeeklyLessonCount(),
+                'schedule_settings' => $school->getDefaultScheduleSettings(),
+                'class_days_turkish' => $school->getClassDaysInTurkish(),
+                'daily_lesson_counts' => $school->getDailyLessonCounts(),
+                'class_daily_lesson_counts' => $school->getClassDailyLessonCounts()
+            ]
+        ]);
+    }
 }

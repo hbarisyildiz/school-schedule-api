@@ -26,14 +26,28 @@ class School extends Model
         'current_students',
         'current_classes',
         'is_active',
-        'last_activity_at'
+        'last_activity_at',
+        'class_days',
+        'lesson_duration',
+        'break_durations',
+        'school_hours',
+        'weekly_lesson_count',
+        'schedule_settings',
+        'daily_lesson_counts',
+        'class_daily_lesson_counts'
     ];
 
     protected $casts = [
         'subscription_starts_at' => 'date',
         'subscription_ends_at' => 'date',
         'last_activity_at' => 'datetime',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'class_days' => 'array',
+        'break_durations' => 'array',
+        'school_hours' => 'array',
+        'schedule_settings' => 'array',
+        'daily_lesson_counts' => 'array',
+        'class_daily_lesson_counts' => 'array'
     ];
 
     /**
@@ -154,5 +168,123 @@ class School extends Model
             return true;
         }
         return $this->current_classes < $this->subscriptionPlan->max_classes;
+    }
+
+    /**
+     * Okul ayarları için varsayılan değerler
+     */
+    public function getDefaultClassDays(): array
+    {
+        return $this->class_days ?? ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    }
+
+    public function getDefaultLessonDuration(): int
+    {
+        return $this->lesson_duration ?? 40;
+    }
+
+    public function getDefaultBreakDurations(): array
+    {
+        return $this->break_durations ?? [
+            'small_break' => 10,
+            'lunch_break' => 20
+        ];
+    }
+
+    public function getDefaultSchoolHours(): array
+    {
+        return $this->school_hours ?? [
+            'start_time' => '08:00',
+            'end_time' => '16:00'
+        ];
+    }
+
+    public function getDefaultWeeklyLessonCount(): int
+    {
+        return $this->weekly_lesson_count ?? 30;
+    }
+
+    public function getDefaultScheduleSettings(): array
+    {
+        return $this->schedule_settings ?? [
+            'allow_teacher_conflicts' => false,
+            'allow_classroom_conflicts' => false,
+            'max_lessons_per_day' => 8,
+            'min_lessons_per_day' => 4
+        ];
+    }
+
+    /**
+     * Ders günlerini Türkçe olarak döndür
+     */
+    public function getClassDaysInTurkish(): array
+    {
+        $days = [
+            'monday' => 'Pazartesi',
+            'tuesday' => 'Salı',
+            'wednesday' => 'Çarşamba',
+            'thursday' => 'Perşembe',
+            'friday' => 'Cuma',
+            'saturday' => 'Cumartesi',
+            'sunday' => 'Pazar'
+        ];
+
+        $classDays = $this->getDefaultClassDays();
+        return array_map(function($day) use ($days) {
+            return $days[$day] ?? $day;
+        }, $classDays);
+    }
+
+    /**
+     * Günlük ders sayılarını getir
+     */
+    public function getDailyLessonCounts(): array
+    {
+        return $this->daily_lesson_counts ?? [];
+    }
+
+    /**
+     * Belirli bir günün ders sayısını getir
+     */
+    public function getLessonCountForDay(string $day): int
+    {
+        $counts = $this->getDailyLessonCounts();
+        return $counts[$day] ?? $this->schedule_settings['max_lessons_per_day'] ?? 8;
+    }
+
+    /**
+     * Sınıf bazlı günlük ders sayılarını getir
+     */
+    public function getClassDailyLessonCounts(): array
+    {
+        return $this->class_daily_lesson_counts ?? [];
+    }
+
+    /**
+     * Belirli bir sınıfın belirli bir gündeki ders sayısını getir
+     */
+    public function getLessonCountForClassAndDay(string $className, string $day): int
+    {
+        $classCounts = $this->getClassDailyLessonCounts();
+        
+        if (isset($classCounts[$className][$day])) {
+            return $classCounts[$className][$day];
+        }
+        
+        return $this->getLessonCountForDay($day);
+    }
+
+    /**
+     * Belirli bir sınıfın tüm günlerdeki ders sayılarını getir
+     */
+    public function getLessonCountsForClass(string $className): array
+    {
+        $classCounts = $this->getClassDailyLessonCounts();
+        
+        if (isset($classCounts[$className])) {
+            return $classCounts[$className];
+        }
+        
+        return $this->getDailyLessonCounts();
     }
 }
