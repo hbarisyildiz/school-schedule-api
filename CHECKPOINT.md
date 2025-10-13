@@ -228,9 +228,26 @@ http://localhost/admin-panel-modern.html
 
 ---
 
+## 🚀 DEPLOYMENT PLANI
+
+**Dosya:** `DEPLOYMENT_PLAN.md`
+
+- Sunucu önerileri (DigitalOcean + Forge)
+- Adım adım deployment guide
+- Güvenlik checklist
+- Maliyet analizi
+- Scale up planı
+
+---
+
 ## 🎯 SONRAKİ OTURUMDA YAPILACAKLAR
 
-### Adım 1: Ders Programı UI (2-3 saat)
+### Seçenek 1: Deployment (Canlıya Alma)
+**Dosya:** `DEPLOYMENT_PLAN.md` okuyun ve adımları takip edin
+**Süre:** 2-3 saat
+**Maliyet:** $24/ay (~₺800)
+
+### Seçenek 2: Ders Programı UI (2-3 saat)
 1. `admin-panel-modern.html` dosyasını aç
 2. "Ders Programları" sekmesine schedule oluşturma formu ekle:
    - Sınıf dropdown (API'den çek)
