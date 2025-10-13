@@ -22,6 +22,13 @@ Bu proje, okulların ders programlarını dijital olarak yönetebilmelerini sağ
 - **Multi-tenant** - Her okul kendi verisi
 - **Role-based** - Super Admin, Okul Müdürü, Öğretmen
 
+### 📅 Okul Ayarları ve Ders Programı
+- **Esnek Tenefüs Yapısı** - Her okul kendi tenefüs sürelerini özelleştirebilir
+- **Sınıf Bazlı Ders Saatleri** - Her sınıf için farklı günlük ders sayıları
+- **Öğretmen Bazlı Müsaitlik** - Öğretmenlerin günlük müsaitlik saatleri
+- **Grid Tabanlı Görsel Arayüz** - Kolay kullanım için modern UI
+- **Periyot Saatleri** - Otomatik hesaplanan ders saatleri
+
 ### 🌍 Türkiye Coğrafi Veritabanı
 - ✅ **81 İl** verisi
 - ✅ **973 İlçe** verisi
