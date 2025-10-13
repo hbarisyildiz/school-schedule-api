@@ -60,6 +60,10 @@ createApp({
             selectedClassForDailyCount: '',
             schoolSettingsLoading: false,
             isSavingSettings: false,
+            
+            // Daily Schedules (Yeni API'den)
+            classDailySchedules: [],
+            teacherDailySchedules: [],
             weekDays: [
                 { value: 'monday', label: 'Pazartesi' },
                 { value: 'tuesday', label: 'Salı' },
@@ -527,11 +531,26 @@ createApp({
                     this.users = response.data;
                 }
                 
+                // Öğretmen programlarını yükle
+                await this.loadTeacherDailySchedules();
+                
             } catch (error) {
                 this.error = 'Kullanıcılar yüklenemedi';
                 console.error('Users load error:', error);
             } finally {
                 this.usersLoading = false;
+            }
+        },
+        
+        async loadTeacherDailySchedules() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await axios.get(`${API_BASE_URL}/school/teacher-daily-schedules`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                this.teacherDailySchedules = response.data;
+            } catch (error) {
+                console.error('Teacher daily schedules load error:', error);
             }
         },
         
@@ -796,11 +815,26 @@ createApp({
                 const response = await axios.get(`${API_BASE_URL}/classes`);
                 // API direkt array dönüyor (pagination yok)
                 this.classes = response.data;
+                
+                // Sınıf programlarını yükle
+                await this.loadClassDailySchedules();
             } catch (error) {
                 this.error = 'Sınıflar yüklenemedi';
                 console.error('Classes load error:', error);
             } finally {
                 this.classesLoading = false;
+            }
+        },
+        
+        async loadClassDailySchedules() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await axios.get(`${API_BASE_URL}/school/class-daily-schedules`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                this.classDailySchedules = response.data;
+            } catch (error) {
+                console.error('Class daily schedules load error:', error);
             }
         },
         
@@ -1194,11 +1228,8 @@ createApp({
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
-                // Local state'i güncelle
-                if (!this.schoolSettings.class_daily_lesson_counts) {
-                    this.schoolSettings.class_daily_lesson_counts = {};
-                }
-                this.schoolSettings.class_daily_lesson_counts[this.selectedClassForSchedule.name] = { ...this.classScheduleData };
+                // Verileri yeniden yükle
+                await this.loadClassDailySchedules();
                 
                 this.message = `${this.selectedClassForSchedule.name} sınıfının ders saatleri kaydedildi!`;
                 this.classScheduleModal = false;
@@ -1287,11 +1318,8 @@ createApp({
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
-                // Local state'i güncelle
-                if (!this.schoolSettings.teacher_daily_lesson_counts) {
-                    this.schoolSettings.teacher_daily_lesson_counts = {};
-                }
-                this.schoolSettings.teacher_daily_lesson_counts[this.selectedTeacherForSchedule.id] = { ...this.teacherScheduleData };
+                // Verileri yeniden yükle
+                await this.loadTeacherDailySchedules();
                 
                 this.message = `${this.selectedTeacherForSchedule.name} öğretmeninin ders saatleri kaydedildi!`;
                 this.teacherScheduleModal = false;
@@ -1341,6 +1369,18 @@ createApp({
             const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
             
             return `${startTimeStr} - ${endTimeStr}`;
+        },
+        
+        // Helper: Sınıf için günlük ders sayısını getir
+        getClassLessonCount(classId, day) {
+            const schedule = this.classDailySchedules.find(s => s.class_id === classId && s.day === day);
+            return schedule ? schedule.lesson_count : 0;
+        },
+        
+        // Helper: Öğretmen için günlük ders sayısını getir
+        getTeacherLessonCount(teacherId, day) {
+            const schedule = this.teacherDailySchedules.find(s => s.teacher_id === teacherId && s.day === day);
+            return schedule ? schedule.lesson_count : 0;
         }
     },
     

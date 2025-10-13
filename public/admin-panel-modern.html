@@ -442,12 +442,12 @@
                                                   class="schedule-day-badge"
                                                   :class="{
                                                       'active': schoolSettings.class_days.includes(day.value),
-                                                      'has-schedule': schoolSettings.teacher_daily_lesson_counts && schoolSettings.teacher_daily_lesson_counts[user.id]?.[day.value] > 0
+                                                      'has-schedule': getTeacherLessonCount(user.id, day.value) > 0
                                                   }"
-                                                  :title="day.label + ': ' + (schoolSettings.teacher_daily_lesson_counts && schoolSettings.teacher_daily_lesson_counts[user.id]?.[day.value] || 0) + ' ders'">
+                                                  :title="day.label + ': ' + getTeacherLessonCount(user.id, day.value) + ' ders'">
                                                 {{ day.label.substring(0, 3) }}
-                                                <span class="lesson-count" v-if="schoolSettings.teacher_daily_lesson_counts && schoolSettings.teacher_daily_lesson_counts[user.id]?.[day.value]">
-                                                    ({{ schoolSettings.teacher_daily_lesson_counts[user.id][day.value] }})
+                                                <span class="lesson-count" v-if="getTeacherLessonCount(user.id, day.value) > 0">
+                                                    ({{ getTeacherLessonCount(user.id, day.value) }})
                                                 </span>
                                             </span>
                                         </div>
@@ -535,12 +535,12 @@
                                                   class="schedule-day-badge"
                                                   :class="{
                                                       'active': schoolSettings.class_days.includes(day.value),
-                                                      'has-schedule': schoolSettings.class_daily_lesson_counts[classItem.name]?.[day.value] > 0
+                                                      'has-schedule': getClassLessonCount(classItem.id, day.value) > 0
                                                   }"
-                                                  :title="day.label + ': ' + (schoolSettings.class_daily_lesson_counts[classItem.name]?.[day.value] || 0) + ' ders'">
+                                                  :title="day.label + ': ' + getClassLessonCount(classItem.id, day.value) + ' ders'">
                                                 {{ day.label.substring(0, 3) }}
-                                                <span class="lesson-count" v-if="schoolSettings.class_daily_lesson_counts[classItem.name]?.[day.value]">
-                                                    ({{ schoolSettings.class_daily_lesson_counts[classItem.name][day.value] }})
+                                                <span class="lesson-count" v-if="getClassLessonCount(classItem.id, day.value) > 0">
+                                                    ({{ getClassLessonCount(classItem.id, day.value) }})
                                                 </span>
                                             </span>
                                         </div>
