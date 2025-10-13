@@ -421,7 +421,6 @@
                                 <th v-else>Branş</th>
                                 <th>Rol</th>
                                 <th v-if="user.role?.name === 'super_admin'">Okul</th>
-                                <th v-else>Kısa Ad</th>
                                 <th v-if="user.role?.name !== 'super_admin'">Günlük Ders Saatleri</th>
                                 <th>Durum</th>
                                 <th>İşlemler</th>
@@ -434,7 +433,6 @@
                                 <td v-else>{{ user.branch || '-' }}</td>
                                 <td>{{ user.role?.display_name }}</td>
                                 <td v-if="user.role?.name === 'super_admin'">{{ user.school?.name || '-' }}</td>
-                                <td v-else>{{ user.short_name || '-' }}</td>
                                 <td v-if="user.role?.name !== 'super_admin'">
                                     <div class="schedule-summary">
                                         <div class="schedule-days">
