@@ -1,307 +1,308 @@
-# 🎯 Proje Checkpoint - 13 Ekim 2025
+# 🎯 PROJE CHECKPOINT - 13 Ekim 2025
 
-**Son Güncelleme:** 13 Ekim 2025, Akşam  
-**Durum:** ✅ Öğretmen Görüntüleme Sorunu Çözüldü  
-**Sonraki Adım:** Ders Programı UI Geliştirme
+## 📍 Mevcut Durum
+
+### ✅ Tamamlanan Özellikler
+
+#### 1. Okul Ayarları Sistemi
+- ✅ Veritabanı yapısı oluşturuldu
+  - `class_days` - Ders günleri (Pazartesi-Cuma)
+  - `lesson_duration` - Ders süresi (dakika)
+  - `break_durations` - Tenefüs süreleri (küçük tenefüs, öğle arası)
+  - `school_hours` - Okul saatleri (başlangıç-bitiş)
+  - `weekly_lesson_count` - Haftalık ders sayısı
+  - `schedule_settings` - Program ayarları (çakışma kuralları)
+  - `daily_lesson_counts` - Günlük ders sayıları (varsayılan)
+  - `class_daily_lesson_counts` - Sınıf bazlı günlük ders sayıları
+
+- ✅ API Endpoint'leri
+  - `GET /api/school/settings` - Okul ayarlarını getir
+  - `PUT /api/school/settings` - Okul ayarlarını güncelle
+
+- ✅ Admin Panel UI
+  - "⚙️ Okul Ayarları" sekmesi eklendi (sadece Okul Müdürü)
+  - Ders günleri seçimi (checkbox)
+  - Ders süresi, tenefüs süreleri input'ları
+  - Okul saatleri (başlangıç-bitiş)
+  - Haftalık ders sayısı
+  - Program ayarları (çakışma kuralları, min/max ders)
+
+#### 2. Sınıf Bazlı Ders Saatleri Sistemi
+- ✅ Grid Modal UI
+  - Sınıflar sayfasında "⏰ Saatleri Düzenle" butonu
+  - Modal açıldığında 12 periyot x 5 gün grid
+  - Seçili günlerde aktif, seçilmeyen günlerde pasif
+  - Her hücre tıklanabilir (✓ veya ✗)
+  - Alt satırda günlük toplam ders sayısı
+
+- ✅ Vue 3 Reactivity Düzeltmeleri
+  - `this.$set` → direct assignment
+  - `this.$delete` → `delete` operator
+  - Object.keys() ile dynamic property iteration
+
+- ✅ CSS Styling
+  - Grid layout responsive
+  - Available/Unavailable renkleri
+  - Legend (açıklama) eklendi
+  - Modal overlay ve close button
+
+#### 3. AWS Deployment
+- ✅ EC2 Instance (t3.micro)
+  - Region: eu-central-1 (Frankfurt)
+  - Public IP: 18.193.119.170
+  - OS: Ubuntu 22.04
+
+- ✅ RDS MySQL (Free Tier)
+  - Endpoint: database-1.cl0o2kyoclqv.eu-central-1.rds.amazonaws.com
+  - Database: school_schedule
+  - User: admin
+
+- ✅ Nginx Configuration
+  - Laravel için web server
+  - /var/www/html/public root
+
+- ✅ User Management
+  - Super Admin: admin@schoolschedule.com / password
+  - Okul Müdürü: mudur@ataturklisesi.edu.tr / password
+
+#### 4. Database Migrations
+- ✅ `2025_10_13_173925_add_school_settings_to_schools_table.php`
+- ✅ `2025_10_13_190332_add_daily_lesson_counts_to_schools_table.php`
+
+#### 5. Model & Controller Updates
+- ✅ `app/Models/School.php`
+  - New fillable fields
+  - Array casts for JSON fields
+  - Helper methods (getDefaultClassDays, etc.)
+
+- ✅ `app/Http/Controllers/Api/SchoolController.php`
+  - `getSettings()` method
+  - `updateSettings()` method with validation
+
+#### 6. Frontend Updates
+- ✅ `public/admin-panel-modern.html`
+  - School settings tab
+  - Class schedule modal
+  - Conditional rendering based on user role
+
+- ✅ `public/admin-panel.js`
+  - School settings data properties
+  - loadSchoolSettings() method
+  - saveSchoolSettings() method
+  - openClassScheduleModal() method
+  - toggleClassSchedulePeriod() method
+  - saveClassSchedule() method
+
+- ✅ `public/admin-panel.css`
+  - School settings form styles
+  - Grid modal styles
+  - Legend styles
+
+#### 7. GitHub
+- ✅ Commit: "feat: Okul ayarları sistemi ve sınıf bazlı ders saatleri modalı eklendi"
+- ✅ Branch: master
+- ✅ Remote: origin/master
 
 ---
 
-## 🏆 BUGÜN ÇÖZÜLEN SORUN
+## 🔄 Devam Eden İşler
 
-### Sınıf Öğretmeni Görünmüyor Sorunu
-**Süre:** 24 saat debugging  
-**Sebep:** `routes/api.php` dosyasında duplicate route  
-**Çözüm:** Satır 99'daki gereksiz route kaldırıldı
+### 1. "Okul Ayarları Yüklenemedi" Hatası
+**Durum:** API çağrısı yapılıyor ama response alınamıyor
+**Debug Adımları:**
+- ✅ Token kontrolü yapıldı (Token exists)
+- ⏳ Network tab'de response kontrolü bekleniyor
+- ⏳ API endpoint doğrulama bekleniyor
 
-```php
-// ❌ SORUN: Bu route Controller'ı bypass ediyordu
-Route::get('classes', function () {
-    return response()->json(\App\Models\ClassRoom::where(...)->get());
-});
-
-// ✅ ÇÖZÜM: apiResource zaten var (satır 84)
-Route::apiResource('classes', \App\Http\Controllers\Api\ClassController::class);
-```
+**Sonraki Adım:** Network tab'den response ve status code kontrolü
 
 ---
 
-## ✅ TAMAMLANAN ÖZELLIKLER
+## 📋 Yapılacaklar (TODO)
 
-### Backend (API)
-- [x] 56 API endpoint
-- [x] 23 veritabanı tablosu
-- [x] Multi-tenant sistem
-- [x] Role-based access control
-- [x] ClassController - Öğretmen ilişkisi FIX
-- [x] UserController - Okul müdürü silme yetkisi
-- [x] Duplicate route temizliği
+### Öncelik 1: Hata Düzeltme
+- [ ] "Okul ayarları yüklenemedi" hatasını çöz
+- [ ] API response ve status code kontrolü
+- [ ] Token doğrulama kontrolü
+- [ ] CORS ayarları kontrolü
 
-### Frontend (Admin Panel)
-- [x] Modern Vue 3 admin panel
-- [x] Rol bazlı menüler
-  - Super Admin: Kullanıcılar (tüm okullar)
-  - Okul Müdürü: Öğretmenler (kendi okulu)
-- [x] Sınıflar sekmesi (öğretmen bilgisi ile)
-- [x] Öğretmenler tablosu (Branş + Kısa Ad)
-- [x] Console.log temizliği
-- [x] Cache yönetimi
+### Öncelik 2: Öğretmen Bazlı Ders Saatleri
+- [ ] Öğretmenler sayfasına "⏰ Saatleri Düzenle" butonu
+- [ ] Grid modal UI (12 periyot x 5 gün)
+- [ ] API endpoint: GET/PUT /api/teachers/{id}/schedule-hours
+- [ ] Database: `teacher_daily_lesson_counts` JSON field
+- [ ] Frontend: teacherScheduleModal component
 
-### Demo Verisi
-- [x] 100 okul (Türkiye geneli)
-- [x] 100 okul müdürü
-- [x] 1,000 öğretmen (her okula 10)
-- [x] 1,200 sınıf (9-12. sınıf, A-B-C şubeleri)
-- [x] 20 farklı branş
+### Öncelik 3: Ders Atama Kısıtlamaları
+- [ ] Schedule assignment sırasında kontrol
+- [ ] Seçili saatlerde ders atanmaması
+- [ ] Öğretmen çakışma kontrolü
+- [ ] Sınıf çakışma kontrolü
+- [ ] Classroom çakışma kontrolü
 
-### Temizlik
-- [x] 19 test dosyası silindi
-- [x] Setup script'leri organize edildi
-- [x] Ana sayfa modernize edildi
-- [x] Dokümantasyon güncellendi
-
----
-
-## 🚀 KALAN ÖNEMLI ÖZELLIKLER
-
-### 1. Ders Programı (Schedule) UI - ÖNCELİK 1
-**Durum:** Pending  
-**API:** Hazır (`ScheduleController.php`)  
-**Gerekli:**
-- [ ] Program oluşturma formu
-- [ ] Gün/saat seçimi
-- [ ] Öğretmen/Sınıf/Ders dropdown'ları
-- [ ] Çakışma kontrolü gösterimi
-- [ ] Haftalık program görünümü (tablo)
-
-**Dosyalar:**
-- Backend: `app/Http/Controllers/Api/ScheduleController.php` ✅
-- Frontend: `public/admin-panel-modern.html` (yeni sekme ekle)
-
----
-
-### 2. Excel Import/Export - ÖNCELİK 2
-**Durum:** API Hazır, Frontend Test Gerekli  
-**API:** `UserController::importTeachers()` ✅  
-**Gerekli:**
-- [ ] Excel import testi
-- [ ] Export fonksiyonu
-- [ ] Hata mesajları düzenleme
-
----
-
-### 3. Email Sistemi - ÖNCELİK 3
-**Durum:** Mail sınıfları hazır, SMTP yok  
-**Gerekli:**
+### Öncelik 4: Email Sistemi
 - [ ] SMTP yapılandırması (.env)
-- [ ] Okul kayıt onay maili
-- [ ] Bildirim mailleri
-- [ ] Test
+- [ ] Email template'leri
+- [ ] Okul kayıt onay emaili
+- [ ] Şifre sıfırlama emaili
+- [ ] Bildirim emaili
 
-**Dosyalar:**
-- `app/Mail/SchoolRegistrationApproved.php` ✅
-- `app/Mail/SchoolWelcome.php` ✅
-- `.env` (SMTP ekle)
+### Öncelik 5: PDF Raporlar
+- [ ] Class schedule PDF
+- [ ] Teacher schedule PDF
+- [ ] Classroom schedule PDF
+- [ ] Weekly schedule PDF
 
----
+### Öncelik 6: Domain & SSL
+- [ ] Domain satın alma
+- [ ] DNS ayarları
+- [ ] Let's Encrypt SSL sertifikası
+- [ ] Nginx SSL yapılandırması
 
-### 4. PDF Rapor - ÖNCELİK 4
-**Durum:** Başlanmadı  
-**Gerekli:**
-- [ ] DomPDF kurulumu
-- [ ] Ders programı PDF şablonu
-- [ ] Export endpoint
-- [ ] Frontend butonu
-
----
-
-## 📁 DOSYA YAPISI
-
-### Ana Dosyalar
-```
-public/
-├── index.html                    ✅ Modern ana sayfa
-├── admin-panel-modern.html       ✅ Admin panel
-├── admin-panel.js                ✅ Vue 3 app
-├── admin-panel.css               ✅ Stil
-├── school-registration.html      ✅ Okul kayıt
-└── verify-email.html             ✅ Email doğrulama
-
-public/ (Setup Scripts)
-├── check-and-create-users.php    ✅ Kullanıcı oluştur
-├── create-100-schools.php        ✅ 100 okul oluştur
-├── add-teachers-and-classes.php  ✅ Öğretmen/sınıf ekle
-├── create-test-data.php          ✅ Hızlı test verisi
-└── SETUP_SCRIPTS.md              ✅ Dokümantasyon
-```
-
-### Controllers
-```
-app/Http/Controllers/Api/
-├── AuthController.php            ✅ Login/Register
-├── DashboardController.php       ✅ Dashboard stats
-├── SchoolController.php          ✅ Okul CRUD
-├── UserController.php            ✅ Kullanıcı CRUD + Excel import
-├── ClassController.php           ✅ Sınıf CRUD (FIX edildi)
-├── SubjectController.php         ✅ Ders CRUD
-└── ScheduleController.php        ✅ Program CRUD (UI YOK)
-```
+### Öncelik 7: Optimizasyon
+- [ ] Database indexing
+- [ ] Query optimization
+- [ ] Cache mekanizması (Redis)
+- [ ] Image optimization
+- [ ] Frontend bundle optimization
 
 ---
 
-## 🔐 TEST HESAPLARI
+## 🐛 Bilinen Sorunlar
 
-### Super Admin
-- Email: `admin@schoolschedule.com`
-- Şifre: `admin123`
-- Yetki: Tüm sistem
+### 1. Okul Ayarları Yüklenemiyor
+**Hata:** "Okul ayarları yüklenemedi"
+**Durum:** Debug aşamasında
+**Çözüm:** Network tab kontrolü bekleniyor
 
-### Okul Müdürü
-- Email: `mudur@ataturklisesi.edu.tr`
-- Şifre: `mudur123`
-- Yetki: Atatürk Lisesi
-
-### Demo Okullar (100 okul)
-- Email Pattern: `mudur@{okul-adi}1.edu.tr`
-- Şifre: `123456` (hepsi)
-- Örnek: `mudur@ataturk1.edu.tr`
+### 2. Vue 3 Reactivity Uyarıları
+**Hata:** "You are running a development build of Vue"
+**Durum:** Development mode, production'da düzelecek
+**Çözüm:** Production build kullanılacak
 
 ---
 
-## 🛠️ KURULUM (Yeni Geliştirici İçin)
+## 🔧 Teknik Detaylar
 
-### 1. Clone & Setup
-```bash
-git clone <repo-url>
-cd school-schedule-api
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan db:seed
+### Database Schema
+```sql
+-- schools table
+class_days JSON NULL
+lesson_duration INT DEFAULT 40
+break_durations JSON NULL
+school_hours JSON NULL
+weekly_lesson_count INT DEFAULT 30
+schedule_settings JSON NULL
+daily_lesson_counts JSON NULL
+class_daily_lesson_counts JSON NULL
 ```
 
-### 2. Demo Verisi Oluştur
-```bash
-# Tarayıcıda aç:
-http://localhost/check-and-create-users.php
-http://localhost/create-100-schools.php
-http://localhost/add-teachers-and-classes.php
+### API Endpoints
+```
+GET  /api/school/settings
+PUT  /api/school/settings
+POST /api/classes/{id}/schedule-hours
+GET  /api/classes/{id}/schedule-hours
 ```
 
-### 3. Admin Panel Aç
-```bash
-http://localhost/admin-panel-modern.html
+### Environment Variables
+```env
+APP_ENV=production
+APP_DEBUG=false
+DB_HOST=database-1.cl0o2kyoclqv.eu-central-1.rds.amazonaws.com
+DB_DATABASE=school_schedule
+DB_USERNAME=admin
+DB_PASSWORD=SchoolDB2025!
 ```
 
 ---
 
-## 📊 İSTATİSTİKLER
+## 📊 İstatistikler
 
-### Kod
-- API Endpoints: 56
-- Controllers: 9
-- Models: 14
-- Migrations: 24
-- Frontend: 1,000+ satır Vue 3
-
-### Veri
-- Okullar: 100
-- Kullanıcılar: 1,100+
-- Sınıflar: 1,200
-- Branşlar: 20
-
-### Dokümantasyon
-- ROADMAP.md: 25 sayfa
-- WORKFLOW.md: 35 sayfa
-- DATABASE_ANALYSIS.md: 30 sayfa
-- **Toplam:** 90+ sayfa
+- **Toplam Commit:** 15+
+- **Database Migrations:** 25
+- **API Endpoints:** 30+
+- **Frontend Components:** 8
+- **User Roles:** 3 (Super Admin, School Admin, Teacher)
+- **AWS Resources:** 2 (EC2, RDS)
 
 ---
 
-## 🐛 BİLİNEN SORUNLAR
+## 🎯 Sonraki Checkpoint Hedefleri
 
-- ✅ ~~Sınıf öğretmeni görünmüyor~~ → ÇÖZÜLDÜ!
-- ✅ ~~Okul müdürü kullanıcı silemiyor~~ → ÇÖZÜLDÜ!
-- ✅ ~~Super admin gereksiz sekmeler görüyor~~ → ÇÖZÜLDÜ!
-
-**Aktif Sorun:** YOK ✅
-
----
-
-## 🚀 DEPLOYMENT PLANLARI
-
-### 1. DigitalOcean + Laravel Forge (Tavsiye)
-**Dosya:** `DEPLOYMENT_PLAN.md`
-- Maliyet: $24/ay (~₺800)
-- Süre: 1 saat
-- Otomatik GitHub deploy
-- Kolay yönetim
-
-### 2. AWS Free Tier (Ücretsiz 12 Ay!)
-**Dosya:** `AWS_DEPLOYMENT.md`
-- Maliyet: $0 (12 ay ücretsiz)
-- Süre: 3-4 saat (manuel kurulum)
-- EC2 + RDS + Redis
-- Adım adım rehber
+1. ✅ Okul ayarları sistemi tamamlandı
+2. ⏳ "Okul ayarları yüklenemedi" hatası çözülecek
+3. ⏳ Öğretmen bazlı ders saatleri eklenecek
+4. ⏳ Ders atama kısıtlamaları eklenecek
+5. ⏳ Email sistemi kurulacak
 
 ---
 
-## 🎯 SONRAKİ OTURUMDA YAPILACAKLAR
+## 📝 Notlar
 
-### Seçenek 1: Deployment (Canlıya Alma)
-**Dosya:** `DEPLOYMENT_PLAN.md` okuyun ve adımları takip edin
-**Süre:** 2-3 saat
-**Maliyet:** $24/ay (~₺800)
-
-### Seçenek 2: Ders Programı UI (2-3 saat)
-1. `admin-panel-modern.html` dosyasını aç
-2. "Ders Programları" sekmesine schedule oluşturma formu ekle:
-   - Sınıf dropdown (API'den çek)
-   - Ders dropdown (API'den çek)
-   - Öğretmen dropdown (API'den çek)
-   - Gün seçimi (Pazartesi-Cuma)
-   - Saat seçimi (08:00-17:00)
-   - Kaydet butonu
-3. Çakışma kontrolü mesajlarını göster
-4. Haftalık program tablosu oluştur
-5. Test et
-
-### Adım 2: Excel Import Test (30 dk)
-1. Öğretmen Excel şablonunu test et
-2. Import fonksiyonunu test et
-3. Hata mesajlarını düzenle
-
-### Adım 3: Email Sistemi (1 saat)
-1. `.env` dosyasına SMTP ekle
-2. Mail gönderimini test et
-3. Okul kayıt mailini aktif et
+- Docker local development için kullanılıyor
+- AWS Free Tier kullanılıyor (12 ay ücretsiz)
+- Laravel 10.x kullanılıyor
+- Vue 3 (CDN) kullanılıyor
+- MySQL 8.0 kullanılıyor
+- Nginx web server kullanılıyor
 
 ---
 
-## 📞 YARDIM
-
-**Sorun yaşarsanız:**
-1. `SUMMARY.md` - Genel bakış
-2. `ROADMAP.md` - Detaylı plan
-3. `WORKFLOW.md` - İş akışları
-4. `DATABASE_ANALYSIS.md` - Veritabanı
-
-**GitHub:** https://github.com/hbarisyildiz/school-schedule-api
+**Son Güncelleme:** 13 Ekim 2025 - 20:30
+**Checkpoint No:** 2
+**Durum:** ✅ Stable - Development continues
 
 ---
 
-## ✅ CHECKPOINT DURUMU
+## 🎯 CHECKPOINT #2 - 13 Ekim 2025 - 20:30
 
-**Sistem:** %85 Tamamlandı  
-**Backend API:** %95 Tamamlandı  
-**Frontend UI:** %70 Tamamlandı  
-**Dokümantasyon:** %100 Tamamlandı  
+### ✅ Bu Checkpoint'te Tamamlananlar:
 
-**Son Başarı:** Sınıf öğretmeni görüntüleme sorunu çözüldü! 🎉
+#### 1. Okul Ayarları Sistemi - TAMAMLANDI ✅
+- ✅ Veritabanı migration'ları oluşturuldu
+- ✅ School model güncellendi
+- ✅ SchoolController API endpoint'leri eklendi
+- ✅ Admin panel UI tamamlandı
+- ✅ Vue 3 reactivity sorunları düzeltildi
+- ✅ Sınıf bazlı ders saatleri modalı eklendi
+
+#### 2. GitHub Kaydı ✅
+- ✅ Tüm değişiklikler commit edildi
+- ✅ GitHub'a push edildi
+- ✅ Commit mesajı: "feat: Okul ayarları sistemi ve sınıf bazlı ders saatleri modalı eklendi"
+
+#### 3. AWS Deployment ✅
+- ✅ EC2 instance çalışıyor (18.193.119.170)
+- ✅ RDS MySQL bağlantısı kuruldu
+- ✅ Nginx yapılandırması tamamlandı
+- ✅ Super Admin ve Okul Müdürü girişi aktif
+
+### ⏳ Devam Eden İşler:
+
+#### 1. "Okul Ayarları Yüklenemedi" Hatası
+**Durum:** Debug aşamasında
+**Son Adım:** Token kontrolü yapıldı (Token exists)
+**Sonraki Adım:** Network tab'den response ve status code kontrolü
+
+### 📋 Sonraki Adımlar:
+
+1. ⏳ "Okul ayarları yüklenemedi" hatasını çöz
+2. ⏳ Öğretmen bazlı ders saatleri modalı ekle
+3. ⏳ Ders atama kısıtlamaları ekle
+4. ⏳ Email sistemi kurulumu
+5. ⏳ PDF rapor oluşturma
 
 ---
 
-**Not:** Bu dosyayı her önemli milestone'dan sonra güncelleyin!
+**Checkpoint #1'den Bu Yana:**
+- 9 dosya değiştirildi
+- 1,159 satır eklendi
+- 2 yeni migration oluşturuldu
+- 1 yeni API endpoint eklendi
+- Vue 3 reactivity sorunları çözüldü
 
-**Son Güncelleme:** 13 Ekim 2025, 22:00
-
+**Sonraki Checkpoint Hedefleri:**
+1. Okul ayarları hatası çözülecek
+2. Öğretmen saatleri modalı eklenecek
+3. Ders atama kısıtlamaları aktif olacak

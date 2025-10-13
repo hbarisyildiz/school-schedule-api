@@ -59,11 +59,13 @@ docker-compose exec app php artisan db:seed
 
 ## 👤 Test Kullanıcıları
 
-| Rol | Email | Şifre |
-|-----|-------|-------|
-| **Super Admin** | admin@schoolschedule.com | admin123 |
-| **Okul Müdürü** | mudur@ataturklisesi.edu.tr | mudur123 |
-| **Öğretmen** | ayse.yilmaz@ataturklisesi.edu.tr | teacher123 |
+| Rol | Email | Şifre | Durum |
+|-----|-------|-------|-------|
+| **Super Admin** | admin@schoolschedule.com | admin123 | ✅ Aktif |
+| **Okul Müdürü** | mudur@ataturklisesi.edu.tr | mudur123 | ✅ Aktif |
+| **Öğretmen** | ayse.yilmaz@ataturklisesi.edu.tr | teacher123 | ✅ Aktif |
+
+**AWS Deployment:** http://18.193.119.170
 
 ## � API Endpoints
 
@@ -76,6 +78,8 @@ docker-compose exec app php artisan db:seed
 - `GET /api/user` - Kullanıcı bilgileri
 - `GET /api/my-school` - Okul bilgileri
 - `GET /api/schools` - Tüm okullar (Super Admin)
+- `GET /api/school/settings` - Okul ayarları (YENİ!)
+- `PUT /api/school/settings` - Okul ayarlarını güncelle (YENİ!)
 
 ## About Laravel
 
