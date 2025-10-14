@@ -36,23 +36,14 @@ class SubjectController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
-                'code' => 'required|string|max:20|unique:subjects,code',
-                'weekly_hours' => 'required|integer|min:1|max:40',
                 'description' => 'nullable|string|max:500',
             ], [
                 'name.required' => 'Ders adı zorunludur',
-                'code.required' => 'Ders kodu zorunludur',
-                'code.unique' => 'Bu ders kodu zaten kullanılıyor',
-                'weekly_hours.required' => 'Haftalık saat zorunludur',
-                'weekly_hours.min' => 'Haftalık saat en az 1 olmalıdır',
-                'weekly_hours.max' => 'Haftalık saat en fazla 40 olmalıdır',
             ]);
 
             $subject = Subject::create([
                 'school_id' => auth()->user()->school_id,
                 'name' => $request->name,
-                'code' => strtoupper($request->code),
-                'weekly_hours' => $request->weekly_hours,
                 'description' => $request->description,
                 'is_active' => true,
                 'created_by' => auth()->id()
@@ -92,13 +83,11 @@ class SubjectController extends Controller
 
             $request->validate([
                 'name' => 'string|max:255',
-                'code' => 'string|max:20|unique:subjects,code,' . $subject->id,
-                'weekly_hours' => 'integer|min:1|max:40',
                 'description' => 'nullable|string|max:500',
             ]);
 
             $subject->update($request->only([
-                'name', 'code', 'weekly_hours', 'description'
+                'name', 'description'
             ]));
 
             return $this->updatedResponse($subject, 'Ders başarıyla güncellendi');

@@ -713,8 +713,6 @@
                         <thead>
                             <tr>
                                 <th>Ders Adı</th>
-                                <th>Kod</th>
-                                <th>Haftalık Saat</th>
                                 <th>Açıklama</th>
                                 <th>İşlemler</th>
                             </tr>
@@ -722,8 +720,6 @@
                         <tbody>
                             <tr v-for="subject in subjects" :key="subject.id">
                                 <td>{{ subject.name }}</td>
-                                <td>{{ subject.code }}</td>
-                                <td>{{ subject.weekly_hours }}</td>
                                 <td>{{ subject.description || '-' }}</td>
                                 <td class="actions">
                                     <button @click="editSubject(subject)" class="btn btn-primary btn-small">Düzenle</button>
@@ -1347,16 +1343,6 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Ders Kodu:</label>
-                    <input v-model="newSubject.code" type="text" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Haftalık Saat:</label>
-                    <input v-model.number="newSubject.weekly_hours" type="number" min="1" max="20">
-                </div>
-                
-                <div class="form-group">
                     <label>Açıklama:</label>
                     <textarea v-model="newSubject.description"></textarea>
                 </div>
@@ -1377,16 +1363,6 @@
                 <div class="form-group">
                     <label>Ders Adı:</label>
                     <input v-model="editSubjectData.name" type="text">
-                </div>
-                
-                <div class="form-group">
-                    <label>Ders Kodu:</label>
-                    <input v-model="editSubjectData.code" type="text">
-                </div>
-                
-                <div class="form-group">
-                    <label>Haftalık Saat:</label>
-                    <input v-model.number="editSubjectData.weekly_hours" type="number" min="1" max="20">
                 </div>
                 
                 <div class="form-group">

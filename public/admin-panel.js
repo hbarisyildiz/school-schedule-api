@@ -135,8 +135,6 @@ createApp({
             addSubjectModal: false,
             newSubject: {
                 name: '',
-                code: '',
-                weekly_hours: 4,
                 description: ''
             },
             

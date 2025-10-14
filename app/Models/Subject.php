@@ -11,10 +11,8 @@ class Subject extends Model
     protected $fillable = [
         'school_id',
         'name',
-        'code',
         'color',
         'description',
-        'weekly_hours',
         'is_active'
     ];
 
