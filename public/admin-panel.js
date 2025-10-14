@@ -139,6 +139,8 @@ createApp({
                 name: '',
                 description: ''
             },
+            subjectTemplates: [],
+            selectedTemplate: '',
             
             // Classes
             classes: [],
@@ -667,6 +669,36 @@ createApp({
         
         openAddSubjectModal() {
             this.addSubjectModal = true;
+            this.loadSubjectTemplates();
+        },
+        
+        async loadSubjectTemplates() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const schoolType = this.schoolSettings.school_type;
+                
+                if (!schoolType) {
+                    this.subjectTemplates = [];
+                    return;
+                }
+                
+                const response = await axios.get(`${API_BASE_URL}/subject-templates?school_type=${schoolType}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                this.subjectTemplates = response.data;
+            } catch (error) {
+                console.error('Subject templates load error:', error);
+                this.subjectTemplates = [];
+            }
+        },
+        
+        selectTemplate(templateId) {
+            const template = this.subjectTemplates.find(t => t.id == templateId);
+            if (template) {
+                this.newSubject.name = template.name;
+                this.newSubject.description = template.description;
+            }
         },
         
         async addSubject() {
@@ -676,10 +708,9 @@ createApp({
                 this.addSubjectModal = false;
                 this.newSubject = {
                     name: '',
-                    code: '',
-                    weekly_hours: 4,
                     description: ''
                 };
+                this.selectedTemplate = '';
                 this.loadSubjects();
             } catch (error) {
                 this.error = error.response?.data?.message || 'Ders eklenemedi';

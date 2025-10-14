@@ -1361,14 +1361,33 @@
                 <button @click="addSubjectModal = false" class="close-btn">×</button>
                 <h2>📚 Ders Ekle</h2>
                 
+                <!-- Ders Şablonlarından Seç -->
+                <div class="form-group">
+                    <label>MEB Ders Şablonlarından Seç (Önerilen):</label>
+                    <select v-model="selectedTemplate" @change="selectTemplate" class="form-input">
+                        <option value="">Ders seçiniz...</option>
+                        <option v-for="template in subjectTemplates" :key="template.id" :value="template.id">
+                            {{ template.name }}
+                        </option>
+                    </select>
+                    <small style="color: #7f8c8d; font-size: 12px;">
+                        💡 MEB öğretim programlarına uygun hazır ders listesi
+                    </small>
+                </div>
+                
+                <div style="text-align: center; margin: 15px 0; color: #999;">
+                    <strong>VEYA</strong>
+                </div>
+                
+                <!-- Manuel Ders Ekle -->
                 <div class="form-group">
                     <label>Ders Adı:</label>
-                    <input v-model="newSubject.name" type="text" required>
+                    <input v-model="newSubject.name" type="text" placeholder="Manuel ders adı girin">
                 </div>
                 
                 <div class="form-group">
                     <label>Açıklama:</label>
-                    <textarea v-model="newSubject.description"></textarea>
+                    <textarea v-model="newSubject.description" placeholder="Ders açıklaması (isteğe bağlı)"></textarea>
                 </div>
                 
                 <div class="modal-footer">

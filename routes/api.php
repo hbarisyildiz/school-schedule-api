@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Ders yönetimi
         Route::apiResource('subjects', \App\Http\Controllers\Api\SubjectController::class);
         Route::post('subjects/{id}/toggle-status', [\App\Http\Controllers\Api\SubjectController::class, 'toggleStatus']);
+        Route::get('subject-templates', [\App\Http\Controllers\Api\SubjectController::class, 'getTemplates']);
         // Route::get('classes', ...) - KALDIRILDI! Yukarıda apiResource var (satır 84)
         Route::get('teachers', function () {
             return response()->json(\App\Models\User::where('school_id', auth()->user()->school_id)

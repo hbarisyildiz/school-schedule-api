@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
+use App\Models\SubjectTemplate;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 
@@ -137,6 +138,27 @@ class SubjectController extends Controller
             $message = $subject->is_active ? 'Ders aktifleştirildi' : 'Ders pasifleştirildi';
 
             return $this->successResponse($subject, $message);
+
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
+    /**
+     * Okul türüne göre ders şablonlarını getir
+     */
+    public function getTemplates(Request $request)
+    {
+        try {
+            $schoolType = $request->query('school_type');
+            
+            if (!$schoolType) {
+                return response()->json(['message' => 'Okul türü belirtilmelidir'], 400);
+            }
+
+            $templates = SubjectTemplate::getBySchoolType($schoolType);
+
+            return response()->json($templates);
 
         } catch (\Exception $e) {
             return $this->handleException($e);
