@@ -76,7 +76,7 @@ class ClassController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'grade' => 'required|string|max:10',
+            'grade' => 'required',
             'branch' => 'required|string|max:5',
             'class_teacher_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string'
@@ -131,7 +131,7 @@ class ClassController extends Controller
 
         $request->validate([
             'name' => 'string|max:255',
-            'grade' => 'string|max:10',
+            'grade' => 'required',
             'branch' => 'string|max:5',
             'class_teacher_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string'
