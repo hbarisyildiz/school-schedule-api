@@ -97,7 +97,7 @@
                             <div class="quick-btn-text">
                                 <div class="quick-btn-title">İlkokul</div>
                                 <div class="quick-btn-subtitle">mudur123</div>
-                            </div>
+                    </div>
                         </button>
                         
                         <button @click="quickLogin('mudur@ataturkortaokulu.edu.tr')" class="quick-btn ortaokul">
@@ -703,10 +703,10 @@
                     <button @click="teacherScheduleModal = false" class="btn btn-danger">İptal</button>
                     <button @click="saveTeacherSchedule" class="btn btn-success">💾 Kaydet</button>
                 </div>
+                </div>
             </div>
-        </div>
-
-        <!-- ========== SUBJECTS TAB ========== -->
+            
+            <!-- ========== SUBJECTS TAB ========== -->
             <div v-if="activeTab === 'subjects' && user.role?.name !== 'super_admin'" class="card">
                 <div class="flex-between mb-20">
                     <h2>📚 Dersler</h2>
@@ -1301,8 +1301,8 @@
                 
                 <div class="form-group">
                     <label>Sınıf Adı: *</label>
-                    <input v-model="newClass.name" type="text" placeholder="Örn: 9-A, 10-B" required>
-                    <small style="color: #7f8c8d; font-size: 12px;">Otomatik: Seviye + Şube (Örn: 9-A)</small>
+                    <input v-model="newClass.name" type="text" placeholder="Otomatik oluşturulacak" readonly style="background: #f8f9fa; cursor: not-allowed;">
+                    <small style="color: #7f8c8d; font-size: 12px;">💡 Seviye ve Şube seçince otomatik oluşur</small>
                 </div>
                 
                 <div class="form-group">

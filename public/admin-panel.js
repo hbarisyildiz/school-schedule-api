@@ -1134,6 +1134,13 @@ createApp({
             if (!grade) return '-';
             return `${grade}. Sınıf`;
         },
+        // Sınıf adı oluştur
+        generateClassName(grade, branch) {
+            if (Number(grade) === 0) {
+                return `Hazırlık-${branch}`;
+            }
+            return `${grade}-${branch}`;
+        },
         
         async saveSchoolSettings() {
             this.isSavingSettings = true;
@@ -1450,6 +1457,17 @@ createApp({
         message(newVal) {
             if (newVal) {
                 setTimeout(() => this.message = '', 4000);
+            }
+        },
+        // Sınıf adını otomatik oluştur
+        'newClass.grade'(newVal) {
+            if (newVal && this.newClass.branch) {
+                this.newClass.name = this.generateClassName(newVal, this.newClass.branch);
+            }
+        },
+        'newClass.branch'(newVal) {
+            if (newVal && this.newClass.grade) {
+                this.newClass.name = this.generateClassName(this.newClass.grade, newVal);
             }
         },
         
