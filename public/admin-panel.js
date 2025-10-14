@@ -256,7 +256,9 @@ createApp({
             const passwords = {
                 'admin@schoolschedule.com': 'admin123',
                 'mudur@ataturklisesi.edu.tr': 'mudur123',
-                'ayse.yilmaz@ataturklisesi.edu.tr': 'teacher123'
+                'ayse.yilmaz@ataturklisesi.edu.tr': 'teacher123',
+                'mudur@ataturkilkokulu.edu.tr': 'mudur123',
+                'mudur@ataturkortaokulu.edu.tr': 'mudur123'
             };
             
             this.loginForm.email = email;
