@@ -543,6 +543,24 @@ input::placeholder, textarea::placeholder {
     color: white;
 }
 
+.quick-btn.ilkokul {
+    border-color: #f39c12;
+}
+
+.quick-btn.ilkokul:hover {
+    background: #f39c12;
+    color: white;
+}
+
+.quick-btn.ortaokul {
+    border-color: #9b59b6;
+}
+
+.quick-btn.ortaokul:hover {
+    background: #9b59b6;
+    color: white;
+}
+
 .quick-btn-icon {
     font-size: 24px;
     margin-right: 15px;
