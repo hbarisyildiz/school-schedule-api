@@ -27,6 +27,7 @@ class School extends Model
         'current_classes',
         'is_active',
         'last_activity_at',
+        'school_type',
         'class_days',
         'lesson_duration',
         'break_durations',
@@ -312,5 +313,34 @@ class School extends Model
     public function teacherDailySchedules(): HasMany
     {
         return $this->hasMany(TeacherDailySchedule::class, 'teacher_id');
+    }
+
+    /**
+     * Okul türüne göre sınıf seviyelerini getir
+     */
+    public function getGradeLevels(): array
+    {
+        return match($this->school_type) {
+            'ilkokul' => [
+                ['value' => 1, 'label' => '1. Sınıf'],
+                ['value' => 2, 'label' => '2. Sınıf'],
+                ['value' => 3, 'label' => '3. Sınıf'],
+                ['value' => 4, 'label' => '4. Sınıf'],
+            ],
+            'ortaokul' => [
+                ['value' => 5, 'label' => '5. Sınıf'],
+                ['value' => 6, 'label' => '6. Sınıf'],
+                ['value' => 7, 'label' => '7. Sınıf'],
+                ['value' => 8, 'label' => '8. Sınıf'],
+            ],
+            'lise' => [
+                ['value' => 0, 'label' => 'Hazırlık'],
+                ['value' => 9, 'label' => '9. Sınıf'],
+                ['value' => 10, 'label' => '10. Sınıf'],
+                ['value' => 11, 'label' => '11. Sınıf'],
+                ['value' => 12, 'label' => '12. Sınıf'],
+            ],
+            default => []
+        };
     }
 }

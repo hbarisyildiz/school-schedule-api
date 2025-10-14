@@ -30,6 +30,7 @@ createApp({
             
             // School Settings
             schoolSettings: {
+                school_type: '',
                 class_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
                 lesson_duration: 40,
                 break_durations: {
@@ -64,6 +65,7 @@ createApp({
             // Daily Schedules (Yeni API'den)
             classDailySchedules: [],
             teacherDailySchedules: [],
+            gradeOptions: [],
             weekDays: [
                 { value: 'monday', label: 'Pazartesi' },
                 { value: 'tuesday', label: 'Salı' },
@@ -1037,6 +1039,7 @@ createApp({
                 });
                 
                 this.schoolSettings = {
+                    school_type: response.data.school_type || '',
                     class_days: response.data.class_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
                     lesson_duration: response.data.lesson_duration || 40,
                     break_durations: response.data.break_durations || {
@@ -1065,6 +1068,8 @@ createApp({
                     class_daily_lesson_counts: {},
                     teacher_daily_lesson_counts: {}
                 };
+                // Okul türüne göre seviye seçeneklerini güncelle
+                this.updateGradeOptions(response.data.grade_levels);
                 
                 console.log('Loaded school settings:', this.schoolSettings);
             } catch (error) {
@@ -1073,6 +1078,27 @@ createApp({
             } finally {
                 this.schoolSettingsLoading = false;
             }
+        },
+        // Okul türüne göre seviye seçeneklerini güncelle
+        updateGradeOptions(gradeLevels) {
+            if (Array.isArray(gradeLevels) && gradeLevels.length > 0) {
+                this.gradeOptions = gradeLevels;
+            } else {
+                // Varsayılan: Lise seçenekleri
+                this.gradeOptions = [
+                    { value: 0, label: 'Hazırlık' },
+                    { value: 9, label: '9. Sınıf' },
+                    { value: 10, label: '10. Sınıf' },
+                    { value: 11, label: '11. Sınıf' },
+                    { value: 12, label: '12. Sınıf' }
+                ];
+            }
+        },
+        // Seviye etiketi
+        gradeLabel(grade) {
+            if (Number(grade) === 0) return 'Hazırlık';
+            if (!grade) return '-';
+            return `${grade}. Sınıf`;
         },
         
         async saveSchoolSettings() {

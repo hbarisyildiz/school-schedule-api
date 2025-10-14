@@ -513,7 +513,7 @@
                         <tbody>
                             <tr v-for="classItem in classes" :key="classItem.id">
                                 <td><strong>{{ classItem.name }}</strong></td>
-                                <td>{{ classItem.grade }}. Sınıf</td>
+                                <td>{{ gradeLabel(classItem.grade) }}</td>
                                 <td>{{ classItem.branch || '-' }}</td>
                                 <td>
                                     <span v-if="classItem.class_teacher">
@@ -743,6 +743,20 @@
                 <div v-else class="settings-form">
                     <form @submit.prevent="saveSchoolSettings">
                         
+                        <!-- Okul Türü -->
+                        <div class="form-section">
+                            <h3>🏫 Okul Türü</h3>
+                            <div class="input-group">
+                                <select v-model="schoolSettings.school_type" class="form-input">
+                                    <option :value="''">Seçiniz</option>
+                                    <option value="ilkokul">İlkokul</option>
+                                    <option value="ortaokul">Ortaokul</option>
+                                    <option value="lise">Lise</option>
+                                </select>
+                            </div>
+                            <small style="color:#6c757d;">Okul türüne göre sınıf seviyeleri otomatik ayarlanır.</small>
+                        </div>
+
                         <!-- Ders Günleri -->
                         <div class="form-section">
                             <h3>📅 Ders Günleri</h3>
@@ -1235,10 +1249,7 @@
                         <label>Seviye: *</label>
                         <select v-model="newClass.grade" required>
                             <option value="">Seçiniz</option>
-                            <option value="9">9. Sınıf</option>
-                            <option value="10">10. Sınıf</option>
-                            <option value="11">11. Sınıf</option>
-                            <option value="12">12. Sınıf</option>
+                            <option v-for="opt in gradeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                         </select>
                     </div>
                     
@@ -1291,10 +1302,7 @@
                     <div class="form-group">
                         <label>Seviye:</label>
                         <select v-model="editClassData.grade">
-                            <option value="9">9. Sınıf</option>
-                            <option value="10">10. Sınıf</option>
-                            <option value="11">11. Sınıf</option>
-                            <option value="12">12. Sınıf</option>
+                            <option v-for="opt in gradeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                         </select>
                     </div>
                     

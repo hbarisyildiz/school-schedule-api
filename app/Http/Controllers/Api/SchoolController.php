@@ -232,6 +232,8 @@ class SchoolController extends Controller
         }
 
         return response()->json([
+            'school_type' => $school->school_type,
+            'grade_levels' => $school->getGradeLevels(),
             'class_days' => $school->getDefaultClassDays(),
             'lesson_duration' => $school->getDefaultLessonDuration(),
             'break_durations' => $school->getDefaultBreakDurations(),
@@ -257,6 +259,7 @@ class SchoolController extends Controller
         }
 
         $request->validate([
+            'school_type' => 'nullable|in:ilkokul,ortaokul,lise',
             'class_days' => 'array',
             'class_days.*' => 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'lesson_duration' => 'integer|min:20|max:120',
@@ -279,6 +282,7 @@ class SchoolController extends Controller
 
         // Sadece gönderilen alanları güncelle
         $updateData = $request->only([
+            'school_type',
             'class_days',
             'lesson_duration',
             'break_durations',
@@ -293,6 +297,8 @@ class SchoolController extends Controller
         return response()->json([
             'message' => 'Okul ayarları başarıyla güncellendi',
             'settings' => [
+                'school_type' => $school->school_type,
+                'grade_levels' => $school->getGradeLevels(),
                 'class_days' => $school->getDefaultClassDays(),
                 'lesson_duration' => $school->getDefaultLessonDuration(),
                 'break_durations' => $school->getDefaultBreakDurations(),
