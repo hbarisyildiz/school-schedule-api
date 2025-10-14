@@ -97,6 +97,7 @@ createApp({
             schoolModalError: '',
             newSchool: {
                 name: '',
+                school_type: '',
                 email: '',
                 password: '',
                 phone: '',

@@ -759,166 +759,177 @@
                 <div v-else class="settings-form">
                     <form @submit.prevent="saveSchoolSettings">
                         
-                        <!-- Okul Türü -->
-                        <div class="form-section">
-                            <h3>🏫 Okul Türü</h3>
-                            <div class="input-group">
-                                <select v-model="schoolSettings.school_type" class="form-input">
-                                    <option :value="''">Seçiniz</option>
-                                    <option value="ilkokul">İlkokul</option>
-                                    <option value="ortaokul">Ortaokul</option>
-                                    <option value="lise">Lise</option>
-                                </select>
-                            </div>
-                            <small style="color:#6c757d;">Okul türüne göre sınıf seviyeleri otomatik ayarlanır.</small>
-                        </div>
+                        <!-- Grid Layout: 2 Kolon -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            
+                            <!-- Sol Kolon -->
+                            <div>
+                                <!-- Okul Türü -->
+                                <div class="form-section">
+                                    <h3>🏫 Okul Türü</h3>
+                                    <div class="input-group">
+                                        <select v-model="schoolSettings.school_type" class="form-input">
+                                            <option :value="''">Seçiniz</option>
+                                            <option value="ilkokul">İlkokul</option>
+                                            <option value="ortaokul">Ortaokul</option>
+                                            <option value="lise">Lise</option>
+                                        </select>
+                                    </div>
+                                    <small style="color:#6c757d; font-size: 11px;">Okul türüne göre sınıf seviyeleri otomatik ayarlanır.</small>
+                                </div>
 
-                        <!-- Ders Günleri -->
-                        <div class="form-section">
-                            <h3>📅 Ders Günleri</h3>
-                            <div class="checkbox-group">
-                                <label v-for="day in weekDays" :key="day.value" class="checkbox-item">
-                                    <input 
-                                        type="checkbox" 
-                                        :value="day.value" 
-                                        v-model="schoolSettings.class_days"
-                                        class="checkbox-input"
-                                    >
-                                    <span class="checkbox-label">{{ day.label }}</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Ders Süresi -->
-                        <div class="form-section">
-                            <h3>⏰ Ders Süresi</h3>
-                            <div class="input-group">
-                                <input 
-                                    type="number" 
-                                    v-model="schoolSettings.lesson_duration" 
-                                    min="20" 
-                                    max="120" 
-                                    class="form-input"
-                                    required
-                                >
-                                <span class="input-suffix">dakika</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Tenefüs Süreleri -->
-                        <div class="form-section">
-                            <h3>☕ Tenefüs Süreleri</h3>
-                            <div class="break-settings">
-                                <div class="input-group">
-                                    <label>Küçük Tenefüs:</label>
-                                    <input 
-                                        type="number" 
-                                        v-model="schoolSettings.break_durations.small_break" 
-                                        min="5" 
-                                        max="30" 
-                                        class="form-input"
-                                        required
-                                    >
-                                    <span class="input-suffix">dakika</span>
+                                <!-- Ders Günleri -->
+                                <div class="form-section">
+                                    <h3>📅 Ders Günleri</h3>
+                                    <div class="checkbox-group">
+                                        <label v-for="day in weekDays" :key="day.value" class="checkbox-item">
+                                            <input 
+                                                type="checkbox" 
+                                                :value="day.value" 
+                                                v-model="schoolSettings.class_days"
+                                                class="checkbox-input"
+                                            >
+                                            <span class="checkbox-label">{{ day.label }}</span>
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="input-group">
-                                    <label>Öğle Arası:</label>
-                                    <input 
-                                        type="number" 
-                                        v-model="schoolSettings.break_durations.lunch_break" 
-                                        min="10" 
-                                        max="60" 
-                                        class="form-input"
-                                        required
-                                    >
-                                    <span class="input-suffix">dakika</span>
+                                
+                                <!-- Ders Süresi & Haftalık Ders -->
+                                <div class="form-section">
+                                    <h3>⏰ Ders Süresi</h3>
+                                    <div class="input-group">
+                                        <input 
+                                            type="number" 
+                                            v-model="schoolSettings.lesson_duration" 
+                                            min="20" 
+                                            max="120" 
+                                            class="form-input"
+                                            required
+                                        >
+                                        <span class="input-suffix">dakika</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-section">
+                                    <h3>📊 Haftalık Ders Sayısı</h3>
+                                    <div class="input-group">
+                                        <input 
+                                            type="number" 
+                                            v-model="schoolSettings.weekly_lesson_count" 
+                                            min="20" 
+                                            max="50" 
+                                            class="form-input"
+                                            required
+                                        >
+                                        <span class="input-suffix">ders/hafta</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Okul Saatleri -->
-                        <div class="form-section">
-                            <h3>🕐 Okul Saatleri</h3>
-                            <div class="time-settings">
-                                <div class="input-group">
-                                    <label>Başlangıç Saati:</label>
-                                    <input 
-                                        type="time" 
-                                        v-model="schoolSettings.school_hours.start_time" 
-                                        class="form-input"
-                                        required
-                                    >
+                            
+                            <!-- Sağ Kolon -->
+                            <div>
+                                <!-- Tenefüs Süreleri -->
+                                <div class="form-section">
+                                    <h3>☕ Tenefüs Süreleri</h3>
+                                    <div class="break-settings">
+                                        <div class="input-group">
+                                            <label>Küçük Tenefüs:</label>
+                                            <input 
+                                                type="number" 
+                                                v-model="schoolSettings.break_durations.small_break" 
+                                                min="5" 
+                                                max="30" 
+                                                class="form-input"
+                                                required
+                                            >
+                                            <span class="input-suffix">dakika</span>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Öğle Arası:</label>
+                                            <input 
+                                                type="number" 
+                                                v-model="schoolSettings.break_durations.lunch_break" 
+                                                min="10" 
+                                                max="60" 
+                                                class="form-input"
+                                                required
+                                            >
+                                            <span class="input-suffix">dakika</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="input-group">
-                                    <label>Bitiş Saati:</label>
-                                    <input 
-                                        type="time" 
-                                        v-model="schoolSettings.school_hours.end_time" 
-                                        class="form-input"
-                                        required
-                                    >
+                                
+                                <!-- Okul Saatleri -->
+                                <div class="form-section">
+                                    <h3>🕐 Okul Saatleri</h3>
+                                    <div class="time-settings">
+                                        <div class="input-group">
+                                            <label>Başlangıç Saati:</label>
+                                            <input 
+                                                type="time" 
+                                                v-model="schoolSettings.school_hours.start_time" 
+                                                class="form-input"
+                                                required
+                                            >
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Bitiş Saati:</label>
+                                            <input 
+                                                type="time" 
+                                                v-model="schoolSettings.school_hours.end_time" 
+                                                class="form-input"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Haftalık Ders Sayısı -->
-                        <div class="form-section">
-                            <h3>📊 Haftalık Ders Sayısı</h3>
-                            <div class="input-group">
-                                <input 
-                                    type="number" 
-                                    v-model="schoolSettings.weekly_lesson_count" 
-                                    min="20" 
-                                    max="50" 
-                                    class="form-input"
-                                    required
-                                >
-                                <span class="input-suffix">ders/hafta</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Ders Programı Ayarları -->
-                        <div class="form-section">
-                            <h3>🎯 Ders Programı Ayarları</h3>
-                            <div class="checkbox-group">
-                                <label class="checkbox-item">
-                                    <input 
-                                        type="checkbox" 
-                                        v-model="schoolSettings.schedule_settings.allow_teacher_conflicts"
-                                        class="checkbox-input"
-                                    >
-                                    <span class="checkbox-label">Öğretmen çakışmalarına izin ver</span>
-                                </label>
-                                <label class="checkbox-item">
-                                    <input 
-                                        type="checkbox" 
-                                        v-model="schoolSettings.schedule_settings.allow_classroom_conflicts"
-                                        class="checkbox-input"
-                                    >
-                                    <span class="checkbox-label">Sınıf çakışmalarına izin ver</span>
-                                </label>
-                            </div>
-                            <div class="input-group">
-                                <label>Günlük Maksimum Ders:</label>
-                                <input 
-                                    type="number" 
-                                    v-model="schoolSettings.schedule_settings.max_lessons_per_day" 
-                                    min="1" 
-                                    max="12" 
-                                    class="form-input"
-                                    required
-                                >
-                            </div>
-                            <div class="input-group">
-                                <label>Günlük Minimum Ders:</label>
-                                <input 
-                                    type="number" 
-                                    v-model="schoolSettings.schedule_settings.min_lessons_per_day" 
-                                    min="1" 
-                                    max="12" 
-                                    class="form-input"
-                                    required
-                                >
+                                
+                                <!-- Ders Programı Ayarları -->
+                                <div class="form-section">
+                                    <h3>🎯 Ders Programı Ayarları</h3>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-item">
+                                            <input 
+                                                type="checkbox" 
+                                                v-model="schoolSettings.schedule_settings.allow_teacher_conflicts"
+                                                class="checkbox-input"
+                                            >
+                                            <span class="checkbox-label">Öğretmen çakışmalarına izin ver</span>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input 
+                                                type="checkbox" 
+                                                v-model="schoolSettings.schedule_settings.allow_classroom_conflicts"
+                                                class="checkbox-input"
+                                            >
+                                            <span class="checkbox-label">Sınıf çakışmalarına izin ver</span>
+                                        </label>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                        <div class="input-group">
+                                            <label>Max Ders:</label>
+                                            <input 
+                                                type="number" 
+                                                v-model="schoolSettings.schedule_settings.max_lessons_per_day" 
+                                                min="1" 
+                                                max="12" 
+                                                class="form-input"
+                                                required
+                                            >
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Min Ders:</label>
+                                            <input 
+                                                type="number" 
+                                                v-model="schoolSettings.schedule_settings.min_lessons_per_day" 
+                                                min="1" 
+                                                max="12" 
+                                                class="form-input"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -1055,6 +1066,19 @@
                 <div class="form-group">
                     <label>Okul Adı: *</label>
                     <input v-model="newSchool.name" type="text" placeholder="Örn: Atatürk Lisesi" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Okul Türü: *</label>
+                    <select v-model="newSchool.school_type" required>
+                        <option value="">Okul Türü Seçiniz</option>
+                        <option value="ilkokul">İlkokul</option>
+                        <option value="ortaokul">Ortaokul</option>
+                        <option value="lise">Lise</option>
+                    </select>
+                    <small style="color: #7f8c8d; font-size: 12px;">
+                        💡 Okul türüne göre otomatik sınıflar oluşturulacak
+                    </small>
                 </div>
                 
                 <div class="form-group">

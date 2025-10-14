@@ -36,6 +36,7 @@ class SchoolController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'school_type' => 'required|in:ilkokul,ortaokul,lise',
             'email' => 'required|email|unique:schools,email',
             'password' => 'required|string|min:6',
             'phone' => 'nullable|string',
@@ -53,6 +54,7 @@ class SchoolController extends Controller
                 'name' => $request->name,
                 'slug' => \Str::slug($request->name),
                 'code' => 'SCH' . rand(1000, 9999),
+                'school_type' => $request->school_type,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'city_id' => $request->city_id,
@@ -82,6 +84,9 @@ class SchoolController extends Controller
                 'is_active' => true,
                 'email_verified_at' => now()
             ]);
+
+            // Okul türüne göre otomatik sınıflar oluştur
+            $this->createDefaultClasses($school, $request->school_type);
 
             DB::commit();
 
@@ -487,5 +492,27 @@ class SchoolController extends Controller
             'message' => 'Öğretmen ders programı başarıyla güncellendi',
             'schedules' => \App\Models\TeacherDailySchedule::where('teacher_id', $teacherId)->get()
         ]);
+    }
+
+    /**
+     * Okul türüne göre otomatik sınıflar oluştur
+     */
+    private function createDefaultClasses(School $school, string $schoolType)
+    {
+        $gradeLevels = $school->getGradeLevels();
+        $branches = ['A', 'B', 'C', 'D'];
+
+        foreach ($gradeLevels as $level) {
+            foreach ($branches as $branch) {
+                \App\Models\ClassRoom::create([
+                    'school_id' => $school->id,
+                    'name' => $level['value'] === 0 ? "Hazırlık-{$branch}" : "{$level['value']}-{$branch}",
+                    'grade' => $level['value'],
+                    'branch' => $branch,
+                    'capacity' => 30,
+                    'is_active' => true
+                ]);
+            }
+        }
     }
 }
