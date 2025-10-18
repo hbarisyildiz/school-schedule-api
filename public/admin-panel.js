@@ -287,9 +287,17 @@ createApp({
                     
                     // URL hash'ini kontrol et ve doğru sekmeye yönlendir
                     const hash = window.location.hash.substring(1);
-                    if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings'].includes(hash)) {
+                    if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(hash)) {
                         this.activeTab = hash;
                         this.changeTab(hash);
+                    }
+                    
+                    // URL parametrelerini kontrol et (tab=classes gibi)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const tab = urlParams.get('tab');
+                    if (tab && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(tab)) {
+                        this.activeTab = tab;
+                        this.changeTab(tab);
                     }
                 }
             }
