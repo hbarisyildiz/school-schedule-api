@@ -12,6 +12,7 @@ createApp({
         return {
             // App State
             activeTab: 'dashboard',
+            pendingTab: null, // Login sonrası açılacak sekme
             user: null,
             showLogin: true,
             isLoggingIn: false,
@@ -270,6 +271,13 @@ createApp({
             // Modal'ları zorla kapalı tut
             this.modalError = '';
             
+            // URL parametrelerini önceden kontrol et
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            if (tab && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(tab)) {
+                this.pendingTab = tab; // Login sonrası açılacak sekme
+            }
+            
             // Check if user is already logged in (token in localStorage)
             const token = localStorage.getItem('auth_token');
             if (token) {
@@ -298,6 +306,13 @@ createApp({
                     if (tab && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(tab)) {
                         this.activeTab = tab;
                         this.changeTab(tab);
+                    }
+                    
+                    // Pending tab varsa onu aç
+                    if (this.pendingTab) {
+                        this.activeTab = this.pendingTab;
+                        this.changeTab(this.pendingTab);
+                        this.pendingTab = null; // Temizle
                     }
                 }
             }
@@ -346,9 +361,14 @@ createApp({
                 
                 // URL hash'ini kontrol et ve doğru sekmeye yönlendir
                 const hash = window.location.hash.substring(1);
-                if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings'].includes(hash)) {
+                if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(hash)) {
                     this.activeTab = hash;
                     this.changeTab(hash);
+                } else if (this.pendingTab) {
+                    // Pending tab varsa onu aç
+                    this.activeTab = this.pendingTab;
+                    this.changeTab(this.pendingTab);
+                    this.pendingTab = null; // Temizle
                 } else {
                     // Hash yoksa dashboard'a git
                     this.activeTab = 'dashboard';
