@@ -24,6 +24,7 @@ createApp({
                 password: ''
             },
             loginError: '',
+            loginMessage: '', // URL parametresi varsa gösterilecek mesaj
             
             // Messages
             message: '',
@@ -265,8 +266,23 @@ createApp({
                 (area.code && area.code.toLowerCase().includes(query))
             );
         }
-    },
-    
+        },
+        
+        methods: {
+            getTabName(tab) {
+                const tabNames = {
+                    'dashboard': 'Dashboard',
+                    'users': 'Kullanıcılar',
+                    'classes': 'Sınıflar',
+                    'classrooms': 'Sınıflar',
+                    'settings': 'Ayarlar',
+                    'teachers': 'Öğretmenler',
+                    'subjects': 'Dersler',
+                    'schedules': 'Ders Programları'
+                };
+                return tabNames[tab] || tab;
+            },
+        
         async mounted() {
             // Modal'ları zorla kapalı tut
             this.modalError = '';
@@ -276,6 +292,7 @@ createApp({
             const tab = urlParams.get('tab');
             if (tab && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(tab)) {
                 this.pendingTab = tab; // Login sonrası açılacak sekme
+                this.loginMessage = `Giriş yaptıktan sonra ${this.getTabName(tab)} sekmesine yönlendirileceksiniz.`;
             }
             
             // Check if user is already logged in (token in localStorage)

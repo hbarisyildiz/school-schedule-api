@@ -29,6 +29,9 @@
                         <span v-if="isLoggingIn">Giriş yapılıyor...</span>
                         <span v-else>Giriş Yap</span>
                     </button>
+                    <div v-if="loginMessage" class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> {{ loginMessage }}
+                    </div>
                     <div v-if="loginError" class="alert alert-danger mt-3">{{ loginError }}</div>
                 </form>
                 
