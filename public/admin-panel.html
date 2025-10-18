@@ -30,9 +30,9 @@
                         <span v-else>Giriş Yap</span>
                     </button>
                     <div v-if="loginMessage" class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i> {{ loginMessage }}
+                        <i class="fas fa-info-circle"></i> <span v-text="loginMessage"></span>
                     </div>
-                    <div v-if="loginError" class="alert alert-danger mt-3">{{ loginError }}</div>
+                    <div v-if="loginError" class="alert alert-danger mt-3" v-text="loginError"></div>
                 </form>
                 
                 <!-- Quick Login Buttons -->
