@@ -281,7 +281,8 @@ createApp({
                     'schedules': 'Ders Programları'
                 };
                 return tabNames[tab] || tab;
-            },
+            }
+        },
         
         async mounted() {
             // Modal'ları zorla kapalı tut
