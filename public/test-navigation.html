@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-link { display: block; margin: 10px 0; padding: 10px; background: #f0f0f0; text-decoration: none; color: #333; border-radius: 5px; }
+        .test-link:hover { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+    <h1>Navigation Test</h1>
+    <p>Bu sayfa navigation linklerini test etmek için oluşturuldu.</p>
+    
+    <h2>Test Linkleri:</h2>
+    <a href="/admin-panel.html?tab=classes" class="test-link">Sınıflar Sekmesi (Query Parameter)</a>
+    <a href="/admin-panel.html#classes" class="test-link">Sınıflar Sekmesi (Hash)</a>
+    <a href="/admin-panel.html?tab=teachers" class="test-link">Öğretmenler Sekmesi (Query Parameter)</a>
+    <a href="/admin-panel.html#teachers" class="test-link">Öğretmenler Sekmesi (Hash)</a>
+    <a href="/admin-panel.html?tab=classrooms" class="test-link">Sınıflar Sekmesi (Query Parameter)</a>
+    <a href="/admin-panel.html#classrooms" class="test-link">Sınıflar Sekmesi (Hash)</a>
+    
+    <h2>Geri Dön Linkleri:</h2>
+    <a href="/class-schedule.html" class="test-link">Sınıf Saatleri Sayfası</a>
+    <a href="/teacher-schedule.html" class="test-link">Öğretmen Saatleri Sayfası</a>
+    <a href="/edit-class.html" class="test-link">Sınıf Düzenleme Sayfası</a>
+    <a href="/edit-teacher.html" class="test-link">Öğretmen Düzenleme Sayfası</a>
+    
+    <h2>Test Sonuçları:</h2>
+    <p>1. Query parameter linklerine tıklayın</p>
+    <p>2. Login ekranı görünüyorsa, giriş yapın</p>
+    <p>3. Giriş yaptıktan sonra doğru sekme açılıyor mu kontrol edin</p>
+</body>
+</html>
