@@ -379,11 +379,14 @@ createApp({
                 
                 // URL hash'ini kontrol et ve doğru sekmeye yönlendir
                 const hash = window.location.hash.substring(1);
+                console.log('Login - Hash:', hash, 'PendingTab:', this.pendingTab);
+                
                 if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(hash)) {
                     this.activeTab = hash;
                     this.changeTab(hash);
                 } else if (this.pendingTab) {
                     // Pending tab varsa onu aç
+                    console.log('Opening pending tab:', this.pendingTab);
                     this.activeTab = this.pendingTab;
                     this.changeTab(this.pendingTab);
                     this.pendingTab = null; // Temizle
