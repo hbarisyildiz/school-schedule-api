@@ -293,7 +293,18 @@ createApp({
             const tab = urlParams.get('tab');
             if (tab && ['dashboard', 'users', 'classes', 'classrooms', 'settings', 'teachers', 'subjects', 'schedules'].includes(tab)) {
                 this.pendingTab = tab; // Login sonrası açılacak sekme
-                this.loginMessage = `Giriş yaptıktan sonra ${this.getTabName(tab)} sekmesine yönlendirileceksiniz.`;
+                const tabNames = {
+                    'dashboard': 'Dashboard',
+                    'users': 'Kullanıcılar',
+                    'classes': 'Sınıflar',
+                    'classrooms': 'Sınıflar',
+                    'settings': 'Ayarlar',
+                    'teachers': 'Öğretmenler',
+                    'subjects': 'Dersler',
+                    'schedules': 'Ders Programları'
+                };
+                const tabName = tabNames[tab] || tab;
+                this.loginMessage = `Giriş yaptıktan sonra ${tabName} sekmesine yönlendirileceksiniz.`;
             }
             
             // Check if user is already logged in (token in localStorage)
