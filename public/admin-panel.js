@@ -15,6 +15,7 @@ createApp({
             user: null,
             showLogin: true,
             isLoggingIn: false,
+            dropdownOpen: null,
             
             // Login Form
             loginForm: {
@@ -28,18 +29,49 @@ createApp({
             error: '',
             modalError: '',
             
+            // Day Labels
+            dayLabels: {
+                'monday': 'Pzt',
+                'tuesday': 'Sal',
+                'wednesday': 'Çar',
+                'thursday': 'Per',
+                'friday': 'Cum',
+                'saturday': 'Cmt',
+                'sunday': 'Paz'
+            },
+            
+            // Break Names
+            breakNames: [
+                '1.',
+                '2.', 
+                '3.',
+                '4.',
+                '5.',
+                '6.',
+                '7.',
+                '8.',
+                '9.'
+            ],
+            
             // School Settings
             schoolSettings: {
                 school_type: '',
                 class_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
                 lesson_duration: 40,
+                daily_lesson_count: 8,
                 break_durations: {
-                    small_break: 10,
-                    lunch_break: 20
+                    break_1: 10,
+                    break_2: 10,
+                    break_3: 10,
+                    break_4: 10,
+                    break_5: 20, // Öğle arası
+                    break_6: 10,
+                    break_7: 10,
+                    break_8: 10,
+                    break_9: 10
                 },
                 school_hours: {
-                    start_time: '08:00',
-                    end_time: '16:00'
+                    start: '08:00'
                 },
                 weekly_lesson_count: 30,
                 schedule_settings: {
@@ -146,20 +178,9 @@ createApp({
             // Classes
             classes: [],
             classesLoading: false,
-            addClassModal: false,
-            editClassModal: false,
-            newClass: {
-                name: '',
-                grade: '',
-                branch: '',
-                class_teacher_id: '',
-                description: ''
-            },
+            classesError: '',
             
-            // Class Schedule Modal
-            classScheduleModal: false,
-            selectedClassForSchedule: null,
-            classScheduleData: {},
+            // Class Schedule Modal (Removed - using separate page now)
             
             // Teacher Schedule Modal
             teacherScheduleModal: false,
@@ -174,6 +195,23 @@ createApp({
             schedulesLoading: false,
             editScheduleModal: false,
             editScheduleData: {},
+            
+            // Classrooms
+            areas: [],
+            areasLoading: false,
+            addAreaModal: false,
+            editAreaModal: false,
+            newArea: {
+                name: '',
+                code: '',
+                type: 'classroom',
+                capacity: 30,
+                current_occupancy: 0,
+                equipment: [],
+                description: '',
+                is_active: true
+            },
+            editAreaData: {},
             
             // Search & Filter
             searchQuery: '',
@@ -215,17 +253,54 @@ createApp({
                 user.name.toLowerCase().includes(query) ||
                 user.email.toLowerCase().includes(query)
             );
+        },
+        
+        filteredAreas() {
+            if (!this.searchQuery) return this.areas;
+            
+            const query = this.searchQuery.toLowerCase();
+            return this.areas.filter(area => 
+                area.name.toLowerCase().includes(query) ||
+                (area.code && area.code.toLowerCase().includes(query))
+            );
         }
     },
     
-    mounted() {
-        // Check if user is already logged in (token in localStorage)
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            this.loadUser();
-        }
-    },
+        async mounted() {
+            // Modal'ları zorla kapalı tut
+            this.modalError = '';
+            
+            // Check if user is already logged in (token in localStorage)
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                await this.loadUser();
+                
+                // Eğer user yüklendiyse login sayfasını gizle
+                if (this.user) {
+                    this.showLogin = false;
+                    
+                    // Super admin değilse school settings'i önceden yükle
+                    if (this.user.role?.name !== 'super_admin') {
+                        this.loadSchoolSettings();
+                    }
+                    
+                    // URL hash'ini kontrol et ve doğru sekmeye yönlendir
+                    const hash = window.location.hash.substring(1);
+                    if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings'].includes(hash)) {
+                        this.activeTab = hash;
+                        this.changeTab(hash);
+                    }
+                }
+            }
+            
+            // Dropdown'u dışarı tıklandığında kapat
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.nav-dropdown')) {
+                    this.dropdownOpen = null;
+                }
+            });
+        },
     
     methods: {
         // ===== Authentication =====
@@ -234,7 +309,20 @@ createApp({
             this.loginError = '';
             
             try {
-                const response = await axios.post(`${API_BASE_URL}/auth/login`, this.loginForm);
+                console.log('=== LOGIN DEBUG START ===');
+                console.log('Login attempt:', this.loginForm);
+                console.log('API URL:', `${API_BASE_URL}/auth/login`);
+                
+                const response = await axios.post(`${API_BASE_URL}/auth/login`, this.loginForm, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 10000
+                });
+                
+                console.log('Login response status:', response.status);
+                console.log('Login response data:', response.data);
                 
                 // Save token
                 localStorage.setItem('auth_token', response.data.access_token);
@@ -248,25 +336,55 @@ createApp({
                 // Load initial data
                 this.loadDashboard();
                 
+                // URL hash'ini kontrol et ve doğru sekmeye yönlendir
+                const hash = window.location.hash.substring(1);
+                if (hash && ['dashboard', 'users', 'classes', 'classrooms', 'settings'].includes(hash)) {
+                    this.activeTab = hash;
+                    this.changeTab(hash);
+                } else {
+                    // Hash yoksa dashboard'a git
+                    this.activeTab = 'dashboard';
+                }
+                
+                console.log('=== LOGIN SUCCESS ===');
+                
             } catch (error) {
-                this.loginError = error.response?.data?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
+                console.error('=== LOGIN ERROR ===');
+                console.error('Error object:', error);
+                console.error('Error message:', error.message);
+                console.error('Error code:', error.code);
+                console.error('Error response:', error.response);
+                
+                if (error.response) {
+                    console.error('Response status:', error.response.status);
+                    console.error('Response data:', error.response.data);
+                    console.error('Response headers:', error.response.headers);
+                }
+                
+                if (error.request) {
+                    console.error('Request object:', error.request);
+                }
+                
+                this.loginError = error.response?.data?.message || error.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
             } finally {
                 this.isLoggingIn = false;
             }
         },
         
-        async quickLogin(email) {
-            const passwords = {
-                'admin@schoolschedule.com': 'admin123',
-                'mudur@ataturklisesi.edu.tr': 'mudur123',
-                'ayse.yilmaz@ataturklisesi.edu.tr': 'teacher123',
-                'mudur@ataturkilkokulu.edu.tr': 'mudur123',
-                'mudur@ataturkortaokulu.edu.tr': 'mudur123'
+        async quickLogin(type) {
+            const credentials = {
+                'super_admin': { email: 'admin@schoolschedule.com', password: 'admin123' },
+                'mudur': { email: 'mudur@ataturklisesi.edu.tr', password: 'mudur123' },
+                'ilkokul': { email: 'mudur@ataturkilkokulu.edu.tr', password: 'mudur123' },
+                'ortaokul': { email: 'mudur@ataturkortaokulu.edu.tr', password: 'mudur123' }
             };
             
-            this.loginForm.email = email;
-            this.loginForm.password = passwords[email];
+            const cred = credentials[type];
+            if (cred) {
+                this.loginForm.email = cred.email;
+                this.loginForm.password = cred.password;
             await this.login();
+            }
         },
         
         async loadUser() {
@@ -276,9 +394,12 @@ createApp({
                 this.showLogin = false;
                 this.loadDashboard();
             } catch (error) {
+                // Token geçersizse temizle ve login sayfasını göster
                 localStorage.removeItem('auth_token');
                 delete axios.defaults.headers.common['Authorization'];
+                this.user = null;
                 this.showLogin = true;
+                console.log('Token geçersiz, login sayfası gösteriliyor');
             }
         },
         
@@ -526,7 +647,9 @@ createApp({
         async loadUsers() {
             this.usersLoading = true;
             try {
-                const response = await axios.get(`${API_BASE_URL}/users?page=${this.currentPage}`);
+                const response = await axios.get(`${API_BASE_URL}/users?page=${this.currentPage}`, {
+                    timeout: 10000 // 10 saniye timeout
+                });
                 
                 if (response.data.data) {
                     this.users = response.data.data;
@@ -536,8 +659,11 @@ createApp({
                     this.users = response.data;
                 }
                 
-                // Öğretmen programlarını yükle
-                await this.loadTeacherDailySchedules();
+                // Teachers array'ini de doldur (öğretmenler sayfası için)
+                this.teachers = this.users;
+                
+                // Öğretmen programlarını yükle (paralel)
+                this.loadTeacherDailySchedules();
                 
             } catch (error) {
                 this.error = 'Kullanıcılar yüklenemedi';
@@ -551,11 +677,13 @@ createApp({
             try {
                 const token = localStorage.getItem('auth_token');
                 const response = await axios.get(`${API_BASE_URL}/school/teacher-daily-schedules`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
+                    timeout: 5000 // 5 saniye timeout
                 });
                 this.teacherDailySchedules = response.data;
             } catch (error) {
                 console.error('Teacher daily schedules load error:', error);
+                this.teacherDailySchedules = [];
             }
         },
         
@@ -810,31 +938,50 @@ createApp({
             
             this.activeTab = tab;
             this.searchQuery = '';
-            
-            // Okul ayarları sekmesine geçildiğinde ayarları ve sınıfları yükle
-            if (tab === 'school-settings') {
-                this.loadSchoolSettings();
-                this.loadClasses();
-            }
             this.filterStatus = 'all';
             this.currentPage = 1;
             
-            // Load data based on active tab
+            // Load data based on active tab - sadece gerekirse yükle
             switch(tab) {
                 case 'schools':
-                    this.loadSchools();
+                    if (!this.schools || this.schools.length === 0) {
+                        this.loadSchools();
+                    }
                     break;
                 case 'users':
-                    this.loadUsers();
+                    if (!this.users || this.users.length === 0) {
+                        this.loadUsers();
+                    }
+                    break;
+                case 'teachers':
+                    if (!this.users || this.users.length === 0) {
+                        this.loadUsers(); // Öğretmenler için de users API'sini kullan
+                    }
                     break;
                 case 'classes':
-                    this.loadClasses();
+                    if (!this.classes || this.classes.length === 0) {
+                        this.loadClasses();
+                    }
                     break;
                 case 'subjects':
-                    this.loadSubjects();
+                    if (!this.subjects || this.subjects.length === 0) {
+                        this.loadSubjects();
+                    }
                     break;
                 case 'schedules':
-                    this.loadSchedules();
+                    if (!this.schedules || this.schedules.length === 0) {
+                        this.loadSchedules();
+                    }
+                    break;
+                case 'classrooms':
+                    if (!this.areas || this.areas.length === 0) {
+                        this.loadAreas();
+                    }
+                    break;
+                case 'settings':
+                    if (!this.schoolSettings || !this.schoolSettings.school_type) {
+                        this.loadSchoolSettings();
+                    }
                     break;
                 case 'dashboard':
                     this.loadDashboard();
@@ -846,14 +993,18 @@ createApp({
         async loadClasses() {
             this.classesLoading = true;
             try {
-                const response = await axios.get(`${API_BASE_URL}/classes`);
+                const response = await axios.get(`${API_BASE_URL}/classes`, {
+                    timeout: 10000 // 10 saniye timeout
+                });
                 // API direkt array dönüyor (pagination yok)
                 this.classes = response.data;
                 
-                // Sınıf programlarını yükle
-                await this.loadClassDailySchedules();
+                // Sınıf programlarını arka planda yükle (paralel) - sadece gerekirse
+                if (this.classes.length > 0) {
+                    this.loadClassDailySchedules();
+                }
             } catch (error) {
-                this.error = 'Sınıflar yüklenemedi';
+                this.classesError = 'Sınıflar yüklenemedi';
                 console.error('Classes load error:', error);
             } finally {
                 this.classesLoading = false;
@@ -864,65 +1015,23 @@ createApp({
             try {
                 const token = localStorage.getItem('auth_token');
                 const response = await axios.get(`${API_BASE_URL}/school/class-daily-schedules`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
+                    timeout: 5000 // 5 saniye timeout
                 });
-                this.classDailySchedules = response.data;
+                this.classDailySchedules = response.data || [];
             } catch (error) {
                 console.error('Class daily schedules load error:', error);
+                // Hata durumunda boş array ata
+                this.classDailySchedules = [];
             }
         },
         
-        async openAddClassModal() {
-            this.modalError = '';
-            await this.loadTeachers();
-            this.addClassModal = true;
-        },
+        // openAddClassModal fonksiyonu kaldırıldı - artık ayrı sayfa kullanılıyor
         
-        async loadTeachers() {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/teachers`);
-                this.teachers = response.data;
-            } catch (error) {
-                console.error('Teachers load error:', error);
-            }
-        },
         
-        async addClass() {
-            this.modalError = '';
-            try {
-                const response = await axios.post(`${API_BASE_URL}/classes`, this.newClass);
-                this.message = 'Sınıf başarıyla eklendi';
-                this.addClassModal = false;
-                
-                // Yeni eklenen sınıfı direkt listeye ekle (daha hızlı)
-                if (response.data.class) {
-                    // Eğer classes bir array ise push et, pagination varsa başa ekle
-                    if (Array.isArray(this.classes)) {
-                        this.classes.unshift(response.data.class);
-                    } else {
-                        // Pagination varsa yenile
-                        this.loadClasses();
-                    }
-                }
-                
-                this.newClass = {
-                    name: '',
-                    grade: '',
-                    branch: '',
-                    class_teacher_id: '',
-                    description: ''
-                };
-            } catch (error) {
-                this.modalError = error.response?.data?.message || 'Sınıf eklenemedi';
-            }
-        },
+        // addClass fonksiyonu kaldırıldı - artık ayrı sayfa kullanılıyor
         
-        editClass(classItem) {
-            this.modalError = '';
-            this.editClassData = { ...classItem };
-            this.loadTeachers();
-            this.editClassModal = true;
-        },
+        // editClass fonksiyonu kaldırıldı - artık ayrı sayfa kullanılıyor
         
         async updateClass() {
             this.modalError = '';
@@ -1069,20 +1178,28 @@ createApp({
                 console.log('Loading settings with token:', token ? 'Token exists' : 'No token');
                 
                 const response = await axios.get(`${API_BASE_URL}/school/settings`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
+                    timeout: 5000 // 5 saniye timeout
                 });
                 
                 this.schoolSettings = {
                     school_type: response.data.school_type || '',
                     class_days: response.data.class_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
                     lesson_duration: response.data.lesson_duration || 40,
+                    daily_lesson_count: response.data.daily_lesson_count || 8,
                     break_durations: response.data.break_durations || {
-                        small_break: 10,
-                        lunch_break: 20
+                        break_1: 10,
+                        break_2: 10,
+                        break_3: 10,
+                        break_4: 10,
+                        break_5: 20,
+                        break_6: 10,
+                        break_7: 10,
+                        break_8: 10,
+                        break_9: 10
                     },
                     school_hours: response.data.school_hours || {
-                        start_time: '08:00',
-                        end_time: '16:00'
+                        start: '08:00'
                     },
                     weekly_lesson_count: response.data.weekly_lesson_count || 30,
                     schedule_settings: response.data.schedule_settings || {
@@ -1105,7 +1222,8 @@ createApp({
                 // Okul türüne göre seviye seçeneklerini güncelle
                 this.updateGradeOptions(response.data.grade_levels);
                 
-                console.log('Loaded school settings:', this.schoolSettings);
+                console.log('Loaded school settings from API:', response.data);
+                console.log('Applied school settings:', this.schoolSettings);
             } catch (error) {
                 console.error('Okul ayarları yüklenemedi:', error);
                 this.error = 'Okul ayarları yüklenemedi';
@@ -1115,7 +1233,9 @@ createApp({
         },
         // Okul türüne göre seviye seçeneklerini güncelle
         updateGradeOptions(gradeLevels) {
+            console.log('updateGradeOptions called with:', gradeLevels);
             if (Array.isArray(gradeLevels) && gradeLevels.length > 0) {
+                // Backend'den gelen format: [{value: 1, label: '1. Sınıf'}, ...]
                 this.gradeOptions = gradeLevels;
             } else {
                 // Varsayılan: Lise seçenekleri
@@ -1127,6 +1247,7 @@ createApp({
                     { value: 12, label: '12. Sınıf' }
                 ];
             }
+            console.log('Updated gradeOptions:', this.gradeOptions);
         },
         // Seviye etiketi
         gradeLabel(grade) {
@@ -1144,26 +1265,41 @@ createApp({
         
         async saveSchoolSettings() {
             this.isSavingSettings = true;
+            this.error = '';
+            this.message = '';
+            
             try {
                 const token = localStorage.getItem('auth_token');
                 console.log('Saving settings with token:', token ? 'Token exists' : 'No token');
+                console.log('Sending schoolSettings:', JSON.stringify(this.schoolSettings, null, 2));
                 
-                // Sadece okul ayarlarını gönder (class_daily_lesson_counts ve teacher_daily_lesson_counts hariç)
-                const { class_daily_lesson_counts, teacher_daily_lesson_counts, ...schoolSettingsToSave } = this.schoolSettings;
-                
-                const response = await axios.put(`${API_BASE_URL}/school/settings`, schoolSettingsToSave, {
+                // Tüm okul ayarlarını gönder (günlük ders sayıları dahil)
+                const response = await axios.put(`${API_BASE_URL}/school/settings`, this.schoolSettings, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
-                this.message = 'Okul ayarları başarıyla kaydedildi!';
-                this.error = '';
-                
                 // Güncellenmiş ayarları yükle
+                console.log('Loaded school settings from API:', response.data.settings);
                 this.schoolSettings = response.data.settings;
+                
+                // Başarı mesajını göster (sadece bir kez)
+                this.message = 'Ayarlar başarıyla kaydedildi!';
+                
+                // Mesajı 3 saniye sonra temizle
+                setTimeout(() => {
+                    this.message = '';
+                }, 3000);
+                
+                // Sınıflar sayfasını yenile (eğer açıksa)
+                if (this.activeTab === 'classes') {
+                    this.loadClasses();
+                }
                 
             } catch (error) {
                 console.error('Okul ayarları kaydedilemedi:', error);
-                this.error = error.response?.data?.message || 'Okul ayarları kaydedilemedi';
+                console.error('Error response:', error.response?.data);
+                console.error('Error status:', error.response?.status);
+                this.error = error.response?.data?.message || error.response?.data?.errors || 'Okul ayarları kaydedilemedi';
             } finally {
                 this.isSavingSettings = false;
             }
@@ -1216,98 +1352,7 @@ createApp({
             }
         },
         
-        // ===== Class Schedule Modal =====
-        async openClassScheduleModal(classItem) {
-            this.selectedClassForSchedule = classItem;
-            
-            try {
-                // API'den mevcut veriyi çek
-                const token = localStorage.getItem('auth_token');
-                const response = await axios.get(`${API_BASE_URL}/school/class-daily-schedules`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                
-                // Bu sınıfın verilerini filtrele
-                const classSchedules = response.data.filter(s => s.class_id === classItem.id);
-                
-                if (classSchedules.length > 0) {
-                    // Mevcut veriyi yükle
-                    this.classScheduleData = {};
-                    classSchedules.forEach(schedule => {
-                        this.classScheduleData[schedule.day] = schedule.lesson_count;
-                    });
-                } else {
-                    // Varsayılan değerler
-                    this.classScheduleData = {
-                        monday: 8,
-                        tuesday: 8,
-                        wednesday: 8,
-                        thursday: 8,
-                        friday: 8
-                    };
-                }
-            } catch (error) {
-                console.error('Sınıf saatleri yüklenemedi:', error);
-                // Hata durumunda varsayılan değerler
-                this.classScheduleData = {
-                    monday: 8,
-                    tuesday: 8,
-                    wednesday: 8,
-                    thursday: 8,
-                    friday: 8
-                };
-            }
-            
-            this.classScheduleModal = true;
-        },
-        
-        toggleClassSchedulePeriod(day, period) {
-            // Ders olmayan günlerde işlem yapma
-            if (!this.schoolSettings.class_days.includes(day)) return;
-            
-            const currentCount = this.classScheduleData[day] || 0;
-            
-            // Tıklanan periyot aktifse, onu ve sonrasını kapat
-            if (currentCount >= period) {
-                this.classScheduleData[day] = period - 1;
-            } else {
-                // Tıklanan periyot pasifse, onu ve öncesini aç
-                this.classScheduleData[day] = period;
-            }
-        },
-        
-        async saveClassSchedule() {
-            try {
-                // Yeni API yapısına göre veriyi hazırla
-                const token = localStorage.getItem('auth_token');
-                const schedules = [];
-                
-                // Her gün için schedule objesi oluştur
-                for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
-                    schedules.push({
-                        day: day,
-                        lesson_count: this.classScheduleData[day] || 0
-                    });
-                }
-                
-                // Yeni API endpoint'ine gönder
-                await axios.put(`${API_BASE_URL}/school/class-daily-schedules/${this.selectedClassForSchedule.id}`, {
-                    schedules: schedules
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                
-                // Verileri yeniden yükle
-                await this.loadClassDailySchedules();
-                
-                this.message = `${this.selectedClassForSchedule.name} sınıfının ders saatleri kaydedildi!`;
-                this.classScheduleModal = false;
-                
-            } catch (error) {
-                console.error('Sınıf saatleri kaydedilemedi:', error);
-                this.error = error.response?.data?.message || 'Sınıf saatleri kaydedilemedi';
-            }
-        },
+        // ===== Class Schedule Modal (Removed - using separate page now) =====
         
         // Öğretmen Ders Saatleri Modal Fonksiyonları
         async openTeacherScheduleModal(teacher) {
@@ -1442,14 +1487,213 @@ createApp({
         
         // Helper: Sınıf için günlük ders sayısını getir
         getClassLessonCount(classId, day) {
+            if (!Array.isArray(this.classDailySchedules)) {
+                return 0;
+            }
             const schedule = this.classDailySchedules.find(s => s.class_id === classId && s.day === day);
             return schedule ? schedule.lesson_count : 0;
         },
         
         // Helper: Öğretmen için günlük ders sayısını getir
         getTeacherLessonCount(teacherId, day) {
+            if (!Array.isArray(this.teacherDailySchedules)) {
+                return 0;
+            }
             const schedule = this.teacherDailySchedules.find(s => s.teacher_id === teacherId && s.day === day);
             return schedule ? schedule.lesson_count : 0;
+        },
+        
+        // ===== Classrooms Management =====
+        async loadAreas() {
+            this.areasLoading = true;
+            try {
+                const response = await axios.get(`${API_BASE_URL}/areas`);
+                this.areas = response.data.data || response.data;
+            } catch (error) {
+                this.error = 'Derslikler yüklenemedi';
+                console.error('Areas load error:', error);
+            } finally {
+                this.areasLoading = false;
+            }
+        },
+        
+        openAddAreaModal() {
+            this.modalError = '';
+            this.newArea = {
+                name: '',
+                code: '',
+                type: 'classroom',
+                capacity: 30,
+                current_occupancy: 0,
+                equipment: [],
+                description: '',
+                is_active: true
+            };
+            this.addAreaModal = true;
+        },
+        
+        async addArea() {
+            this.modalError = '';
+            try {
+                await axios.post(`${API_BASE_URL}/areas`, this.newArea);
+                this.message = 'Derslik başarıyla eklendi';
+                this.addAreaModal = false;
+                this.newArea = {
+                    name: '',
+                    code: '',
+                    type: 'classroom',
+                    capacity: 30,
+                    current_occupancy: 0,
+                    equipment: [],
+                    description: '',
+                    is_active: true
+                };
+                this.loadAreas();
+            } catch (error) {
+                this.modalError = error.response?.data?.message || 'Derslik eklenemedi';
+                console.error('Add area error:', error.response?.data);
+            }
+        },
+        
+        editArea(area) {
+            this.modalError = '';
+            this.editAreaData = { ...area };
+            this.editAreaModal = true;
+        },
+        
+        async updateArea() {
+            this.modalError = '';
+            try {
+                await axios.put(`${API_BASE_URL}/areas/${this.editAreaData.id}`, this.editAreaData);
+                this.message = 'Derslik başarıyla güncellendi';
+                this.editAreaModal = false;
+                this.loadAreas();
+            } catch (error) {
+                this.modalError = error.response?.data?.message || 'Derslik güncellenemedi';
+                console.error('Update area error:', error.response?.data);
+            }
+        },
+        
+        async deleteArea(area) {
+            if (!confirm(`${area.name} dersliğini silmek istediğinizden emin misiniz?`)) {
+                return;
+            }
+            
+            try {
+                await axios.delete(`${API_BASE_URL}/areas/${area.id}`);
+                this.message = 'Derslik başarıyla silindi';
+                this.loadAreas();
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Derslik silinemedi';
+                console.error('Delete area error:', error.response?.data);
+            }
+        },
+        
+        // Helper: Derslik tipi etiketi
+        getAreaTypeLabel(type) {
+            const labels = {
+                'classroom': 'Normal Derslik',
+                'laboratory': 'Laboratuvar',
+                'workshop': 'Atölye',
+                'music_room': 'Müzik Odası',
+                'computer_lab': 'Bilgisayar Lab',
+                'art_room': 'Resim Atölyesi'
+            };
+            return labels[type] || type;
+        },
+        
+        
+        // Helper: Sayfa başlığı
+        getPageTitle() {
+            const titles = {
+                'dashboard': 'Dashboard',
+                'classes': 'Sınıflar',
+                'teachers': 'Öğretmenler',
+                'subjects': 'Dersler',
+                'classrooms': 'Derslikler',
+                'settings': 'Ayarlar'
+            };
+            return titles[this.activeTab] || 'Dashboard';
+        },
+        
+        // Tab değiştirme fonksiyonu
+        setActiveTab(tab) {
+            this.activeTab = tab;
+            this.dropdownOpen = null; // Dropdown'u kapat
+        },
+        
+        toggleDropdown(dropdown) {
+            this.dropdownOpen = this.dropdownOpen === dropdown ? null : dropdown;
+        },
+        
+        // Gün etiketi fonksiyonu
+        getDayLabel(day) {
+            const dayLabels = {
+                'monday': 'Pazartesi',
+                'tuesday': 'Salı',
+                'wednesday': 'Çarşamba',
+                'thursday': 'Perşembe',
+                'friday': 'Cuma',
+                'saturday': 'Cumartesi',
+                'sunday': 'Pazar'
+            };
+            return dayLabels[day] || day;
+        },
+        
+        // Modal kapatma fonksiyonu
+        closeModals() {
+            this.modalError = '';
+        },
+        
+        getBranchLabel(branch) {
+            const labels = {
+                'matematik': 'Matematik',
+                'fizik': 'Fizik',
+                'kimya': 'Kimya',
+                'biyoloji': 'Biyoloji',
+                'turkce': 'Türkçe',
+                'edebiyat': 'Edebiyat',
+                'tarih': 'Tarih',
+                'cografya': 'Coğrafya',
+                'felsefe': 'Felsefe',
+                'ingilizce': 'İngilizce',
+                'almanca': 'Almanca',
+                'fransizca': 'Fransızca',
+                'beden': 'Beden Eğitimi',
+                'muzik': 'Müzik',
+                'resim': 'Resim',
+                'din': 'Din Kültürü',
+                'rehberlik': 'Rehberlik',
+                'bilgisayar': 'Bilgisayar',
+                'geometri': 'Geometri',
+                'teknoloji_tasarim': 'Teknoloji Tasarım'
+            };
+            return labels[branch] || branch;
+        },
+        
+        async deleteTeacher(teacher) {
+            if (!confirm(`${teacher.name} öğretmenini silmek istediğinizden emin misiniz?`)) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('auth_token');
+                await axios.delete(`${API_BASE_URL}/users/${teacher.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                this.message = 'Öğretmen başarıyla silindi';
+                this.loadUsers();
+                
+                // Mesajı 3 saniye sonra temizle
+                setTimeout(() => {
+                    this.message = '';
+                }, 3000);
+                
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Öğretmen silinemedi';
+                console.error('Delete teacher error:', error);
+            }
         }
     },
     

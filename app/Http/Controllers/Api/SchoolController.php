@@ -241,6 +241,7 @@ class SchoolController extends Controller
             'grade_levels' => $school->getGradeLevels(),
             'class_days' => $school->getDefaultClassDays(),
             'lesson_duration' => $school->getDefaultLessonDuration(),
+            'daily_lesson_count' => $school->daily_lesson_count ?? 8,
             'break_durations' => $school->getDefaultBreakDurations(),
             'school_hours' => $school->getDefaultSchoolHours(),
             'weekly_lesson_count' => $school->getDefaultWeeklyLessonCount(),
@@ -268,12 +269,19 @@ class SchoolController extends Controller
             'class_days' => 'array',
             'class_days.*' => 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'lesson_duration' => 'integer|min:20|max:120',
+            'daily_lesson_count' => 'integer|min:1|max:12',
             'break_durations' => 'array',
-            'break_durations.small_break' => 'integer|min:5|max:30',
-            'break_durations.lunch_break' => 'integer|min:10|max:60',
+            'break_durations.break_1' => 'integer|min:5|max:30',
+            'break_durations.break_2' => 'integer|min:5|max:30',
+            'break_durations.break_3' => 'integer|min:5|max:30',
+            'break_durations.break_4' => 'integer|min:5|max:30',
+            'break_durations.break_5' => 'integer|min:5|max:30',
+            'break_durations.break_6' => 'integer|min:5|max:30',
+            'break_durations.break_7' => 'integer|min:5|max:30',
+            'break_durations.break_8' => 'integer|min:5|max:30',
+            'break_durations.break_9' => 'integer|min:5|max:30',
             'school_hours' => 'array',
-            'school_hours.start_time' => 'date_format:H:i',
-            'school_hours.end_time' => 'date_format:H:i|after:school_hours.start_time',
+            'school_hours.start' => 'date_format:H:i',
             'weekly_lesson_count' => 'integer|min:20|max:50',
             'schedule_settings' => 'array',
             'schedule_settings.allow_teacher_conflicts' => 'boolean',
@@ -282,7 +290,6 @@ class SchoolController extends Controller
             'schedule_settings.min_lessons_per_day' => 'integer|min:1|max:12',
             'daily_lesson_counts' => 'array',
             'daily_lesson_counts.*' => 'integer|min:1|max:12'
-            // class_daily_lesson_counts ve teacher_daily_lesson_counts artık ayrı endpoint'lerden kaydediliyor
         ]);
 
         // Sadece gönderilen alanları güncelle
@@ -290,6 +297,7 @@ class SchoolController extends Controller
             'school_type',
             'class_days',
             'lesson_duration',
+            'daily_lesson_count',
             'break_durations',
             'school_hours',
             'weekly_lesson_count',
@@ -306,6 +314,7 @@ class SchoolController extends Controller
                 'grade_levels' => $school->getGradeLevels(),
                 'class_days' => $school->getDefaultClassDays(),
                 'lesson_duration' => $school->getDefaultLessonDuration(),
+                'daily_lesson_count' => $school->daily_lesson_count ?? 8,
                 'break_durations' => $school->getDefaultBreakDurations(),
                 'school_hours' => $school->getDefaultSchoolHours(),
                 'weekly_lesson_count' => $school->getDefaultWeeklyLessonCount(),
@@ -388,9 +397,12 @@ class SchoolController extends Controller
             return response()->json(['message' => 'Okul bulunamadı'], 404);
         }
 
-        $schedules = \App\Models\ClassDailySchedule::whereHas('classRoom', function($query) use ($school) {
-            $query->where('school_id', $school->id);
-        })->with('classRoom:id,name')->get();
+        // Optimize edilmiş sorgu - whereHas yerine join kullan
+        $schedules = \App\Models\ClassDailySchedule::select('class_daily_schedules.*')
+            ->join('classes', 'class_daily_schedules.class_id', '=', 'classes.id')
+            ->where('classes.school_id', $school->id)
+            ->where('classes.is_active', true)
+            ->get();
 
         return response()->json($schedules);
     }
@@ -447,9 +459,12 @@ class SchoolController extends Controller
             return response()->json(['message' => 'Okul bulunamadı'], 404);
         }
 
-        $schedules = \App\Models\TeacherDailySchedule::whereHas('teacher', function($query) use ($school) {
-            $query->where('school_id', $school->id);
-        })->with('teacher:id,name')->get();
+        // Optimize edilmiş sorgu - whereHas yerine join kullan
+        $schedules = \App\Models\TeacherDailySchedule::select('teacher_daily_schedules.*')
+            ->join('users', 'teacher_daily_schedules.teacher_id', '=', 'users.id')
+            ->where('users.school_id', $school->id)
+            ->where('users.is_active', true)
+            ->get();
 
         return response()->json($schedules);
     }
@@ -504,12 +519,26 @@ class SchoolController extends Controller
 
         foreach ($gradeLevels as $level) {
             foreach ($branches as $branch) {
-                \App\Models\ClassRoom::create([
+                $className = $level['value'] === 0 ? "Hazırlık-{$branch}" : "{$level['value']}-{$branch}";
+                
+                // Sınıf oluştur
+                $classRoom = \App\Models\ClassRoom::create([
                     'school_id' => $school->id,
-                    'name' => $level['value'] === 0 ? "Hazırlık-{$branch}" : "{$level['value']}-{$branch}",
+                    'name' => $className,
                     'grade' => $level['value'],
                     'branch' => $branch,
                     'capacity' => 30,
+                    'is_active' => true
+                ]);
+                
+                // Her sınıf için otomatik derslik oluştur
+                \App\Models\Classroom::create([
+                    'school_id' => $school->id,
+                    'name' => "{$className} Dersliği",
+                    'code' => $className,
+                    'type' => 'classroom',
+                    'capacity' => 30,
+                    'current_occupancy' => 0,
                     'is_active' => true
                 ]);
             }

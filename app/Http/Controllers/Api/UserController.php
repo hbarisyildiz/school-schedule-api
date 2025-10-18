@@ -83,19 +83,19 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $user = User::with(['role', 'school', 'createdBy'])
-            ->where('school_id', auth()->user()->school_id)
-            ->findOrFail($id);
+        try {
+            $user = User::with(['role', 'school'])
+                ->where('school_id', auth()->user()->school_id)
+                ->findOrFail($id);
 
-        return response()->json([
-            'user' => $user,
-            'permissions' => $user->role->permissions ?? [],
-            'statistics' => [
-                'created_at' => $user->created_at->format('d.m.Y H:i'),
-                'last_login' => $user->last_login_at?->format('d.m.Y H:i'),
-                'total_schedules' => $user->schedules()->count() ?? 0
-            ]
-        ]);
+            return response()->json($user);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Kullanıcı bulunamadı',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**
@@ -114,6 +114,7 @@ class UserController extends Controller
             'role_id' => 'exists:roles,id',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
+            'password' => 'nullable|string|min:6',
         ]);
 
         // Sadece kendi bilgilerini veya yetkisi olanlar değiştirebilir
@@ -123,9 +124,16 @@ class UserController extends Controller
             ], 403);
         }
 
-        $user->update($request->only([
+        $updateData = $request->only([
             'name', 'short_name', 'branch', 'email', 'role_id', 'phone', 'address'
-        ]));
+        ]);
+
+        // Şifre varsa hash'le
+        if ($request->password) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+
+        $user->update($updateData);
 
         return response()->json([
             'message' => 'Kullanıcı bilgileri güncellendi',

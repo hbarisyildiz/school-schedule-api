@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Okul Ders Programı Yönetim Sistemi</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="admin-panel.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div v-if="showLogin" class="login-container">
+            <div class="login-card">
+                <h2 class="text-center mb-4">Okul Ders Programı Yönetim Sistemi</h2>
+                <form @submit.prevent="login">
+                    <div class="mb-3">
+                        <label class="form-label">E-posta</label>
+                        <input type="email" v-model="loginForm.email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre</label>
+                        <input type="password" v-model="loginForm.password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" :disabled="isLoggingIn">
+                        <span v-if="isLoggingIn">Giriş yapılıyor...</span>
+                        <span v-else>Giriş Yap</span>
+                    </button>
+                    <div v-if="loginError" class="alert alert-danger mt-3">{{ loginError }}</div>
+                </form>
+                
+                <!-- Quick Login Buttons -->
+                <div class="mt-4">
+                    <h6 class="text-center">Hızlı Giriş</h6>
+                    <div class="d-grid gap-2">
+                        <button @click="quickLogin('super_admin')" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-crown"></i> Süper Admin
+                        </button>
+                        <button @click="quickLogin('mudur')" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-user-tie"></i> Müdür
+                        </button>
+                        <button @click="quickLogin('ilkokul')" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-school"></i> İlkokul
+                        </button>
+                        <button @click="quickLogin('ortaokul')" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-graduation-cap"></i> Ortaokul
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div v-else class="app-container">
+            <!-- Top Navigation -->
+            <nav class="top-nav">
+                <div class="nav-left">
+                    <div class="logo">
+                        <i class="fas fa-school"></i>
+                        <span v-if="user && user.school">{{ user.school.name }}</span>
+                        <span v-else>Okul Yönetim Sistemi</span>
+                    </div>
+                </div>
+                
+                <div class="nav-center">
+                    <div class="nav-menu">
+                        <button @click="setActiveTab('dashboard')" 
+                                :class="['nav-item', { active: activeTab === 'dashboard' }]">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </button>
+                        
+                        <div class="nav-dropdown">
+                            <button class="nav-item dropdown-toggle" @click="toggleDropdown('management')">
+                                <i class="fas fa-cogs"></i>
+                                <span>Yönetim</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div v-if="dropdownOpen === 'management'" class="dropdown-menu">
+                                <button @click="setActiveTab('classes')" class="dropdown-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>Sınıflar</span>
+                                </button>
+                                <button @click="setActiveTab('teachers')" class="dropdown-item">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span>Öğretmenler</span>
+                                </button>
+                                <button @click="setActiveTab('subjects')" class="dropdown-item">
+                                    <i class="fas fa-book"></i>
+                                    <span>Dersler</span>
+                                </button>
+                                <button @click="setActiveTab('classrooms')" class="dropdown-item">
+                                    <i class="fas fa-door-open"></i>
+                                    <span>Derslikler</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button @click="setActiveTab('settings')" 
+                                :class="['nav-item', { active: activeTab === 'settings' }]">
+                            <i class="fas fa-cog"></i>
+                            <span>Ayarlar</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="nav-right">
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name" v-if="user">{{ user.name }}</div>
+                                <div class="user-role" v-if="user && user.role">{{ user.role.display_name }}</div>
+                            </div>
+                        </div>
+                        <button @click="logout" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-header">
+                    <h1 class="page-title">
+                        <i class="fas fa-tachometer-alt" v-if="activeTab === 'dashboard'"></i>
+                        <i class="fas fa-users" v-if="activeTab === 'classes'"></i>
+                        <i class="fas fa-chalkboard-teacher" v-if="activeTab === 'teachers'"></i>
+                        <i class="fas fa-book" v-if="activeTab === 'subjects'"></i>
+                        <i class="fas fa-door-open" v-if="activeTab === 'classrooms'"></i>
+                        <i class="fas fa-cog" v-if="activeTab === 'settings'"></i>
+                        {{ getPageTitle() }}
+                    </h1>
+                </div>
+                
+                <div class="content-body">
+                    <!-- Messages -->
+                    <div v-if="message" class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" @click="message = ''"></button>
+                    </div>
+                    <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" @click="error = ''"></button>
+                    </div>
+
+                    <!-- Dashboard Tab -->
+                    <div v-if="activeTab === 'dashboard'" class="tab-content">
+                        <h2>Dashboard</h2>
+                        <p>Hoş geldiniz, {{ user?.name }}!</p>
+                    </div>
+
+                    <!-- Classes Tab -->
+                    <div v-if="activeTab === 'classes'" class="tab-content">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2>Sınıflar</h2>
+                            <a href="/add-class.html" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Sınıf Ekle
+                            </a>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div v-if="classesLoading" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                            <p class="mt-3 text-muted">
+                                <i class="fas fa-info-circle"></i> Sınıflar yükleniyor...<br>
+                                <small>Bu işlem biraz zaman alabilir, lütfen bekleyin.</small>
+                            </p>
+                        </div>
+                        
+                        <!-- Error State -->
+                        <div v-else-if="classesError" class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> {{ classesError }}
+                        </div>
+                        
+                        <!-- Classes Table -->
+                        <div v-else class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sınıf Adı</th>
+                                        <th>Seviye</th>
+                                        <th>Şube</th>
+                                        <th>Sınıf Öğretmeni</th>
+                                        <th>Günlük Ders Saatleri</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="classItem in classes" :key="classItem.id">
+                                        <td>{{ classItem.name }}</td>
+                                        <td>{{ gradeLabel(classItem.grade) }}</td>
+                                        <td>{{ classItem.branch }}</td>
+                                        <td>{{ classItem.teacher?.name || 'Atanmamış' }}</td>
+                                        <td>
+                                            <div class="lesson-counts">
+                                                <span v-for="day in schoolSettings.class_days" 
+                                                      :key="day" class="badge bg-secondary me-1">
+                                                    {{ getDayLabel(day) }}: {{ getClassLessonCount(classItem.id, day) }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a :href="`/edit-class.html?id=${classItem.id}`" 
+                                                   class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-edit"></i> Düzenle
+                                                </a>
+                                                <a :href="`/class-schedule.html?id=${classItem.id}`" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-clock"></i> Saatler
+                                                </a>
+                                                <button @click="deleteClass(classItem)" 
+                                                        class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash"></i> Sil
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Teachers Tab -->
+                    <div v-if="activeTab === 'teachers'" class="tab-content">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2>Öğretmenler</h2>
+                            <a href="/add-teacher.html" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Öğretmen Ekle
+                            </a>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div v-if="usersLoading" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                            <p class="mt-3 text-muted">
+                                <i class="fas fa-info-circle"></i> Öğretmenler yükleniyor...<br>
+                                <small>Bu işlem biraz zaman alabilir, lütfen bekleyin.</small>
+                            </p>
+                        </div>
+                        
+                        <!-- Error State -->
+                        <div v-else-if="error" class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                        </div>
+                        
+                        <!-- Teachers Table -->
+                        <div v-else class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Ad Soyad</th>
+                                        <th>E-posta</th>
+                                        <th>Telefon</th>
+                                        <th>Branş</th>
+                                        <th>Günlük Ders Saatleri</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="teacher in users" :key="teacher.id">
+                                        <td>{{ teacher.name }}</td>
+                                        <td>{{ teacher.email }}</td>
+                                        <td>{{ teacher.phone || '-' }}</td>
+                                        <td>{{ getBranchLabel(teacher.branch) || '-' }}</td>
+                                        <td>
+                                            <div class="lesson-counts">
+                                                <span v-for="day in schoolSettings.class_days" 
+                                                      :key="day" class="badge bg-secondary me-1">
+                                                    {{ getDayLabel(day) }}: {{ getTeacherLessonCount(teacher.id, day) }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a :href="`/edit-teacher.html?id=${teacher.id}`" 
+                                                   class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-edit"></i> Düzenle
+                                                </a>
+                                                <a :href="`/teacher-schedule.html?id=${teacher.id}`" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-clock"></i> Saatler
+                                                </a>
+                                                <button @click="deleteTeacher(teacher)" 
+                                                        class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash"></i> Sil
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Areas (Classrooms) Tab -->
+                    <div v-if="activeTab === 'classrooms'" class="tab-content">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2>Derslikler</h2>
+                            <a href="/add-area.html" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Derslik Ekle
+                            </a>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div v-if="areasLoading" class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Derslikler yükleniyor...</span>
+                            </div>
+                            <p class="mt-2">Derslikler yükleniyor...</p>
+                        </div>
+                        
+                        <!-- Error State -->
+                        <div v-else-if="error" class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                        </div>
+                        
+                        <!-- Areas Table -->
+                        <div v-else class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Derslik Adı</th>
+                                        <th>Kısa Ad</th>
+                                        <th>Tip</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="area in filteredAreas" :key="area.id">
+                                        <td>{{ area.name }}</td>
+                                        <td>{{ area.code || '-' }}</td>
+                                        <td>{{ getAreaTypeLabel(area.type) }}</td>
+                                        <td>
+                                            <span :class="['badge', area.is_active ? 'bg-success' : 'bg-secondary']">
+                                                {{ area.is_active ? 'Aktif' : 'Pasif' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a :href="`/edit-area.html?id=${area.id}`" class="btn btn-warning btn-sm me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button @click="deleteArea(area)" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div v-if="activeTab === 'settings'" class="tab-content">
+                        
+                        <div v-if="schoolSettingsLoading" class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                        
+                        <div v-else-if="schoolSettings" class="settings-form">
+                            
+                            <!-- Error Message -->
+                            <div v-if="error" class="alert alert-danger alert-dismissible fade show">
+                                <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                                <button type="button" class="btn-close" @click="error = ''"></button>
+                            </div>
+
+                            <div class="settings-container">
+                                <!-- Sol Kolon -->
+                                <div>
+                                    <!-- Okul Bilgileri -->
+                                    <div class="settings-section">
+                                        <h5><i class="fas fa-school"></i> Okul Bilgileri</h5>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label class="form-label">Okul Türü</label>
+                                                <select v-model="schoolSettings.school_type" class="form-select">
+                                                    <option value="ilkokul">İlkokul</option>
+                                                    <option value="ortaokul">Ortaokul</option>
+                                                    <option value="lise">Lise</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-small">
+                                                <label class="form-label">Ders Süresi (dk)</label>
+                                                <input v-model="schoolSettings.lesson_duration" type="number" class="form-control" min="30" max="60">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ders Günleri -->
+                                    <div class="settings-section">
+                                        <h5><i class="fas fa-calendar-week"></i> Ders Günleri</h5>
+                                        <div class="day-switches">
+                                            <div v-for="(day, dayKey) in dayLabels" :key="dayKey" 
+                                                 :class="['day-switch', schoolSettings.class_days.includes(dayKey) ? 'active' : 'inactive']">
+                                                <div class="form-check">
+                                                    <input 
+                                                        :id="`day-${dayKey}`"
+                                                        v-model="schoolSettings.class_days" 
+                                                        :value="dayKey" 
+                                                        type="checkbox" 
+                                                        class="form-check-input"
+                                                    >
+                                                    <label :for="`day-${dayKey}`" class="form-check-label">
+                                                        <span :class="['badge', schoolSettings.class_days.includes(dayKey) ? 'bg-success' : 'bg-danger']">
+                                                            {{ day }}
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sağ Kolon -->
+                                <div>
+                                    <!-- Okul Saatleri -->
+                                    <div class="settings-section">
+                                        <h5><i class="fas fa-clock"></i> Okul Saatleri</h5>
+                                        <div class="row">
+                                            <div class="col-small">
+                                                <label class="form-label">Başlangıç Saati</label>
+                                                <input v-model="schoolSettings.school_hours.start" type="time" class="form-control">
+                                            </div>
+                                            <div class="col-small">
+                                                <label class="form-label">Günlük Ders Sayısı</label>
+                                                <input v-model="schoolSettings.daily_lesson_count" type="number" class="form-control" min="1" max="12">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Sınıflar tablosundaki ders sayıları bu değeri referans alır</small>
+                                    </div>
+
+                                    <!-- Tenefüs Süreleri -->
+                                    <div class="settings-section">
+                                        <h5><i class="fas fa-coffee"></i> Tenefüs Süreleri</h5>
+                                        <div class="break-inputs">
+                                            <div v-for="(breakName, index) in breakNames" :key="index" class="break-input">
+                                                <label>{{ breakName }}</label>
+                                                <div class="input-group">
+                                                    <input 
+                                                        v-model="schoolSettings.break_durations[`break_${index + 1}`]" 
+                                                        type="number" 
+                                                        class="form-control" 
+                                                        min="5" 
+                                                        max="30"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Kaydet Butonu -->
+                            <div class="d-flex justify-content-end align-items-center mt-4">
+                                <button @click="saveSchoolSettings" class="btn btn-success" :disabled="isSavingSettings">
+                                    <i v-if="isSavingSettings" class="fas fa-spinner fa-spin"></i>
+                                    <i v-else class="fas fa-save"></i>
+                                    {{ isSavingSettings ? 'Kaydediliyor...' : 'Kaydet' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <script src="admin-panel.js"></script>
+</body>
+</html>

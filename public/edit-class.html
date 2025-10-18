@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınıf Düzenle - Okul Ders Programı Yönetim Sistemi</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="admin-panel.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- Top Navigation -->
+            <nav class="top-nav">
+                <div class="nav-left">
+                    <div class="logo">
+                        <i class="fas fa-school"></i>
+                        <span>Sınıf Düzenle</span>
+                    </div>
+                </div>
+                
+                <div class="nav-right">
+                    <a href="/admin-panel#classes" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Geri Dön</span>
+                    </a>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <div class="content-header">
+                    <h1 class="page-title">
+                        <i class="fas fa-edit"></i>
+                        Sınıf Düzenle
+                    </h1>
+                </div>
+
+                <div class="content-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-edit"></i> Sınıf Bilgileri</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div v-if="error" class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                                    </div>
+                                    <div v-if="message" class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i> {{ message }}
+                                    </div>
+                                    
+                                    <form @submit.prevent="updateClass">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Sınıf Adı</label>
+                                                    <input v-model="classData.name" type="text" class="form-control" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Seviye</label>
+                                            <select v-model="classData.grade" class="form-select" @change="generateClassName" :disabled="gradeOptionsLoading">
+                                                <option value="">Seviye Seçin</option>
+                                                <option v-for="grade in gradeOptions" :key="grade.value" :value="grade.value">
+                                                    {{ grade.label }}
+                                                </option>
+                                            </select>
+                                            <div v-if="gradeOptionsLoading" class="form-text">
+                                                <i class="fas fa-spinner fa-spin"></i> Seviyeler yükleniyor...
+                                            </div>
+                                        </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Şube</label>
+                                                    <input v-model="classData.branch" type="text" class="form-control" placeholder="A, B, C..." @input="generateClassName">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Sınıf Adı</label>
+                                            <input v-model="classData.name" type="text" class="form-control" placeholder="Otomatik oluşturulacak">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Sınıf Öğretmeni</label>
+                                            <select v-model="classData.class_teacher_id" class="form-select" :disabled="teachersLoading">
+                                                <option value="">Öğretmen Seçin</option>
+                                                <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
+                                                    {{ teacher.name }}
+                                                </option>
+                                            </select>
+                                            <div v-if="teachersLoading" class="form-text">
+                                                <i class="fas fa-spinner fa-spin"></i> Öğretmenler yükleniyor...
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-warning" :disabled="isLoading">
+                                                <span v-if="isLoading">
+                                                    <i class="fas fa-spinner fa-spin"></i> Güncelleniyor...
+                                                </span>
+                                                <span v-else>
+                                                    <i class="fas fa-save"></i> Güncelle
+                                                </span>
+                                            </button>
+                                            <a href="/admin-panel#classes" class="btn btn-secondary">
+                                                <i class="fas fa-times"></i> İptal
+                                            </a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-info-circle"></i> Bilgi</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">
+                                        Sınıf düzenleme sayfasında seviye, şube ve sınıf öğretmeni değiştirilebilir. 
+                                        Sınıf adı otomatik olarak güncellenir.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        const API_BASE_URL = 'http://localhost/api';
+
+        createApp({
+            data() {
+                return {
+                    classData: {},
+                    teachers: [],
+                    gradeOptions: [],
+                    teachersLoading: false,
+                    gradeOptionsLoading: false,
+                    isLoading: false,
+                    error: '',
+                    message: ''
+                }
+            },
+            async mounted() {
+                // Token kontrolü
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    window.location.href = '/admin-panel';
+                    return;
+                }
+                
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const classId = urlParams.get('id');
+                
+                if (!classId) {
+                    this.error = 'Sınıf ID bulunamadı';
+                    return;
+                }
+                
+                // Tüm API çağrılarını paralel yap
+                await Promise.all([
+                    this.loadClass(classId),
+                    this.loadTeachers(),
+                    this.loadSchoolSettings()
+                ]);
+            },
+            methods: {
+                async loadClass(classId) {
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        if (!token) {
+                            this.error = 'Oturum süresi dolmuş. Lütfen tekrar giriş yapın.';
+                            return;
+                        }
+                        
+                        const response = await axios.get(`${API_BASE_URL}/classes/${classId}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        this.classData = response.data;
+                    } catch (error) {
+                        if (error.response?.status === 401) {
+                            this.error = 'Oturum süresi dolmuş. Lütfen tekrar giriş yapın.';
+                        } else {
+                            this.error = 'Sınıf bilgileri yüklenemedi';
+                        }
+                        console.error('Load class error:', error);
+                    }
+                },
+                
+                async loadTeachers() {
+                    this.teachersLoading = true;
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        const response = await axios.get(`${API_BASE_URL}/teachers`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        this.teachers = response.data;
+                    } catch (error) {
+                        console.error('Load teachers error:', error);
+                    } finally {
+                        this.teachersLoading = false;
+                    }
+                },
+                
+                async loadSchoolSettings() {
+                    this.gradeOptionsLoading = true;
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        const response = await axios.get(`${API_BASE_URL}/school/settings`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        
+                        if (response.data && response.data.grade_levels) {
+                            this.gradeOptions = response.data.grade_levels.map(level => ({
+                                value: level.value,
+                                label: level.label
+                            }));
+                        }
+                    } catch (error) {
+                        console.error('Load school settings error:', error);
+                    } finally {
+                        this.gradeOptionsLoading = false;
+                    }
+                },
+                
+                generateClassName() {
+                    if (this.classData.grade && this.classData.branch) {
+                        this.classData.name = this.classData.grade + '-' + this.classData.branch;
+                    }
+                },
+                
+                async updateClass() {
+                    this.isLoading = true;
+                    this.error = '';
+                    this.message = '';
+                    
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        await axios.put(`${API_BASE_URL}/classes/${this.classData.id}`, this.classData, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        
+                        this.message = 'Sınıf başarıyla güncellendi';
+                        setTimeout(() => {
+                            window.location.href = '/admin-panel#classes';
+                        }, 1500);
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Sınıf güncellenemedi';
+                        console.error('Update class error:', error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+        </div>
+    </div>
+</body>
+</html>

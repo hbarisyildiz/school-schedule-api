@@ -30,6 +30,7 @@ class School extends Model
         'school_type',
         'class_days',
         'lesson_duration',
+        'daily_lesson_count',
         'break_durations',
         'school_hours',
         'weekly_lesson_count',
@@ -313,6 +314,14 @@ class School extends Model
     public function teacherDailySchedules(): HasMany
     {
         return $this->hasMany(TeacherDailySchedule::class, 'teacher_id');
+    }
+
+    /**
+     * Derslikler ilişkisi
+     */
+    public function classrooms(): HasMany
+    {
+        return $this->hasMany(Classroom::class);
     }
 
     /**

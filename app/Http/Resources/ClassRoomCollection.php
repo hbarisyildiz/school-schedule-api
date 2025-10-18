@@ -25,16 +25,16 @@ class ClassRoomCollection extends ResourceCollection
                     'capacity' => $class->capacity,
                     'current_students' => $class->current_students,
                     'classroom' => $class->classroom,
-                    'class_teacher_id' => $class->class_teacher_id,
+                    'teacher_id' => $class->class_teacher_id,
                     'description' => $class->description,
                     'is_active' => $class->is_active,
                     'created_at' => $class->created_at,
                     'updated_at' => $class->updated_at,
-                    'class_teacher' => $class->classTeacher ? [
-                        'id' => $class->classTeacher->id,
-                        'name' => $class->classTeacher->name,
-                        'email' => $class->classTeacher->email,
-                        'short_name' => $class->classTeacher->short_name,
+                    'teacher' => $class->teacher ? [
+                        'id' => $class->teacher->id,
+                        'name' => $class->teacher->name,
+                        'email' => $class->teacher->email,
+                        'short_name' => $class->teacher->short_name,
                     ] : null,
                     'school' => $class->school ? [
                         'id' => $class->school->id,

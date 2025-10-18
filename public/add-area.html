@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derslik Ekle - Okul Yönetim Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 0;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-3">
+                    <h4 class="text-center mb-4">
+                        <i class="fas fa-graduation-cap"></i>
+                        Okul Yönetimi
+                    </h4>
+                    <nav class="nav flex-column">
+                        <a href="/admin-panel" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/admin-panel" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Kullanıcılar</span>
+                        </a>
+                        <a href="/admin-panel" class="nav-link">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>Sınıflar</span>
+                        </a>
+                        <a href="/admin-panel" class="nav-link active">
+                            <i class="fas fa-door-open"></i>
+                            <span>Derslikler</span>
+                        </a>
+                        <a href="/admin-panel" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Ayarlar</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2><i class="fas fa-plus"></i> Derslik Ekle</h2>
+                            <p class="text-muted">Yeni derslik bilgilerini girin</p>
+                        </div>
+                        <a href="/admin-panel" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Geri Dön
+                        </a>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body p-4">
+                                    <form @submit.prevent="addArea">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Derslik Adı</label>
+                                                    <input v-model="newArea.name" type="text" class="form-control" placeholder="Örn: 9-A Dersliği" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Kısa Ad</label>
+                                                    <input v-model="newArea.code" type="text" class="form-control" placeholder="Örn: 9A">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tip</label>
+                                                    <select v-model="newArea.type" class="form-select" required>
+                                                        <option value="classroom">Normal Derslik</option>
+                                                        <option value="laboratory">Laboratuvar</option>
+                                                        <option value="workshop">Atölye</option>
+                                                        <option value="music_room">Müzik Odası</option>
+                                                        <option value="computer_lab">Bilgisayar Lab</option>
+                                                        <option value="art_room">Resim Atölyesi</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Durum</label>
+                                                    <select v-model="newArea.is_active" class="form-select">
+                                                        <option :value="true">Aktif</option>
+                                                        <option :value="false">Pasif</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Açıklama</label>
+                                            <textarea v-model="newArea.description" class="form-control" rows="3" placeholder="Derslik hakkında ek bilgiler..."></textarea>
+                                        </div>
+
+                                        <!-- Error Message -->
+                                        <div v-if="error" class="alert alert-danger">
+                                            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                                        </div>
+
+                                        <!-- Success Message -->
+                                        <div v-if="message" class="alert alert-success">
+                                            <i class="fas fa-check-circle"></i> {{ message }}
+                                        </div>
+
+                                        <!-- Submit Button -->
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="/admin-panel#classrooms" class="btn btn-outline-secondary">
+                                                <i class="fas fa-times"></i> İptal
+                                            </a>
+                                            <button type="submit" class="btn btn-success" :disabled="isLoading">
+                                                <i v-if="isLoading" class="fas fa-spinner fa-spin"></i>
+                                                <i v-else class="fas fa-plus"></i>
+                                                {{ isLoading ? 'Ekleniyor...' : 'Derslik Ekle' }}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const API_BASE_URL = 'http://localhost:8000/api';
+
+        createApp({
+            data() {
+                return {
+                    newArea: {
+                        name: '',
+                        code: '',
+                        type: 'classroom',
+                        is_active: true,
+                        description: ''
+                    },
+                    isLoading: false,
+                    error: '',
+                    message: ''
+                }
+            },
+            async mounted() {
+                // Token kontrolü
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    window.location.href = '/admin-panel';
+                    return;
+                }
+                
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            },
+            methods: {
+                async addArea() {
+                    this.isLoading = true;
+                    this.error = '';
+                    this.message = '';
+                    
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        const response = await axios.post(`${API_BASE_URL}/areas`, this.newArea, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        
+                        this.message = 'Derslik başarıyla eklendi';
+                        setTimeout(() => {
+                            window.location.href = '/admin-panel#classrooms';
+                        }, 1500);
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Derslik eklenemedi';
+                        console.error('Add area error:', error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }
+        }).mount('body');
+    </script>
+</body>
+</html>

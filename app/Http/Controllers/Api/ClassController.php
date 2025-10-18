@@ -16,28 +16,37 @@ class ClassController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $role = $user->role->name;
-        
-        // Query builder ile çek (with eager loading)
-        $query = ClassRoom::with(['classTeacher', 'school'])
-            ->orderBy('grade')
-            ->orderBy('branch');
-        
-        // Super admin değilse sadece kendi okulunun sınıflarını göster
-        if ($role !== 'super_admin') {
-            $query->where('school_id', $user->school_id);
-        }
-        
-        $classes = $query->get();
-        
-        // Her sınıf için manuel map (öğretmen bilgisini garanti etmek için)
-        $result = $classes->map(function($class) {
-            // Öğretmen bilgisini direkt çek (eager loading yerine)
-            $teacher = null;
-            if ($class->class_teacher_id) {
-                $teacherData = \App\Models\User::find($class->class_teacher_id);
-                if ($teacherData) {
+        // Hızlı versiyon - öğretmen bilgisi ile
+        try {
+            $user = auth()->user();
+            $role = $user->role->name;
+            
+            $query = ClassRoom::select('id', 'name', 'grade', 'branch', 'class_teacher_id')
+                ->where('is_active', true);
+            
+            // Super admin değilse sadece kendi okulunun sınıflarını göster
+            if ($role !== 'super_admin') {
+                $query->where('school_id', $user->school_id);
+            }
+            
+            $classes = $query->orderByRaw('CAST(grade AS UNSIGNED)')
+                ->orderBy('branch')
+                ->get();
+            
+            // Tüm öğretmen ID'lerini topla
+            $teacherIds = $classes->pluck('class_teacher_id')->filter()->unique();
+            
+            // Tüm öğretmenleri tek seferde çek
+            $teachers = \App\Models\User::select('id', 'name', 'email', 'short_name', 'branch')
+                ->whereIn('id', $teacherIds)
+                ->get()
+                ->keyBy('id');
+            
+            // Her sınıf için öğretmen bilgisini ekle
+            $result = $classes->map(function($class) use ($teachers) {
+                $teacher = null;
+                if ($class->class_teacher_id && isset($teachers[$class->class_teacher_id])) {
+                    $teacherData = $teachers[$class->class_teacher_id];
                     $teacher = [
                         'id' => $teacherData->id,
                         'name' => $teacherData->name,
@@ -46,27 +55,21 @@ class ClassController extends Controller
                         'branch' => $teacherData->branch,
                     ];
                 }
-            }
+                
+                return [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                    'grade' => $class->grade,
+                    'branch' => $class->branch,
+                    'class_teacher_id' => $class->class_teacher_id,
+                    'teacher' => $teacher
+                ];
+            });
             
-            return [
-                'id' => $class->id,
-                'school_id' => $class->school_id,
-                'name' => $class->name,
-                'grade' => $class->grade,
-                'branch' => $class->branch,
-                'capacity' => $class->capacity,
-                'current_students' => $class->current_students,
-                'classroom' => $class->classroom,
-                'class_teacher_id' => $class->class_teacher_id,
-                'description' => $class->description,
-                'is_active' => $class->is_active,
-                'created_at' => $class->created_at,
-                'updated_at' => $class->updated_at,
-                'class_teacher' => $teacher
-            ];
-        });
-        
-        return response()->json($result);
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -79,21 +82,44 @@ class ClassController extends Controller
             'grade' => 'required',
             'branch' => 'required|string|max:5',
             'class_teacher_id' => 'nullable|exists:users,id',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'create_area' => 'nullable|boolean'
         ]);
 
-        $class = ClassRoom::create([
-            'school_id' => auth()->user()->school_id,
-            'name' => $request->name,
-            'grade' => $request->grade,
-            'branch' => $request->branch,
-            'capacity' => 30, // Default kapasite
-            'class_teacher_id' => $request->class_teacher_id,
-            'description' => $request->description,
-            'is_active' => true
-        ]);
+        try {
+            $class = ClassRoom::create([
+                'school_id' => auth()->user()->school_id,
+                'name' => $request->name,
+                'grade' => $request->grade,
+                'branch' => $request->branch,
+                'class_teacher_id' => $request->class_teacher_id,
+                'description' => $request->description,
+                'is_active' => true
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Benzersizlik kısıtlaması hatası
+            if ($e->getCode() == 23000 && str_contains($e->getMessage(), 'classes_school_id_name_unique')) {
+                return response()->json([
+                    'message' => 'Bu sınıf adı zaten mevcut. Lütfen farklı bir sınıf adı seçin.',
+                    'error' => 'duplicate_class_name'
+                ], 422);
+            }
+            throw $e;
+        }
         
-        $class->load(['classTeacher', 'school']);
+        // Eğer create_area true ise, otomatik derslik oluştur
+        if ($request->create_area) {
+            \App\Models\Area::create([
+                'school_id' => auth()->user()->school_id,
+                'name' => $class->name . ' Dersliği',
+                'code' => $class->name,
+                'type' => 'classroom',
+                'current_occupancy' => 0,
+                'is_active' => true
+            ]);
+        }
+        
+        $class->load(['teacher', 'school']);
 
         return response()->json([
             'message' => 'Sınıf başarıyla oluşturuldu',
@@ -106,19 +132,11 @@ class ClassController extends Controller
      */
     public function show(string $id)
     {
-        $class = ClassRoom::with(['school', 'classTeacher', 'students', 'schedules'])
+        $class = ClassRoom::with(['school', 'teacher'])
             ->where('school_id', auth()->user()->school_id)
             ->findOrFail($id);
 
-        return response()->json([
-            'class' => $class,
-            'statistics' => [
-                'total_students' => $class->current_students,
-                'capacity' => $class->capacity,
-                'fill_rate' => $class->capacity > 0 ? round(($class->current_students / $class->capacity) * 100, 1) : 0,
-                'total_schedules' => $class->schedules()->count()
-            ]
-        ]);
+        return response()->json($class);
     }
 
     /**
@@ -134,16 +152,53 @@ class ClassController extends Controller
             'grade' => 'required',
             'branch' => 'string|max:5',
             'class_teacher_id' => 'nullable|exists:users,id',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'create_area' => 'nullable|boolean'
         ]);
 
-        $class->update($request->only([
-            'name', 'grade', 'branch', 'class_teacher_id', 'description'
-        ]));
+        try {
+            $class->update($request->only([
+                'name', 'grade', 'branch', 'class_teacher_id', 'description'
+            ]));
+            
+            // Sınıf ismi değiştiyse, ilgili dersliğin ismini de güncelle
+            if ($request->has('name') && $request->name !== $class->getOriginal('name')) {
+                \App\Models\Area::where('school_id', auth()->user()->school_id)
+                    ->where('name', $class->getOriginal('name') . ' Dersliği')
+                    ->update(['name' => $request->name . ' Dersliği']);
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Benzersizlik kısıtlaması hatası
+            if ($e->getCode() == 23000 && str_contains($e->getMessage(), 'classes_school_id_name_unique')) {
+                return response()->json([
+                    'message' => 'Bu sınıf adı zaten mevcut. Lütfen farklı bir sınıf adı seçin.',
+                    'error' => 'duplicate_class_name'
+                ], 422);
+            }
+            throw $e;
+        }
+
+        // Eğer create_classroom true ise ve derslik yoksa, otomatik derslik oluştur
+        if ($request->create_classroom) {
+            $existingClassroom = \App\Models\Classroom::where('school_id', auth()->user()->school_id)
+                ->where('name', $class->name . ' Dersliği')
+                ->first();
+            
+            if (!$existingClassroom) {
+                \App\Models\Classroom::create([
+                    'school_id' => auth()->user()->school_id,
+                    'name' => $class->name . ' Dersliği',
+                    'code' => $class->name,
+                    'type' => 'classroom',
+                    'current_occupancy' => 0,
+                    'is_active' => true
+                ]);
+            }
+        }
 
         return response()->json([
             'message' => 'Sınıf başarıyla güncellendi',
-            'class' => new ClassRoomResource($class->fresh()->load(['classTeacher', 'school']))
+            'class' => new ClassRoomResource($class->fresh()->load(['teacher', 'school']))
         ]);
     }
 

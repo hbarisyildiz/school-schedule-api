@@ -22,6 +22,7 @@ Route::get('cities', [\App\Http\Controllers\Api\SchoolController::class, 'getCit
 Route::get('cities/{cityId}/districts', [\App\Http\Controllers\Api\SchoolController::class, 'getDistricts']);
 Route::get('subscription-plans', [\App\Http\Controllers\Api\SchoolController::class, 'getSubscriptionPlans']);
 
+
 // Okul kayıt sistemi (auth gerektirmeyen)
 Route::post('register-school', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'register']);
 Route::post('verify-school-email', [\App\Http\Controllers\Api\SchoolRegistrationController::class, 'verifyEmail']);
@@ -113,13 +114,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('subjects', \App\Http\Controllers\Api\SubjectController::class);
         Route::post('subjects/{id}/toggle-status', [\App\Http\Controllers\Api\SubjectController::class, 'toggleStatus']);
         Route::get('subject-templates', [\App\Http\Controllers\Api\SubjectController::class, 'getTemplates']);
+        
+        // Derslik yönetimi
+        Route::apiResource('areas', \App\Http\Controllers\Api\AreaController::class);
         // Route::get('classes', ...) - KALDIRILDI! Yukarıda apiResource var (satır 84)
-        Route::get('teachers', function () {
-            return response()->json(\App\Models\User::where('school_id', auth()->user()->school_id)
-                ->whereHas('role', function($query) {
-                    $query->where('name', 'teacher');
-                })->get(['id', 'name', 'email']));
-        });
         
     });
     

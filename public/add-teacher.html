@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öğretmen Ekle - Okul Ders Programı Yönetim Sistemi</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="admin-panel.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- Top Navigation -->
+            <nav class="top-nav">
+                <div class="nav-left">
+                    <div class="logo">
+                        <i class="fas fa-school"></i>
+                        <span>Öğretmen Ekle</span>
+                    </div>
+                </div>
+                
+                <div class="nav-right">
+                    <a href="/admin-panel#teachers" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Geri Dön</span>
+                    </a>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <div class="content-header">
+                    <h1 class="page-title">
+                        <i class="fas fa-plus"></i>
+                        Yeni Öğretmen Ekle
+                    </h1>
+                </div>
+
+                <div class="content-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-plus"></i> Öğretmen Bilgileri</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div v-if="error" class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                                    </div>
+                                    <div v-if="message" class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i> {{ message }}
+                                    </div>
+                                    
+                                    <form @submit.prevent="addTeacher">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Ad Soyad <span class="text-danger">*</span></label>
+                                                    <input v-model="teacherData.name" type="text" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">E-posta <span class="text-danger">*</span></label>
+                                                    <input v-model="teacherData.email" type="email" class="form-control" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefon</label>
+                                                    <input v-model="teacherData.phone" type="tel" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Kısa Ad</label>
+                                                    <input v-model="teacherData.short_name" type="text" class="form-control" placeholder="Örn: A. Yılmaz">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Branş</label>
+                                                    <select v-model="teacherData.branch" class="form-select">
+                                                        <option value="">Branş Seçin</option>
+                                                        <option value="matematik">Matematik</option>
+                                                        <option value="fizik">Fizik</option>
+                                                        <option value="kimya">Kimya</option>
+                                                        <option value="biyoloji">Biyoloji</option>
+                                                        <option value="turkce">Türkçe</option>
+                                                        <option value="edebiyat">Edebiyat</option>
+                                                        <option value="tarih">Tarih</option>
+                                                        <option value="cografya">Coğrafya</option>
+                                                        <option value="felsefe">Felsefe</option>
+                                                        <option value="ingilizce">İngilizce</option>
+                                                        <option value="almanca">Almanca</option>
+                                                        <option value="fransizca">Fransızca</option>
+                                                        <option value="beden">Beden Eğitimi</option>
+                                                        <option value="muzik">Müzik</option>
+                                                        <option value="resim">Resim</option>
+                                                        <option value="din">Din Kültürü</option>
+                                                        <option value="rehberlik">Rehberlik</option>
+                                                        <option value="bilgisayar">Bilgisayar</option>
+                                                        <option value="geometri">Geometri</option>
+                                                        <option value="teknoloji_tasarim">Teknoloji Tasarım</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Şifre <span class="text-danger">*</span></label>
+                                                    <input v-model="teacherData.password" type="password" class="form-control" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Açıklama</label>
+                                            <textarea v-model="teacherData.description" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="/admin-panel#teachers" class="btn btn-secondary">
+                                                <i class="fas fa-times"></i> İptal
+                                            </a>
+                                            <button type="submit" class="btn btn-success" :disabled="isLoading">
+                                                <i v-if="isLoading" class="fas fa-spinner fa-spin"></i>
+                                                <i v-else class="fas fa-save"></i>
+                                                {{ isLoading ? 'Kaydediliyor...' : 'Öğretmen Ekle' }}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-info-circle"></i> Bilgi</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">
+                                        <i class="fas fa-lightbulb"></i> 
+                                        Öğretmen eklendikten sonra otomatik olarak "teacher" rolü atanacaktır.
+                                    </p>
+                                    <p class="text-muted">
+                                        <i class="fas fa-key"></i> 
+                                        Şifre en az 8 karakter olmalıdır.
+                                    </p>
+                                    <p class="text-muted">
+                                        <i class="fas fa-envelope"></i> 
+                                        E-posta adresi benzersiz olmalıdır.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    teacherData: {
+                        name: '',
+                        email: '',
+                        phone: '',
+                        short_name: '',
+                        branch: '',
+                        password: '',
+                        description: ''
+                    },
+                    isLoading: false,
+                    error: '',
+                    message: ''
+                }
+            },
+            
+            async mounted() {
+                // Token kontrolü
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    window.location.href = '/admin-panel';
+                    return;
+                }
+                
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            },
+            
+            methods: {
+                async addTeacher() {
+                    this.isLoading = true;
+                    this.error = '';
+                    this.message = '';
+
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        
+                        // Öğretmen rolünü bul
+                        const rolesResponse = await axios.get(`${API_BASE_URL}/roles`);
+                        const teacherRole = rolesResponse.data.find(role => role.name === 'teacher');
+                        
+                        if (!teacherRole) {
+                            throw new Error('Öğretmen rolü bulunamadı');
+                        }
+
+                        const response = await axios.post(`${API_BASE_URL}/users`, {
+                            ...this.teacherData,
+                            role_id: teacherRole.id,
+                            is_active: true
+                        }, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+
+                        this.message = 'Öğretmen başarıyla eklendi';
+                        
+                        // 2 saniye sonra öğretmenler sayfasına yönlendir
+                        setTimeout(() => {
+                            window.location.href = '/admin-panel#teachers';
+                        }, 2000);
+
+                    } catch (error) {
+                        this.error = error.response?.data?.message || 'Öğretmen eklenemedi';
+                        console.error('Add teacher error:', error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+        </div>
+    </div>
+</body>
+</html>

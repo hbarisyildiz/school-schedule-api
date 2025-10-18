@@ -68,11 +68,11 @@ class Schedule extends Model
     }
 
     /**
-     * Sınıf (fiziki) ilişkisi
+     * Derslik ilişkisi
      */
     public function classroom(): BelongsTo
     {
-        return $this->belongsTo(ClassRoom::class, 'classroom_id');
+        return $this->belongsTo(Classroom::class, 'classroom_id');
     }
 
     /**
